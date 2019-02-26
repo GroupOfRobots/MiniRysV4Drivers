@@ -33,14 +33,19 @@
 
 #include "l6470.h"
 
-class AutoDriver: public L6470 {
-public:
-	AutoDriver(uint8_t, uint8_t, uint8_t, uint8_t);
-	AutoDriver(uint8_t, uint8_t, uint8_t);
+#define GPIO_BUSY_IN	RPI_V2_GPIO_P1_13
+#define GPIO_RESET_OUT 	RPI_V2_GPIO_P1_15
 
-	~AutoDriver(void);
+class Motors: public L6470 {
+public:
+	Motors(uint8_t, uint8_t);
+
+	~Motors(void);
 
 	int busyCheck(void);
+	void setUp(void);
+	void setSpeed(int,int);
+	void stop(void);
 
 private:
 	uint8_t SPIXfer(uint8_t);
@@ -49,40 +54,18 @@ private:
 	 * Additional methods
 	 */
 public:
-	bool IsConnected(void) const;
+	bool IsConnected(int);
 
-	inline static uint16_t getNumBoards(void) {
-		int n = 0;
-		for (int i = 0; i < (int) (sizeof(m_nNumBoards) / sizeof(m_nNumBoards[0])); i++) {
-			n += m_nNumBoards[i];
-		}
-		return n;
-	}
-
-	inline static uint8_t getNumBoards(int cs) {
-		if (cs < (int) (sizeof(m_nNumBoards) / sizeof(m_nNumBoards[0]))) {
-			return m_nNumBoards[cs];
-		} else {
-			return 0;
-		}
-	}
-
-	inline int getMotorNumber(void) {
-		return m_nMotorNumber;
-	}
-
-	void setMotorNumber(int nMotorNumber) {
-		m_nMotorNumber = nMotorNumber;
-	}
 
 private:
 	uint8_t m_nSpiChipSelect;
 	uint8_t m_nResetPin;
 	uint8_t m_nBusyPin;
-	uint8_t m_nPosition;
-	bool m_bIsBusy;
-	static uint8_t m_nNumBoards[2];
-	bool m_bIsConnected;
+	uint8_t m_nPosition; //0-left 1-right
+	bool l_bIsBusy;
+	bool r_bIsBusy;
+	bool l_bIsConnected;
+	bool r_bIsConnected;
 };
 
 #endif /* AUTODRIVER_H_ */

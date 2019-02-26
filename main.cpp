@@ -8,12 +8,9 @@
 #include "tmp102.h"
 #include "lsm6ds3/LSM6DS3.h"
 #include "bcm/bcm2835.h"
-#include "l6470/include/autodriver.h"
 #include "l6470/include/l6470constants.h"
+#include "l6470/include/motors.h"
 #include "vl53l1x/VL53L1X.h"
-
-#define GPIO_BUSY_IN	RPI_V2_GPIO_P1_13
-#define GPIO_RESET_OUT 	RPI_V2_GPIO_P1_15
 
 #define GPIO_TOF_0 	RPI_V2_GPIO_P1_29
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_31
@@ -48,7 +45,7 @@ int main(void) {
 		  printf("Sensor with CS1 started.\n");
 	}
 	int i;
-	for(i=0; i<20; i++){
+	/*for(i=0; i<20; i++){
 		//Get all parameters
 		printf("\nAccelerometer:\n");
 		printf(" X1 = %f\n",SensorOne.readFloatAccelX());
@@ -68,7 +65,7 @@ int main(void) {
 		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
 		delay(100);
 	}
-
+	*/
 	SensorOne.close_i2c();
 
 	stepperTest();
@@ -106,93 +103,26 @@ void tofTest(){
 
 void stepperTest(){
 
-	unsigned long temp;
-
-	bcm2835_spi_begin();
-
-	bcm2835_gpio_fsel(GPIO_RESET_OUT, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_set(GPIO_RESET_OUT);
-
-	bcm2835_gpio_fsel(GPIO_BUSY_IN, BCM2835_GPIO_FSEL_INPT);
-
-	bcm2835_gpio_clr(GPIO_RESET_OUT);
-	bcm2835_delayMicroseconds(10000);
-	bcm2835_gpio_set(GPIO_RESET_OUT);
-	bcm2835_delayMicroseconds(10000);
-
-	AutoDriver board(0, BCM2835_SPI_CS0, GPIO_RESET_OUT);
-	AutoDriver board1(1, BCM2835_SPI_CS0, GPIO_RESET_OUT);
-
-	/////////////////////////////////////TESTY//////////////////////////////////////////////
-
-	// first check  board config register, should be 0x2E88 on bootup
-	temp = board.getParam(L6470_PARAM_CONFIG);
-	printf("Config reg value board0: %4x\n", (int) temp);
-	temp = board1.getParam(L6470_PARAM_CONFIG);
-	printf("Config reg valueboard1: %4x\n", (int) temp);
-
-	// Now check the status of the board. Should be 0x7c03
-	temp = board.getStatus();
-	printf("Status reg value board0: %4x\n", (int) temp);
-	temp = board1.getStatus();
-	printf("Status reg value board1: %4x\n", (int) temp);
-
-	board.configStepMode(0x05);   // 0 microsteps per step
-	board.setMaxSpeed(300);        // 10000 steps/s max
-	board.setMinSpeed(10);        // 10 steps/s min
-	board.setFullSpeed(600);       // microstep below 10000 steps/s
-	board.setAcc(100);             // accelerate at 10000 steps/s/s
-	board.setDec(100);
-	board.setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
-	board.setSlewRate(0x0300);   // Upping the edge speed increases torque.
-	board.setOCThreshold(0x08);  // OC threshold 3000mA
-	board.setOCShutdown(0x0000); // don't shutdown on OC
-	board.setVoltageComp(0x0000); // don't compensate for motor V
-	board.setSwitchMode(0x0010);    // Switch is not hard stop
-	board.setAccKVAL(255);           // We'll tinker with these later, if needed.
-	board.setDecKVAL(255);
-	board.setRunKVAL(255);
-	board.setHoldKVAL(32);           // This controls the holding current; keep it low.
-
-	board1.configStepMode(0x05);   // 0 microsteps per step
-	board1.setMaxSpeed(300);        // 10000 steps/s max
-	board1.setMinSpeed(10);        // 10 steps/s min
-	board1.setFullSpeed(600);       // microstep below 10000 steps/s
-	board1.setAcc(100);             // accelerate at 10000 steps/s/s
-	board1.setDec(100);
-	board1.setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
-	board1.setSlewRate(0x0300);   // Upping the edge speed increases torque.
-	board1.setOCThreshold(0x08);  // OC threshold 3000mA
-	board1.setOCShutdown(0x0000); // don't shutdown on OC
-	board1.setVoltageComp(0x0000); // don't compensate for motor V
-	board1.setSwitchMode(0x0010);    // Switch is not hard stop
-	board1.setAccKVAL(255);           // We'll tinker with these later, if needed.
-	board1.setDecKVAL(255);
-	board1.setRunKVAL(255);
-	board1.setHoldKVAL(32);           // This controls the holding current; keep it low.
-
-
-
+	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+	board.setUp();
+	board.setSpeed(200,200);
+	bcm2835_delay(1000);
+	board.setSpeed(100,50);
+	bcm2835_delay(1500);
+	board.setSpeed(200,200);
+	bcm2835_delay(1000);
+	board.setSpeed(50,100);
+	bcm2835_delay(1500);
+	board.setSpeed(200,200);
+	bcm2835_delay(1000);
+	board.setSpeed(100,50);
+	bcm2835_delay(1500);
+	board.setSpeed(200,200);
+	bcm2835_delay(1000);
+	board.setSpeed(50,100);
+	bcm2835_delay(1500);
+	board.stop();
 
 	////////////////////////////////////////////////////////////////////////////////////////
-
-	while (board.busyCheck())
-		;
-	while (board1.busyCheck())
-		;
-	board1.run(1,200);
-	board.run(1,200);
-
-	bcm2835_delay(3000);
-
-	board.softStop();
-	board1.softStop();
-
-	while (board.busyCheck())
-		;
-
-	board.hardHiZ();
-
-	board1.hardHiZ();
 }
 
