@@ -1,0 +1,7 @@
+*.o
+/Debug/*.o
+/Debug/bcm/*.o
+/Debug/gpio/*.o
+/Debug/l6470/src/*.o
+/Debug/lsm6ds3/*.o
+/Debug/vl53l1x/*.o

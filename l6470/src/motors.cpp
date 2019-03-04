@@ -74,6 +74,10 @@ Motors::Motors(uint8_t nSpiChipSelect, uint8_t nResetPin) : l_bIsBusy(false), l_
 
 Motors::~Motors(void) {
 	hardHiZ();
+	m_nPosition=0;
+	this->hardStop();
+	m_nPosition=1;
+	this->hardStop();
 	l_bIsBusy = false;
 	l_bIsConnected = false;
 	r_bIsBusy = false;
