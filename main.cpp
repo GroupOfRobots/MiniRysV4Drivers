@@ -11,6 +11,7 @@
 #include "l6470/include/l6470constants.h"
 #include "l6470/include/motors.h"
 #include "vl53l1x/VL53L1X.h"
+#include <csignal>
 
 #define GPIO_TOF_0 	RPI_V2_GPIO_P1_29
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_31
@@ -25,8 +26,17 @@
 
 void stepperTest();
 void tofTest();
+Motors *globalBoard;
+
+void sigintHandler(int signum) {
+	if (signum == SIGINT) {
+		globalBoard->stop();
+		exit(signum);
+	}
+}
 
 int main(void) {
+	signal(SIGINT, sigintHandler);
 
 	if (bcm2835_init() == 0) {
 			fprintf(stderr, "Not able to init the bmc2835 library\n");
@@ -104,6 +114,7 @@ void tofTest(){
 void stepperTest(){
 
 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+	globalBoard = &board;
 	board.setUp();
 	board.setSpeed(200,200);
 	bcm2835_delay(1000);
