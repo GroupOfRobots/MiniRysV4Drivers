@@ -46,6 +46,9 @@ public:
 	void setUp(void);
 	void setSpeed(int,int);
 	void stop(void);
+	long getPositionLeft();
+	long getPositionRight();
+	int getBatteryVoltage();
 
 private:
 	uint8_t SPIXfer(uint8_t);

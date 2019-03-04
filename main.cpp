@@ -22,6 +22,7 @@
 #define GPIO_TOF_7 	RPI_V2_GPIO_P1_18
 #define GPIO_TOF_8 	RPI_V2_GPIO_P1_32
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
+#define NDEBUG
 
 void stepperTest();
 void tofTest();
@@ -44,7 +45,7 @@ int main(void) {
 	{
 		  printf("Sensor with CS1 started.\n");
 	}
-	int i;
+	//int i;
 	/*for(i=0; i<20; i++){
 		//Get all parameters
 		printf("\nAccelerometer:\n");
@@ -103,24 +104,58 @@ void tofTest(){
 
 void stepperTest(){
 
+	long positionLeft,positionRight;
+	int voltage;
 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 	board.setUp();
-	board.setSpeed(200,200);
+	board.setSpeed(50,50);
+	bcm2835_delay(2000);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(-50,-50);
+	bcm2835_delay(2000);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(30,30);
+	bcm2835_delay(2000);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(-30,-30);
+	bcm2835_delay(2000);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(20,-20);
 	bcm2835_delay(1000);
-	board.setSpeed(100,50);
-	bcm2835_delay(1500);
-	board.setSpeed(200,200);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(-20,20);
+	bcm2835_delay(3000);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(100,100);
 	bcm2835_delay(1000);
-	board.setSpeed(50,100);
-	bcm2835_delay(1500);
-	board.setSpeed(200,200);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.setSpeed(-200,-200);
 	bcm2835_delay(1000);
-	board.setSpeed(100,50);
-	bcm2835_delay(1500);
-	board.setSpeed(200,200);
-	bcm2835_delay(1000);
-	board.setSpeed(50,100);
-	bcm2835_delay(1500);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
 	board.stop();
 
 	////////////////////////////////////////////////////////////////////////////////////////

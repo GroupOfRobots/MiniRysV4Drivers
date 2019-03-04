@@ -85,52 +85,45 @@ void Motors::setUp(){
 	int temp;
 
 	m_nPosition = 0;
-	// first check  board config register, should be 0x2E88 on bootup
 	temp = this->getParam(L6470_PARAM_CONFIG);
-	printf("Config reg value motor left: %4x\n", (int) temp);
-	// Now check the status of the board. Should be 0x7c03
 	temp = this->getStatus();
-	printf("Status reg value motor right: %4x\n", (int) temp);
 
-	this->configStepMode(0x04);   // 0 microsteps per step
-	this->setMaxSpeed(300);        // 10000 steps/s max
-	this->setMinSpeed(10);        // 10 steps/s min
-	this->setFullSpeed(600);       // microstep below 10000 steps/s
-	this->setAcc(200);             // accelerate at 10000 steps/s/s
-	this->setDec(200);
+	this->configStepMode(0x07);   // 0 microsteps per step
+	this->setMaxSpeed(200);        // 10000 steps/s max
+	this->setMinSpeed(0);        // 10 steps/s min
+	this->setFullSpeed(300);       // microstep below 10000 steps/s
+	this->setAcc(30);             // accelerate at 10000 steps/s/s
+	this->setDec(100);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
-	this->setSlewRate(0x0300);   // Upping the edge speed increases torque.
-	this->setOCThreshold(0x08);  // OC threshold 3000mA
+	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
+	this->setOCThreshold(0x09);  // OC threshold 3000mA
 	this->setOCShutdown(0x0000); // don't shutdown on OC
 	this->setVoltageComp(0x0000); // don't compensate for motor V
 	this->setSwitchMode(0x0010);    // Switch is not hard stop
-	this->setAccKVAL(255);           // We'll tinker with these later, if needed.
-	this->setDecKVAL(255);
-	this->setRunKVAL(255);
+	this->setAccKVAL(0xFF);           // We'll tinker with these later, if needed.
+	this->setDecKVAL(0xFF);
+	this->setRunKVAL(0xFF);
 	this->setHoldKVAL(32);           // This controls the holding current; keep it low.
 
 	m_nPosition = 1;
 	temp = this->getParam(L6470_PARAM_CONFIG);
-	printf("Config reg value motor left: %4x\n", (int) temp);
-
 	temp = this->getStatus();
-	printf("Status reg value motor right: %4x\n", (int) temp);
 
-	this->configStepMode(0x04);   // 0 microsteps per step
-	this->setMaxSpeed(300);        // 10000 steps/s max
-	this->setMinSpeed(10);        // 10 steps/s min
-	this->setFullSpeed(600);       // microstep below 10000 steps/s
-	this->setAcc(200);             // accelerate at 10000 steps/s/s
-	this->setDec(200);
+	this->configStepMode(0x07);   // 0 microsteps per step
+	this->setMaxSpeed(200);        // 10000 steps/s max
+	this->setMinSpeed(0);        // 10 steps/s min
+	this->setFullSpeed(300);       // microstep below 10000 steps/s
+	this->setAcc(30);             // accelerate at 10000 steps/s/s
+	this->setDec(100);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
-	this->setSlewRate(0x0300);   // Upping the edge speed increases torque.
-	this->setOCThreshold(0x08);  // OC threshold 3000mA
+	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
+	this->setOCThreshold(0x09);  // OC threshold 3000mA
 	this->setOCShutdown(0x0000); // don't shutdown on OC
 	this->setVoltageComp(0x0000); // don't compensate for motor V
 	this->setSwitchMode(0x0010);    // Switch is not hard stop
-	this->setAccKVAL(255);           // We'll tinker with these later, if needed.
-	this->setDecKVAL(255);
-	this->setRunKVAL(255);
+	this->setAccKVAL(0xFF);           // We'll tinker with these later, if needed.
+	this->setDecKVAL(0xFF);
+	this->setRunKVAL(0xFF);
 	this->setHoldKVAL(32);           // This controls the holding current; keep it low.
 }
 
@@ -142,9 +135,12 @@ void Motors::setSpeed(int speedLeft, int speedRight){
 	while (this->busyCheck())
 		;
 	m_nPosition=0;
-	this->run(1,speedLeft);
+	if (speedLeft>=0)this->run(L6470_DIR_FWD,speedLeft);
+	else this->run(L6470_DIR_REV,-1*speedLeft);
+
 	m_nPosition=1;
-	this->run(1,speedRight);
+	if (speedRight>=0)this->run(L6470_DIR_FWD,speedRight);
+	else this->run(L6470_DIR_REV,-1*speedRight);
 }
 
 void Motors::stop(){
@@ -210,4 +206,24 @@ bool Motors::IsConnected(int position){
 	}else{
 		return l_bIsConnected;
 	}
+}
+
+long Motors::getPositionLeft(){
+		m_nPosition=0;
+		return this->getPos();
+}
+
+long Motors::getPositionRight(){
+		m_nPosition=1;
+		return this->getPos();
+}
+
+int Motors::getBatteryVoltage(){
+	int voltage;
+	m_nPosition = 0;
+	voltage = this->getVoltageComp();
+	m_nPosition = 1;
+	voltage += this->getVoltageComp();
+
+	return (voltage/16)*3.3*3.1;
 }
