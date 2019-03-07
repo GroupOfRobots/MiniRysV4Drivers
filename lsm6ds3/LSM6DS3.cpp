@@ -392,7 +392,7 @@ LSM6DS3::LSM6DS3( uint8_t busType, uint8_t inputArg ) : LSM6DS3Core( busType, in
 	//Construct with these default settings
 
 	settings.gyroEnabled = 1;  //Can be 0 or 1
-	settings.gyroRange = 2000;   //Max deg/s.  Can be: 125, 245, 500, 1000, 2000
+	settings.gyroRange = 1000;   //Max deg/s.  Can be: 125, 245, 500, 1000, 2000
 	settings.gyroSampleRate = 416;   //Hz.  Can be: 13, 26, 52, 104, 208, 416, 833, 1666
 	settings.gyroBandWidth = 400;  //Hz.  Can be: 50, 100, 200, 400;
 	settings.gyroFifoEnabled = 1;  //Set to include gyro in FIFO
@@ -400,7 +400,7 @@ LSM6DS3::LSM6DS3( uint8_t busType, uint8_t inputArg ) : LSM6DS3Core( busType, in
 
 	settings.accelEnabled = 1;
 	settings.accelODROff = 1;
-	settings.accelRange = 16;      //Max G force readable.  Can be: 2, 4, 8, 16
+	settings.accelRange = 2;      //Max G force readable.  Can be: 2, 4, 8, 16
 	settings.accelSampleRate = 416;  //Hz.  Can be: 13, 26, 52, 104, 208, 416, 833, 1666, 3332, 6664, 13330
 	settings.accelBandWidth = 100;  //Hz.  Can be: 50, 100, 200, 400;
 	settings.accelFifoEnabled = 1;  //Set to include accelerometer in the FIFO
