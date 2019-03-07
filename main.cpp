@@ -45,44 +45,12 @@ int main(void) {
 	}
 
 
-	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+	tofTest();
+	//IMUtest();
+	//stepperTest();
 
-	if( SensorOne.begin() != 0 )
-	{
-		  printf("Problem starting the sensor \n");
-	}
-	else
-	{
-		  printf("Sensor with CS1 started.\n");
-	}
-	//int i;
-	/*for(i=0; i<20; i++){
-		//Get all parameters
-		printf("\nAccelerometer:\n");
-		printf(" X1 = %f\n",SensorOne.readFloatAccelX());
-		printf(" Y1 = %f\n",SensorOne.readFloatAccelY());
-		printf(" Z1 = %f\n",SensorOne.readFloatAccelZ());
-
-		printf("\nGyroscope:\n");
-		printf(" X1 = %f\n",SensorOne.readFloatGyroX());
-		printf(" Y1 = %f\n",SensorOne.readFloatGyroY());
-		printf(" Z1 = %f\n",SensorOne.readFloatGyroZ());
-
-		printf("\nThermometer:\n");
-		printf(" Degrees C = %f\n",SensorOne.readTempC());
-
-		printf("\nSensorOne Bus Errors Reported:\n");
-		printf(" All '1's = %d\n",SensorOne.allOnesCounter);
-		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
-		delay(100);
-	}
-	*/
-	SensorOne.close_i2c();
-
-	stepperTest();
-
-	//tmp102 czujnik(0x48,"/dev/i2c-0");
-	//printf("Rys temperature: %f \n",czujnik.readTemperature());
+	tmp102 czujnik(0x48,"/dev/i2c-0");
+	printf("Rys temperature: %f \n",czujnik.readTemperature());
 
 	puts("Done!");
 
@@ -90,25 +58,61 @@ int main(void) {
 
 void tofTest(){
 
-		uint16_t measurement[10];
-		VL53L1X* sensor[10];
-		sensor[0] = new VL53L1X(GPIO_TOF_0, VL53L1X::Medium);
-		sensor[1] = new VL53L1X(GPIO_TOF_1, VL53L1X::Medium);
-		sensor[2] = new VL53L1X(GPIO_TOF_2, VL53L1X::Medium);
-		sensor[3] = new VL53L1X(GPIO_TOF_3, VL53L1X::Medium);
-		sensor[4] = new VL53L1X(GPIO_TOF_4, VL53L1X::Medium);
-		sensor[5] = new VL53L1X(GPIO_TOF_5, VL53L1X::Medium);
-		sensor[6] = new VL53L1X(GPIO_TOF_6, VL53L1X::Medium);
-		sensor[7] = new VL53L1X(GPIO_TOF_7, VL53L1X::Medium);
-		sensor[8] = new VL53L1X(GPIO_TOF_8, VL53L1X::Medium);
-		sensor[9] = new VL53L1X(GPIO_TOF_9, VL53L1X::Medium);
+		//disable all sensors first
+		bcm2835_gpio_fsel(GPIO_TOF_0, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_set(GPIO_TOF_0);
+		bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_1);
+		bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_2);
+		bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_3);
+		bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_4);
+		bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_5);
+		bcm2835_gpio_fsel(GPIO_TOF_6, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_6);
+		bcm2835_gpio_fsel(GPIO_TOF_7, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_7);
+		bcm2835_gpio_fsel(GPIO_TOF_8, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_8);
+		bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_clr(GPIO_TOF_9);
 
+		puts("gpio initialised");
+
+		uint16_t measurement[10];
+		VL53L1X* sensor[1]; //add static i2c member
+		sensor[0] = new VL53L1X(GPIO_TOF_0, VL53L1X::Medium);
+		bcm2835_delay(100);
+
+		puts("sensor initialised");
+		/*sensor[1] = new VL53L1X(GPIO_TOF_1, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[2] = new VL53L1X(GPIO_TOF_2, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[3] = new VL53L1X(GPIO_TOF_3, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[4] = new VL53L1X(GPIO_TOF_4, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[5] = new VL53L1X(GPIO_TOF_5, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[6] = new VL53L1X(GPIO_TOF_6, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[7] = new VL53L1X(GPIO_TOF_7, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[8] = new VL53L1X(GPIO_TOF_8, VL53L1X::Medium);
+		bcm2835_delay(100);
+		sensor[9] = new VL53L1X(GPIO_TOF_9, VL53L1X::Medium);
+		bcm2835_delay(100);*/
 
 		while(1){
-				for(int i=0; i<10; i++)
-					measurement[i] = sensor[i]->read(0);
-				printf("Distance: %d\n",measurement[0]);
-				bcm2835_delay(150);
+				for(int i=0; i<1; i++){
+					measurement[i] = sensor[i]->readData(0);
+					printf("Distance sensor%d: %d\n",i,measurement[i]);
+					bcm2835_delay(100);
+				}
 		}
 }
 
@@ -170,5 +174,40 @@ void stepperTest(){
 	board.stop();
 
 	////////////////////////////////////////////////////////////////////////////////////////
+}
+
+void IMUtest(){
+	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+
+		if( SensorOne.begin() != 0 )
+		{
+			  printf("Problem starting the sensor \n");
+		}
+		else
+		{
+			  printf("Sensor with CS1 started.\n");
+		}
+		int i;
+		for(i=0; i<20; i++){
+			//Get all parameters
+			printf("\nAccelerometer:\n");
+			printf(" X1 = %f\n",SensorOne.readFloatAccelX());
+			printf(" Y1 = %f\n",SensorOne.readFloatAccelY());
+			printf(" Z1 = %f\n",SensorOne.readFloatAccelZ());
+
+			printf("\nGyroscope:\n");
+			printf(" X1 = %f\n",SensorOne.readFloatGyroX());
+			printf(" Y1 = %f\n",SensorOne.readFloatGyroY());
+			printf(" Z1 = %f\n",SensorOne.readFloatGyroZ());
+
+			printf("\nThermometer:\n");
+			printf(" Degrees C = %f\n",SensorOne.readTempC());
+
+			printf("\nSensorOne Bus Errors Reported:\n");
+			printf(" All '1's = %d\n",SensorOne.allOnesCounter);
+			printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
+			delay(100);
+		}
+		SensorOne.close_i2c();
 }
 

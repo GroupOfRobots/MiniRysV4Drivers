@@ -8,21 +8,22 @@
 #include <fcntl.h>				//Needed for I2C port
 #include <sys/ioctl.h>			//Needed for I2C port
 #include <linux/i2c-dev.h>		//Needed for I2C port"
+#include <stdio.h>
 #include "../bcm/bcm2835.h"
 // Constructor ////////////////////////////////////////////////////////////////
 
 VL53L1X::VL53L1X(uint8_t cs, DistanceMode dist){
 	  address = AddressDefault;
-	  io_timeout = 0;  // no timeout
+	  io_timeout = 10;  // no timeout
 	  did_timeout = false;
-	  calibrated= false;
+	  calibrated = false;
 	  saved_vhv_init = 0;
 	  saved_vhv_timeout = 0;
 	  distance_mode= dist;
-	  cs_pin = cs;
+	  cs_pin = cs; // wakeup pin
 
 	  this->init(true);
-	  this->startContinuous(10);
+	  this->startContinuous(100);
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -39,218 +40,221 @@ void VL53L1X::setAddress(uint8_t new_addr)
 // mode.
 bool VL53L1X::init(bool io_2v8)
 {
-	  //enable sensor during configuration
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
-	  bcm2835_gpio_set(cs_pin);
+	//enable sensor during configuration
+	bcm2835_gpio_set(cs_pin);
 
-  // check model ID and module type registers (values specified in datasheet)
-  if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC) { return false; }
+	filename = (char*)"/dev/i2c-1";
+
+	if ((file_i2c = open(filename, O_RDWR)) < 0)
+	{
+		return false;
+	}
 
 
-  // VL53L1_software_reset() begin
+	if (ioctl(file_i2c, I2C_SLAVE, address) < 0)
+	{
+		return false;
+	}
 
-  writeReg(SOFT_RESET, 0x00);
-  delayMicroseconds(100);
-  writeReg(SOFT_RESET, 0x01);
+	// check model ID and module type registers (values specified in datasheet)
+	if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC) { return false; }
 
-  // give it some time to boot; otherwise the sensor NACKs during the readReg()
-  // call below and the Arduino 101 doesn't seem to handle that well
-  delay(1);
 
-  // VL53L1_poll_for_boot_completion() begin
+	writeReg(SOFT_RESET, 0x00);
+	delayMicroseconds(100);
+	writeReg(SOFT_RESET, 0x01);
 
-  startTimeout();
+	// give it some time to boot; otherwise the sensor NACKs during the readReg()
+	// call below and the Arduino 101 doesn't seem to handle that well
+	delay(100);
 
-  // check last_status in case we still get a NACK to try to deal with it correctly
-  //while ((readReg(FIRMWARE__SYSTEM_STATUS) & 0x01) == 0 || last_status != 0)
-  //{
-  //  if (checkTimeoutExpired())
-  //  {
-  //    did_timeout = true;
-  //    return false;
-  //  }
-  //}
-  // VL53L1_poll_for_boot_completion() end
+	startTimeout();
 
-  // VL53L1_software_reset() end
 
-  // VL53L1_DataInit() begin
 
-  // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
-  if (io_2v8)
-  {
-    writeReg(PAD_I2C_HV__EXTSUP_CONFIG,
-      readReg(PAD_I2C_HV__EXTSUP_CONFIG) | 0x01);
-  }
+	// sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
+	if (io_2v8)
+	{
+			writeReg(PAD_I2C_HV__EXTSUP_CONFIG,
+			  readReg(PAD_I2C_HV__EXTSUP_CONFIG) | 0x01);
+	}
 
-  // store oscillator info for later use
-  fast_osc_frequency = readReg16Bit(OSC_MEASURED__FAST_OSC__FREQUENCY);
-  osc_calibrate_val = readReg16Bit(RESULT__OSC_CALIBRATE_VAL);
+	// store oscillator info for later use
+	fast_osc_frequency = readReg16Bit(OSC_MEASURED__FAST_OSC__FREQUENCY);
+	osc_calibrate_val = readReg16Bit(RESULT__OSC_CALIBRATE_VAL);
+	//bug fix
 
-  // VL53L1_DataInit() end
+	// VL53L1_DataInit() end
 
-  // VL53L1_StaticInit() begin
+	// VL53L1_StaticInit() begin
 
-  // Note that the API does not actually apply the configuration settings below
-  // when VL53L1_StaticInit() is called: it keeps a copy of the sensor's
-  // register contents in memory and doesn't actually write them until a
-  // measurement is started. Writing the configuration here means we don't have
-  // to keep it all in memory and avoids a lot of redundant writes later.
+	// Note that the API does not actually apply the configuration settings below
+	// when VL53L1_StaticInit() is called: it keeps a copy of the sensor's
+	// register contents in memory and doesn't actually write them until a
+	// measurement is started. Writing the configuration here means we don't have
+	// to keep it all in memory and avoids a lot of redundant writes later.
 
-  // the API sets the preset mode to LOWPOWER_AUTONOMOUS here:
-  // VL53L1_set_preset_mode() begin
+	// the API sets the preset mode to LOWPOWER_AUTONOMOUS here:
+	// VL53L1_set_preset_mode() begin
 
-  // VL53L1_preset_mode_standard_ranging() begin
+	// VL53L1_preset_mode_standard_ranging() begin
 
-  // values labeled "tuning parm default" are from vl53l1_tuning_parm_defaults.h
-  // (API uses these in VL53L1_init_tuning_parm_storage_struct())
+	// values labeled "tuning parm default" are from vl53l1_tuning_parm_defaults.h
+	// (API uses these in VL53L1_init_tuning_parm_storage_struct())
 
-  // static config
-  // API resets PAD_I2C_HV__EXTSUP_CONFIG here, but maybe we don't want to do
-  // that? (seems like it would disable 2V8 mode)
-  writeReg16Bit(DSS_CONFIG__TARGET_TOTAL_RATE_MCPS, TargetRate); // should already be this value after reset
-  writeReg(GPIO__TIO_HV_STATUS, 0x02);
-  writeReg(SIGMA_ESTIMATOR__EFFECTIVE_PULSE_WIDTH_NS, 8); // tuning parm default
-  writeReg(SIGMA_ESTIMATOR__EFFECTIVE_AMBIENT_WIDTH_NS, 16); // tuning parm default
-  writeReg(ALGO__CROSSTALK_COMPENSATION_VALID_HEIGHT_MM, 0x01);
-  writeReg(ALGO__RANGE_IGNORE_VALID_HEIGHT_MM, 0xFF);
-  writeReg(ALGO__RANGE_MIN_CLIP, 0); // tuning parm default
-  writeReg(ALGO__CONSISTENCY_CHECK__TOLERANCE, 2); // tuning parm default
+	// static config
+	// API resets PAD_I2C_HV__EXTSUP_CONFIG here, but maybe we don't want to do
+	// that? (seems like it would disable 2V8 mode)
+	writeReg16Bit(DSS_CONFIG__TARGET_TOTAL_RATE_MCPS, TargetRate); // should already be this value after reset
+	writeReg(GPIO__TIO_HV_STATUS, 0x02);
+	writeReg(SIGMA_ESTIMATOR__EFFECTIVE_PULSE_WIDTH_NS, 8); // tuning parm default
+	writeReg(SIGMA_ESTIMATOR__EFFECTIVE_AMBIENT_WIDTH_NS, 16); // tuning parm default
+	writeReg(ALGO__CROSSTALK_COMPENSATION_VALID_HEIGHT_MM, 0x01);
+	writeReg(ALGO__RANGE_IGNORE_VALID_HEIGHT_MM, 0xFF);
+	writeReg(ALGO__RANGE_MIN_CLIP, 0); // tuning parm default
+	writeReg(ALGO__CONSISTENCY_CHECK__TOLERANCE, 2); // tuning parm default
 
-  // general config
-  writeReg16Bit(SYSTEM__THRESH_RATE_HIGH, 0x0000);
-  writeReg16Bit(SYSTEM__THRESH_RATE_LOW, 0x0000);
-  writeReg(DSS_CONFIG__APERTURE_ATTENUATION, 0x38);
+	// general config
+	writeReg16Bit(SYSTEM__THRESH_RATE_HIGH, 0x0000);
+	writeReg16Bit(SYSTEM__THRESH_RATE_LOW, 0x0000);
+	writeReg(DSS_CONFIG__APERTURE_ATTENUATION, 0x38);
 
-  // timing config
-  // most of these settings will be determined later by distance and timing
-  // budget configuration
-  writeReg16Bit(RANGE_CONFIG__SIGMA_THRESH, 360); // tuning parm default
-  writeReg16Bit(RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS, 192); // tuning parm default
+	// timing config
+	// most of these settings will be determined later by distance and timing
+	// budget configuration
+	writeReg16Bit(RANGE_CONFIG__SIGMA_THRESH, 360); // tuning parm default
+	writeReg16Bit(RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS, 192); // tuning parm default
 
-  // dynamic config
+	// dynamic config
 
-  writeReg(SYSTEM__GROUPED_PARAMETER_HOLD_0, 0x01);
-  writeReg(SYSTEM__GROUPED_PARAMETER_HOLD_1, 0x01);
-  writeReg(SD_CONFIG__QUANTIFIER, 2); // tuning parm default
+	writeReg(SYSTEM__GROUPED_PARAMETER_HOLD_0, 0x01);
+	writeReg(SYSTEM__GROUPED_PARAMETER_HOLD_1, 0x01);
+	writeReg(SD_CONFIG__QUANTIFIER, 2); // tuning parm default
 
-  // VL53L1_preset_mode_standard_ranging() end
+	// VL53L1_preset_mode_standard_ranging() end
 
-  // from VL53L1_preset_mode_timed_ranging_*
-  // GPH is 0 after reset, but writing GPH0 and GPH1 above seem to set GPH to 1,
-  // and things don't seem to work if we don't set GPH back to 0 (which the API
-  // does here).
-  writeReg(SYSTEM__GROUPED_PARAMETER_HOLD, 0x00);
-  writeReg(SYSTEM__SEED_CONFIG, 1); // tuning parm default
+	// from VL53L1_preset_mode_timed_ranging_*
+	// GPH is 0 after reset, but writing GPH0 and GPH1 above seem to set GPH to 1,
+	// and things don't seem to work if we don't set GPH back to 0 (which the API
+	// does here).
+	writeReg(SYSTEM__GROUPED_PARAMETER_HOLD, 0x00);
+	writeReg(SYSTEM__SEED_CONFIG, 1); // tuning parm default
 
-  // from VL53L1_config_low_power_auto_mode
-  writeReg(SYSTEM__SEQUENCE_CONFIG, 0x8B); // VHV, PHASECAL, DSS1, RANGE
-  writeReg16Bit(DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT, 200 << 8);
-  writeReg(DSS_CONFIG__ROI_MODE_CONTROL, 2); // REQUESTED_EFFFECTIVE_SPADS
+	// from VL53L1_config_low_power_auto_mode
+	writeReg(SYSTEM__SEQUENCE_CONFIG, 0x8B); // VHV, PHASECAL, DSS1, RANGE
+	writeReg16Bit(DSS_CONFIG__MANUAL_EFFECTIVE_SPADS_SELECT, 200 << 8);
+	writeReg(DSS_CONFIG__ROI_MODE_CONTROL, 2); // REQUESTED_EFFFECTIVE_SPADS
 
-  // VL53L1_set_preset_mode() end
+	// VL53L1_set_preset_mode() end
 
-  // default to long range, 50 ms timing budget
-  // note that this is different than what the API defaults to
-  setDistanceMode(Long);
-  setMeasurementTimingBudget(50000);
+	// default to long range, 50 ms timing budget
+	// note that this is different than what the API defaults to
+	setDistanceMode(Long);
+	setMeasurementTimingBudget(50000);
 
-  // VL53L1_StaticInit() end
+	// VL53L1_StaticInit() end
 
-  // the API triggers this change in VL53L1_init_and_start_range() once a
-  // measurement is started; assumes MM1 and MM2 are disabled
-  writeReg16Bit(ALGO__PART_TO_PART_RANGE_OFFSET_MM,
-    readReg16Bit(MM_CONFIG__OUTER_OFFSET_MM) * 4);
+	// the API triggers this change in VL53L1_init_and_start_range() once a
+	// measurement is started; assumes MM1 and MM2 are disabled
+	writeReg16Bit(ALGO__PART_TO_PART_RANGE_OFFSET_MM,
+	readReg16Bit(MM_CONFIG__OUTER_OFFSET_MM) * 4);
 
-  // disable sensor after configuration
-  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_clr(cs_pin);
+	// disable sensor after configuration
+	bcm2835_gpio_clr(cs_pin);
 
-  return true;
+	return true;
 }
 
 // Write an 8-bit register
 void VL53L1X::writeReg(uint16_t reg, uint8_t value)
 {
 	char buf[3];
-	bcm2835_i2c_begin();                //Start I2C operations.
-	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
 	buf[2] = value;
-	bcm2835_i2c_write(buf,3);
-	bcm2835_i2c_end();
+
+
+	//----- WRITE BYTES -----
+	if (write(file_i2c, buf, 3) != 3)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return;
+	}
 }
 
 // Write a 16-bit register
 void VL53L1X::writeReg16Bit(uint16_t reg, uint16_t value)
 {
 	char buf[4];
-	bcm2835_i2c_begin();                //Start I2C operations.
-	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
 	buf[2] = (value >> 8) & 0xFF;
 	buf[3] = value       & 0xFF;
-	bcm2835_i2c_write(buf,4);
-	bcm2835_i2c_end();
+	//----- WRITE BYTES -----
+	if (write(file_i2c, buf, 4) != 4)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return;
+	}
 }
 
 // Write a 32-bit register
 void VL53L1X::writeReg32Bit(uint16_t reg, uint32_t value)
 {
 	char buf[6];
-	bcm2835_i2c_begin();                //Start I2C operations.
-	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
 	buf[2] = (value >> 24) & 0xFF;
 	buf[3] = (value >> 16) & 0xFF;
 	buf[4] = (value >> 8) & 0xFF;
 	buf[5] = value       & 0xFF;
-	bcm2835_i2c_write(buf,6);
-	bcm2835_i2c_end();
+	//----- WRITE BYTES -----
+	if (write(file_i2c, buf, 6) != 6)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return;
+	}
 }
 
 // Read an 8-bit register
 uint8_t VL53L1X::readReg(regAddr reg)
 {
-	uint8_t value;
-
 	char buf[2];
-	bcm2835_i2c_begin();                //Start I2C operations.
-	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	char buff[1]; //Start I2C operations.
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
-	bcm2835_i2c_write(buf,2);
 
-	value = bcm2835_i2c_read (buf,1);
-	bcm2835_i2c_end();
+	//----- WRITE BYTES -----
+	if (write(file_i2c, buf, 2) != 2)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+	}
+	//----- READ BYTES -----
+	if (read(file_i2c, buff, 1) != 1)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+	}
 
-	return buf[0];
+	return buff[0];
 }
 
 // Read a 16-bit register
 uint16_t VL53L1X::readReg16Bit(uint16_t reg)
 {
-	uint8_t value;
-
 	char buf[2];
-	bcm2835_i2c_begin();                //Start I2C operations.
-	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	char buff[2]; //Start I2C operations.
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
-	bcm2835_i2c_write(buf,2);
 
-	value = bcm2835_i2c_read(buf,2);
-	bcm2835_i2c_end();
+	//----- WRITE BYTES -----
+	if (write(file_i2c, buf, 2) != 2)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+	}
+	//----- READ BYTES -----
+	if (read(file_i2c, buff, 2) != 2)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+	}
 
-	return (uint16_t)(buf[0] << 8 | buf[1]);
+	return (uint16_t)(buff[0] << 8 | buff[1]);
 
 }
 
@@ -259,18 +263,23 @@ uint32_t VL53L1X::readReg32Bit(uint16_t reg)
 {
 	uint8_t value;
 
-	char buf[4];
-	bcm2835_i2c_begin();                //Start I2C operations.
-	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	char buf[2];
+	char buff[4]; //Start I2C operations.
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
-	bcm2835_i2c_write(buf,2);
 
-	value = bcm2835_i2c_read(buf,4);
-	bcm2835_i2c_end();
+	//----- WRITE BYTES -----
+	if (write(file_i2c, buf, 2) != 2)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+	}
+	//----- READ BYTES -----
+	if (read(file_i2c, buff, 4) != 4)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+	}
 
-	return (uint32_t)(buf[0]<< 24|buf[1] << 16 |buf[2] << 8 | buf[3]);
+	return (uint32_t)(buff[0]<< 24|buff[1] << 16 |buff[2] << 8 | buff[3]);
 }
 
 // set distance mode to Short, Medium, or Long
@@ -281,7 +290,6 @@ bool VL53L1X::setDistanceMode(DistanceMode mode)
   //uint32_t budget_us = getMeasurementTimingBudget();
 
 	// enable sensor
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
 	  bcm2835_gpio_set(cs_pin);
 
   switch (mode)
@@ -346,7 +354,6 @@ bool VL53L1X::setDistanceMode(DistanceMode mode)
   distance_mode = mode;
 
 	// disable sensor
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
 	  bcm2835_gpio_clr(cs_pin);
 
   return true;
@@ -439,17 +446,15 @@ uint32_t VL53L1X::getMeasurementTimingBudget()
 void VL53L1X::startContinuous(uint32_t period_ms)
 {
 	// enable sensor
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
-	  bcm2835_gpio_set(cs_pin);
+  bcm2835_gpio_set(cs_pin);
   // from VL53L1_set_inter_measurement_period_ms()
   writeReg32Bit(SYSTEM__INTERMEASUREMENT_PERIOD, period_ms * osc_calibrate_val);
 
   writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
   writeReg(SYSTEM__MODE_START, 0x40); // mode_range__timed
 
-	// disable sensor
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
-	  bcm2835_gpio_clr(cs_pin);
+  //disable sensor
+  bcm2835_gpio_clr(cs_pin);
 }
 
 // Stop continuous measurements
@@ -481,48 +486,46 @@ void VL53L1X::stopContinuous()
 // Returns a range reading in millimeters when continuous mode is active
 // (readRangeSingleMillimeters() also calls this function after starting a
 // single-shot range measurement)
-uint16_t VL53L1X::read(bool blocking)
+uint16_t VL53L1X::readData(bool blocking)
 {
 
 	// enable sensor
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
-	  bcm2835_gpio_set(cs_pin);
-  if (blocking)
-  {
-    startTimeout();
-    while (!dataReady())
-    {
-      if (checkTimeoutExpired())
-      {
-        did_timeout = true;
-        ranging_data.range_status = None;
-        ranging_data.range_mm = 0;
-        ranging_data.peak_signal_count_rate_MCPS = 0;
-        ranging_data.ambient_count_rate_MCPS = 0;
-        return ranging_data.range_mm;
-      }
-    }
-  }
+	bcm2835_gpio_set(cs_pin);
+	if (blocking)
+	{
+		startTimeout();
+		while (!dataReady())
+		{
+			if (checkTimeoutExpired())
+			{
+				did_timeout = true;
+				ranging_data.range_status = None;
+				ranging_data.range_mm = 0;
+				ranging_data.peak_signal_count_rate_MCPS = 0;
+				ranging_data.ambient_count_rate_MCPS = 0;
+				return ranging_data.range_mm;
+			}
+		}
+	}
 
-  readResults();
+	readResults();
 
-  if (!calibrated)
-  {
-    setupManualCalibration();
-    calibrated = true;
-  }
+	if (!calibrated)
+	{
+		setupManualCalibration();
+		calibrated = true;
+	}
 
-  updateDSS();
+	updateDSS();
 
-  getRangingData();
+	getRangingData();
 
-  writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
+	writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
 
 	// disable sensor
-	  bcm2835_gpio_fsel(cs_pin, BCM2835_GPIO_FSEL_OUTP);
-	  bcm2835_gpio_clr(cs_pin);
+	bcm2835_gpio_clr(cs_pin);
 
-  return ranging_data.range_mm;
+	return ranging_data.range_mm;
 }
 
 // convert a RangeStatus to a readable string

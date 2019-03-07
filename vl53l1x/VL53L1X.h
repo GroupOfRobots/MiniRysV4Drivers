@@ -1292,8 +1292,8 @@ class VL53L1X
 
     void startContinuous(uint32_t period_ms);
     void stopContinuous();
-    uint16_t read(bool blocking = true);
-    uint16_t readRangeContinuousMillimeters(bool blocking = true) { return read(blocking); } // alias of read()
+    uint16_t readData(bool blocking = true);
+    uint16_t readRangeContinuousMillimeters(bool blocking = true) { return readData(blocking); } // alias of read()
 
     // check if sensor has new reading available
     // assumes interrupt is active low (GPIO_HV_MUX__CTRL bit 4 is 1)
@@ -1346,9 +1346,15 @@ class VL53L1X
     // making this static would save RAM for multiple instances as long as there
     // aren't multiple sensors being read at the same time (e.g. on separate
     // I2C buses)
-    ResultBuffer results;
 
-    uint8_t address;
+    //I2C configuration
+	int file_i2c;
+	int length;
+	unsigned char buffer[60] = {0};
+	char *filename;
+	uint8_t address;
+
+    ResultBuffer results;
 
     uint8_t cs_pin;
 
