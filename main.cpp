@@ -28,6 +28,7 @@
 
 void stepperTest();
 void tofTest();
+void IMUtest();
 Motors *globalBoard;
 
 void sigintHandler(int signum) {
@@ -47,76 +48,10 @@ int main(void) {
 
 
 
-	tofTest();
-	//IMUtest();
+	//tofTest();
+	IMUtest();
 
-	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
 
-	if( SensorOne.begin() != 0 )
-	{
-		  printf("Problem starting the sensor \n");
-	}
-	else
-	{
-		  printf("Sensor with CS1 started.\n");
-	}
-	int i, n = 2000;
-	// Acceleration
-	float  ax, ay, az;
-	// Raw and filtered gyro
-	float gx, gy, gz, rgx, rgy, rgz, a = 0.5;
-	gx = SensorOne.readFloatGyroX();
-	gy = SensorOne.readFloatGyroY();
-	gz = SensorOne.readFloatGyroZ();
-	// Sum of gyro readings
-	float sumgx = 0, sumgy = 0, sumgz = 0;
-	// Tilt
-	float ty;
-	for(i=0; i<n; i++){
-		//Get all parameters
-		printf("\nAccelerometer:\n");
-		ax = SensorOne.readFloatAccelX();
-		ay = SensorOne.readFloatAccelY();
-		az = SensorOne.readFloatAccelZ();
-		printf(" X = %f\n",ax);
-		printf(" Y = %f\n",ay);
-		printf(" Z = %f\n",az);
-		printf(" ACC = %f\n", sqrt(ax*ax+ay*ay+az*az));
-
-		printf("\nGyroscope:\n");
-		rgx = SensorOne.readFloatGyroX();
-		rgy = SensorOne.readFloatGyroY();
-		rgz = SensorOne.readFloatGyroZ();
-		gx = a*gx + (1-a)*rgx;
-		gy = a*gy + (1-a)*rgy;
-		gz = a*gz + (1-a)*rgz;
-		sumgx += rgx;
-		sumgy += rgy;
-		sumgz += rgz;
-		printf(" RawX = %f\n",rgx);
-		printf(" RawY = %f\n",rgy);
-		printf(" RawZ = %f\n",rgz);
-		printf(" X1 = %f\n",gx);
-		printf(" Y1 = %f\n",gy);
-		printf(" Z1 = %f\n",gz);
-
-		printf("\nTilt:\n");
-		ty = atan2(ax,sqrt(ay*ay+az*az));
-		printf(" Y = %f\n", ty);
-
-		printf("\nThermometer:\n");
-		printf(" Degrees C = %f\n",SensorOne.readTempC());
-
-		printf("\nSensorOne Bus Errors Reported:\n");
-		printf(" All '1's = %d\n",SensorOne.allOnesCounter);
-		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
-		delay(100);
-	}
-	printf(" Average Gyro X = %f\n", sumgx/n);
-	printf(" Average Gyro Y = %f\n", sumgy/n);
-	printf(" Average Gyro Z = %f\n", sumgz/n);
-
-	SensorOne.close_i2c();
 
 
 	//stepperTest();
@@ -251,35 +186,70 @@ void stepperTest(){
 void IMUtest(){
 	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
 
-		if( SensorOne.begin() != 0 )
-		{
-			  printf("Problem starting the sensor \n");
-		}
-		else
-		{
-			  printf("Sensor with CS1 started.\n");
-		}
-		int i;
-		for(i=0; i<20; i++){
-			//Get all parameters
-			printf("\nAccelerometer:\n");
-			printf(" X1 = %f\n",SensorOne.readFloatAccelX());
-			printf(" Y1 = %f\n",SensorOne.readFloatAccelY());
-			printf(" Z1 = %f\n",SensorOne.readFloatAccelZ());
+	if( SensorOne.begin() != 0 )
+	{
+		  printf("Problem starting the sensor \n");
+	}
+	else
+	{
+		  printf("Sensor with CS1 started.\n");
+	}
+	int i, n = 2000;
+	// Acceleration
+	float  ax, ay, az;
+	// Raw and filtered gyro
+	float gx, gy, gz, rgx, rgy, rgz, a = 0.5;
+	gx = SensorOne.readFloatGyroX();
+	gy = SensorOne.readFloatGyroY();
+	gz = SensorOne.readFloatGyroZ();
+	// Sum of gyro readings
+	float sumgx = 0, sumgy = 0, sumgz = 0;
+	// Tilt
+	float ty;
+	for(i=0; i<n; i++){
+		//Get all parameters
+		printf("\nAccelerometer:\n");
+		ax = SensorOne.readFloatAccelX();
+		ay = SensorOne.readFloatAccelY();
+		az = SensorOne.readFloatAccelZ();
+		printf(" X = %f\n",ax);
+		printf(" Y = %f\n",ay);
+		printf(" Z = %f\n",az);
+		printf(" ACC = %f\n", sqrt(ax*ax+ay*ay+az*az));
 
-			printf("\nGyroscope:\n");
-			printf(" X1 = %f\n",SensorOne.readFloatGyroX());
-			printf(" Y1 = %f\n",SensorOne.readFloatGyroY());
-			printf(" Z1 = %f\n",SensorOne.readFloatGyroZ());
+		printf("\nGyroscope:\n");
+		rgx = SensorOne.readFloatGyroX();
+		rgy = SensorOne.readFloatGyroY();
+		rgz = SensorOne.readFloatGyroZ();
+		gx = a*gx + (1-a)*rgx;
+		gy = a*gy + (1-a)*rgy;
+		gz = a*gz + (1-a)*rgz;
+		sumgx += rgx;
+		sumgy += rgy;
+		sumgz += rgz;
+		printf(" RawX = %f\n",rgx);
+		printf(" RawY = %f\n",rgy);
+		printf(" RawZ = %f\n",rgz);
+		printf(" X1 = %f\n",gx);
+		printf(" Y1 = %f\n",gy);
+		printf(" Z1 = %f\n",gz);
 
-			printf("\nThermometer:\n");
-			printf(" Degrees C = %f\n",SensorOne.readTempC());
+		printf("\nTilt:\n");
+		ty = atan2(ax,sqrt(ay*ay+az*az));
+		printf(" Y = %f\n", ty);
 
-			printf("\nSensorOne Bus Errors Reported:\n");
-			printf(" All '1's = %d\n",SensorOne.allOnesCounter);
-			printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
-			delay(100);
-		}
-		SensorOne.close_i2c();
+		printf("\nThermometer:\n");
+		printf(" Degrees C = %f\n",SensorOne.readTempC());
+
+		printf("\nSensorOne Bus Errors Reported:\n");
+		printf(" All '1's = %d\n",SensorOne.allOnesCounter);
+		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
+		delay(100);
+	}
+	printf(" Average Gyro X = %f\n", sumgx/n);
+	printf(" Average Gyro Y = %f\n", sumgy/n);
+	printf(" Average Gyro Z = %f\n", sumgz/n);
+
+	SensorOne.close_i2c();
 }
 
