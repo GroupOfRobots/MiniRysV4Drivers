@@ -195,7 +195,7 @@ void IMUtest(){
 	{
 		  printf("Sensor with CS1 started.\n");
 	}
-	int i, n = 2000;
+	int i, n = 20000;
 
 	// Acceleration
 	float  ax, ay, az;
@@ -203,11 +203,12 @@ void IMUtest(){
 	ay = SensorOne.readFloatAccelY();
 	az = SensorOne.readFloatAccelZ();
 
-	// Raw and filtered gyro
+	// Gyro
 	float rgx, rgy, rgz;
-	rgx = SensorOne.readFloatGyroX();
-	rgy = SensorOne.readFloatGyroY();
-	rgz = SensorOne.readFloatGyroZ();
+	const float offX = 3.597539, offY = -5.142877, offZ = -3.623744;
+	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
 
 	// Sum of gyro readings
 	float sumgx = 0, sumgy = 0, sumgz = 0;
@@ -231,9 +232,9 @@ void IMUtest(){
 		printf(" ACC = %f\n", sqrt(ax*ax+ay*ay+az*az));
 
 		printf("\nGyroscope:\n");
-		rgx = SensorOne.readFloatGyroX();
-		rgy = SensorOne.readFloatGyroY();
-		rgz = SensorOne.readFloatGyroZ();
+		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
 		sumgx += rgx;
 		sumgy += rgy;
 		sumgz += rgz;
