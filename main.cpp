@@ -14,6 +14,7 @@
 #include "vl53l1x/VL53L1X.h"
 #include <csignal>
 #include <math.h>
+#include <fstream>
 
 #define GPIO_TOF_0 	RPI_V2_GPIO_P1_29
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_31
@@ -195,7 +196,7 @@ void IMUtest(){
 	{
 		  printf("Sensor with CS1 started.\n");
 	}
-	int i, n = 20000;
+	int i, n = 1000;
 
 	// Acceleration
 	float  ax, ay, az;
@@ -219,6 +220,10 @@ void IMUtest(){
 	// Filtering
 	filter f(ty,0.5,10);
 	float f_gy, f_ty;
+
+	// Log file
+	std::ofstream file;
+	file.open("imu_log");
 
 	for(i=0; i<n; i++){
 		//Get all parameters
@@ -258,8 +263,14 @@ void IMUtest(){
 		printf("\nSensorOne Bus Errors Reported:\n");
 		printf(" All '1's = %d\n",SensorOne.allOnesCounter);
 		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
+
+		//Write to file
+		file << i*0.1 << " " << rgy << " " << ty << " " << f_gy << " " << f_ty << std::endl;
+
 		delay(100);
 	}
+	file.close();
+
 	printf(" Average Gyro X = %f\n", sumgx/n);
 	printf(" Average Gyro Y = %f\n", sumgy/n);
 	printf(" Average Gyro Z = %f\n", sumgz/n);
