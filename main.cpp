@@ -7,6 +7,7 @@
 
 #include "tmp102.h"
 #include "lsm6ds3/LSM6DS3.h"
+#include "lsm6ds3/filter.h"
 #include "bcm/bcm2835.h"
 #include "l6470/include/l6470constants.h"
 #include "l6470/include/motors.h"
@@ -195,17 +196,29 @@ void IMUtest(){
 		  printf("Sensor with CS1 started.\n");
 	}
 	int i, n = 2000;
+
 	// Acceleration
 	float  ax, ay, az;
+	ax = SensorOne.readFloatAccelX();
+	ay = SensorOne.readFloatAccelY();
+	az = SensorOne.readFloatAccelZ();
+
 	// Raw and filtered gyro
-	float gx, gy, gz, rgx, rgy, rgz, a = 0.5;
-	gx = SensorOne.readFloatGyroX();
-	gy = SensorOne.readFloatGyroY();
-	gz = SensorOne.readFloatGyroZ();
+	float rgx, rgy, rgz;
+	rgx = SensorOne.readFloatGyroX();
+	rgy = SensorOne.readFloatGyroY();
+	rgz = SensorOne.readFloatGyroZ();
+
 	// Sum of gyro readings
 	float sumgx = 0, sumgy = 0, sumgz = 0;
+
 	// Tilt
-	float ty;
+	float ty = atan2(ax,sqrt(ay*ay+az*az));
+
+	// Filtering
+	filter f(ty,0.5,10);
+	float f_gy, f_ty;
+
 	for(i=0; i<n; i++){
 		//Get all parameters
 		printf("\nAccelerometer:\n");
@@ -221,22 +234,22 @@ void IMUtest(){
 		rgx = SensorOne.readFloatGyroX();
 		rgy = SensorOne.readFloatGyroY();
 		rgz = SensorOne.readFloatGyroZ();
-		gx = a*gx + (1-a)*rgx;
-		gy = a*gy + (1-a)*rgy;
-		gz = a*gz + (1-a)*rgz;
 		sumgx += rgx;
 		sumgy += rgy;
 		sumgz += rgz;
-		printf(" RawX = %f\n",rgx);
-		printf(" RawY = %f\n",rgy);
-		printf(" RawZ = %f\n",rgz);
-		printf(" X1 = %f\n",gx);
-		printf(" Y1 = %f\n",gy);
-		printf(" Z1 = %f\n",gz);
+		printf(" X = %f\n",rgx);
+		printf(" Y = %f\n",rgy);
+		printf(" Z = %f\n",rgz);
 
 		printf("\nTilt:\n");
 		ty = atan2(ax,sqrt(ay*ay+az*az));
 		printf(" Y = %f\n", ty);
+
+		printf("\nAfter filtering:\n");
+		f_ty = f.getAngle(ty,rgy);
+		f_gy = f.getGyro();
+		printf(" Gyro Y: %f\n", f_gy);
+		printf(" Tilt Y: %f\n", f_ty);
 
 		printf("\nThermometer:\n");
 		printf(" Degrees C = %f\n",SensorOne.readTempC());
