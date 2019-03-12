@@ -1309,7 +1309,7 @@ class VL53L1X
 
     // The Arduino two-wire interface uses a 7-bit number for the address,
     // and sets the last bit correctly based on reads and writes
-    static const uint8_t AddressDefault = 0b0101001;
+    static const uint8_t AddressDefault = 0x29;
 
     // value used in measurement timing budget calculations
     // assumes PresetMode is LOWPOWER_AUTONOMOUS

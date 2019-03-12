@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../lsm6ds3/LSM6DS3.cpp 
+../lsm6ds3/LSM6DS3.cpp \
+../lsm6ds3/filter.cpp 
 
 OBJS += \
-./lsm6ds3/LSM6DS3.o 
+./lsm6ds3/LSM6DS3.o \
+./lsm6ds3/filter.o 
 
 CPP_DEPS += \
-./lsm6ds3/LSM6DS3.d 
+./lsm6ds3/LSM6DS3.d \
+./lsm6ds3/filter.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -47,17 +47,25 @@ bool VL53L1X::init(bool io_2v8)
 
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
 	{
+		printf("fatal error i2c\n");
 		return false;
 	}
 
 
 	if (ioctl(file_i2c, I2C_SLAVE, address) < 0)
 	{
+		printf("fatal error i2c addr\n");
 		return false;
 	}
 
 	// check model ID and module type registers (values specified in datasheet)
-	if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC) { return false; }
+	if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC)
+	{
+		printf("fatal sensor init\n");
+		return false;
+	}
+
+
 
 
 	writeReg(SOFT_RESET, 0x00);
@@ -76,17 +84,14 @@ bool VL53L1X::init(bool io_2v8)
 	if (io_2v8)
 	{
 			writeReg(PAD_I2C_HV__EXTSUP_CONFIG,
-			  readReg(PAD_I2C_HV__EXTSUP_CONFIG) | 0x01);
+			readReg(PAD_I2C_HV__EXTSUP_CONFIG) | 0x01);
 	}
 
 	// store oscillator info for later use
 	fast_osc_frequency = readReg16Bit(OSC_MEASURED__FAST_OSC__FREQUENCY);
 	osc_calibrate_val = readReg16Bit(RESULT__OSC_CALIBRATE_VAL);
-	//bug fix
 
-	// VL53L1_DataInit() end
 
-	// VL53L1_StaticInit() begin
 
 	// Note that the API does not actually apply the configuration settings below
 	// when VL53L1_StaticInit() is called: it keeps a copy of the sensor's
@@ -150,7 +155,7 @@ bool VL53L1X::init(bool io_2v8)
 	// default to long range, 50 ms timing budget
 	// note that this is different than what the API defaults to
 	setDistanceMode(Long);
-	setMeasurementTimingBudget(50000);
+	setMeasurementTimingBudget(40000);
 
 	// VL53L1_StaticInit() end
 
@@ -160,7 +165,7 @@ bool VL53L1X::init(bool io_2v8)
 	readReg16Bit(MM_CONFIG__OUTER_OFFSET_MM) * 4);
 
 	// disable sensor after configuration
-	bcm2835_gpio_clr(cs_pin);
+	//bcm2835_gpio_clr(cs_pin);
 
 	return true;
 }
@@ -261,7 +266,6 @@ uint16_t VL53L1X::readReg16Bit(uint16_t reg)
 // Read a 32-bit register
 uint32_t VL53L1X::readReg32Bit(uint16_t reg)
 {
-	uint8_t value;
 
 	char buf[2];
 	char buff[4]; //Start I2C operations.
@@ -287,10 +291,7 @@ uint32_t VL53L1X::readReg32Bit(uint16_t reg)
 bool VL53L1X::setDistanceMode(DistanceMode mode)
 {
   // save existing timing budget
-  //uint32_t budget_us = getMeasurementTimingBudget();
-
-	// enable sensor
-	  bcm2835_gpio_set(cs_pin);
+  uint32_t budget_us = getMeasurementTimingBudget();
 
   switch (mode)
   {
@@ -348,13 +349,10 @@ bool VL53L1X::setDistanceMode(DistanceMode mode)
   }
 
   // reapply timing budget
-  //setMeasurementTimingBudget(budget_us);
+  setMeasurementTimingBudget(budget_us);
 
   // save mode so it can be returned by getDistanceMode()
   distance_mode = mode;
-
-	// disable sensor
-	  bcm2835_gpio_clr(cs_pin);
 
   return true;
 }
@@ -445,16 +443,12 @@ uint32_t VL53L1X::getMeasurementTimingBudget()
 // period in milliseconds determining how often the sensor takes a measurement.
 void VL53L1X::startContinuous(uint32_t period_ms)
 {
-	// enable sensor
-  bcm2835_gpio_set(cs_pin);
   // from VL53L1_set_inter_measurement_period_ms()
   writeReg32Bit(SYSTEM__INTERMEASUREMENT_PERIOD, period_ms * osc_calibrate_val);
 
   writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
   writeReg(SYSTEM__MODE_START, 0x40); // mode_range__timed
 
-  //disable sensor
-  bcm2835_gpio_clr(cs_pin);
 }
 
 // Stop continuous measurements
@@ -490,7 +484,7 @@ uint16_t VL53L1X::readData(bool blocking)
 {
 
 	// enable sensor
-	bcm2835_gpio_set(cs_pin);
+	//bcm2835_gpio_set(cs_pin);
 	if (blocking)
 	{
 		startTimeout();
@@ -523,7 +517,7 @@ uint16_t VL53L1X::readData(bool blocking)
 	writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
 
 	// disable sensor
-	bcm2835_gpio_clr(cs_pin);
+	//bcm2835_gpio_clr(cs_pin);
 
 	return ranging_data.range_mm;
 }

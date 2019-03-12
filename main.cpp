@@ -50,16 +50,14 @@ int main(void) {
 
 
 
-	//tofTest();
-	IMUtest();
+	tofTest();
+	//IMUtest();
+	//stepperTest();
 
 
 
 
 	//stepperTest();
-
-	tmp102 czujnik(0x48,"/dev/i2c-0");
-	printf("Rys temperature: %f \n",czujnik.readTemperature());
 
 	puts("Done!");
 
@@ -91,35 +89,14 @@ void tofTest(){
 
 		puts("gpio initialised");
 
-		uint16_t measurement[10];
-		VL53L1X* sensor[1]; //add static i2c member
-		sensor[0] = new VL53L1X(GPIO_TOF_0, VL53L1X::Medium);
+		uint16_t measurement;
+		VL53L1X sensors(GPIO_TOF_0, VL53L1X::Medium);
 		bcm2835_delay(100);
-
-		puts("sensor initialised");
-		/*sensor[1] = new VL53L1X(GPIO_TOF_1, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[2] = new VL53L1X(GPIO_TOF_2, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[3] = new VL53L1X(GPIO_TOF_3, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[4] = new VL53L1X(GPIO_TOF_4, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[5] = new VL53L1X(GPIO_TOF_5, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[6] = new VL53L1X(GPIO_TOF_6, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[7] = new VL53L1X(GPIO_TOF_7, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[8] = new VL53L1X(GPIO_TOF_8, VL53L1X::Medium);
-		bcm2835_delay(100);
-		sensor[9] = new VL53L1X(GPIO_TOF_9, VL53L1X::Medium);
-		bcm2835_delay(100);*/
 
 		while(1){
 				for(int i=0; i<1; i++){
-					measurement[i] = sensor[i]->readData(0);
-					printf("Distance sensor%d: %d\n",i,measurement[i]);
+					measurement = sensors.readData(0);
+					printf("Distance sensor%d: %d\n",i,measurement);
 					bcm2835_delay(100);
 				}
 		}
@@ -276,5 +253,11 @@ void IMUtest(){
 	printf(" Average Gyro Z = %f\n", sumgz/n);
 
 	SensorOne.close_i2c();
+}
+
+void TMPtest(){ //
+	tmp102 czujnik(0x48,"/dev/i2c-0");
+	printf("Rys temperature: %f \n",czujnik.readTemperature());
+
 }
 
