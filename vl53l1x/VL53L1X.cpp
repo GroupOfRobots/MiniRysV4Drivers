@@ -12,7 +12,7 @@
 #include "../bcm/bcm2835.h"
 // Constructor ////////////////////////////////////////////////////////////////
 
-VL53L1X::VL53L1X(uint8_t cs, DistanceMode dist){
+VL53L1X::VL53L1X(DistanceMode dist){
 	  address = AddressDefault;
 	  io_timeout = 10;  // no timeout
 	  did_timeout = false;
@@ -20,18 +20,29 @@ VL53L1X::VL53L1X(uint8_t cs, DistanceMode dist){
 	  saved_vhv_init = 0;
 	  saved_vhv_timeout = 0;
 	  distance_mode= dist;
-	  cs_pin = cs; // wakeup pin
 
 	  this->init(true);
 	  this->startContinuous(100);
+}
+
+void VL53L1X::disable()
+{
+	this->stopContinuous();
+ 	//close(file_i2c);
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
 
 void VL53L1X::setAddress(uint8_t new_addr)
 {
-  writeReg(I2C_SLAVE__DEVICE_ADDRESS, new_addr & 0x7F);
-  address = new_addr;
+
+	this->stopContinuous();
+	delay(100);
+	writeReg(I2C_SLAVE__DEVICE_ADDRESS, new_addr & 0x7F);
+	address = new_addr;
+
+  	//this->init(true);
+	//this->startContinuous(100);
 }
 
 // Initialize sensor using settings taken mostly from VL53L1_DataInit() and
@@ -40,10 +51,8 @@ void VL53L1X::setAddress(uint8_t new_addr)
 // mode.
 bool VL53L1X::init(bool io_2v8)
 {
-	//enable sensor during configuration
-	bcm2835_gpio_set(cs_pin);
 
-	filename = (char*)"/dev/i2c-1";
+	/*filename = (char*)"/dev/i2c-1";
 
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
 	{
@@ -61,9 +70,10 @@ bool VL53L1X::init(bool io_2v8)
 	// check model ID and module type registers (values specified in datasheet)
 	if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC)
 	{
-		printf("fatal sensor init\n");
+		printf("register%d",readReg16Bit(IDENTIFICATION__MODEL_ID));
+		printf("fatal sensor init %d \n");
 		return false;
-	}
+	}*/
 
 
 
@@ -164,9 +174,6 @@ bool VL53L1X::init(bool io_2v8)
 	writeReg16Bit(ALGO__PART_TO_PART_RANGE_OFFSET_MM,
 	readReg16Bit(MM_CONFIG__OUTER_OFFSET_MM) * 4);
 
-	// disable sensor after configuration
-	//bcm2835_gpio_clr(cs_pin);
-
 	return true;
 }
 
@@ -178,12 +185,11 @@ void VL53L1X::writeReg(uint16_t reg, uint8_t value)
 	buf[1] =  reg       & 0xFF;
 	buf[2] = value;
 
-
-	//----- WRITE BYTES -----
-	if (write(file_i2c, buf, 3) != 3)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return;
-	}
+	bcm2835_i2c_begin();                //Start I2C operations.
+	bcm2835_i2c_setSlaveAddress(address);  //I2C address
+	bcm2835_i2c_set_baudrate(10000);
+	bcm2835_i2c_write(buf,3);
+  	bcm2835_i2c_end();
 }
 
 // Write a 16-bit register
@@ -194,11 +200,12 @@ void VL53L1X::writeReg16Bit(uint16_t reg, uint16_t value)
 	buf[1] =  reg       & 0xFF;
 	buf[2] = (value >> 8) & 0xFF;
 	buf[3] = value       & 0xFF;
-	//----- WRITE BYTES -----
-	if (write(file_i2c, buf, 4) != 4)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return;
-	}
+
+	bcm2835_i2c_begin();                //Start I2C operations.
+	bcm2835_i2c_setSlaveAddress(address);  //I2C address
+	bcm2835_i2c_set_baudrate(10000);
+	bcm2835_i2c_write(buf,4);
+  	bcm2835_i2c_end();
 }
 
 // Write a 32-bit register
@@ -211,11 +218,12 @@ void VL53L1X::writeReg32Bit(uint16_t reg, uint32_t value)
 	buf[3] = (value >> 16) & 0xFF;
 	buf[4] = (value >> 8) & 0xFF;
 	buf[5] = value       & 0xFF;
-	//----- WRITE BYTES -----
-	if (write(file_i2c, buf, 6) != 6)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return;
-	}
+
+	bcm2835_i2c_begin();                //Start I2C operations.
+	bcm2835_i2c_setSlaveAddress(address);  //I2C address
+	bcm2835_i2c_set_baudrate(10000);
+	bcm2835_i2c_write(buf,6);
+  	bcm2835_i2c_end();
 }
 
 // Read an 8-bit register
@@ -226,16 +234,14 @@ uint8_t VL53L1X::readReg(regAddr reg)
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
 
-	//----- WRITE BYTES -----
-	if (write(file_i2c, buf, 2) != 2)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return -1;
-	}
-	//----- READ BYTES -----
-	if (read(file_i2c, buff, 1) != 1)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return -1;
-	}
+	uint8_t value;
+
+	bcm2835_i2c_begin();                //Start I2C operations.
+	bcm2835_i2c_setSlaveAddress(address);  //I2C address
+	bcm2835_i2c_set_baudrate(10000);
+	bcm2835_i2c_write(buf,2);
+  	value = bcm2835_i2c_read(buff,1);
+  	bcm2835_i2c_end();
 
 	return buff[0];
 }
@@ -248,16 +254,14 @@ uint16_t VL53L1X::readReg16Bit(uint16_t reg)
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
 
-	//----- WRITE BYTES -----
-	if (write(file_i2c, buf, 2) != 2)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return -1;
-	}
-	//----- READ BYTES -----
-	if (read(file_i2c, buff, 2) != 2)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return -1;
-	}
+	uint8_t value;
+
+	bcm2835_i2c_begin();                //Start I2C operations.
+	bcm2835_i2c_setSlaveAddress(address);  //I2C address
+	bcm2835_i2c_set_baudrate(10000);
+	bcm2835_i2c_write(buf,2);
+  	value = bcm2835_i2c_read(buff,2);
+  	bcm2835_i2c_end();
 
 	return (uint16_t)(buff[0] << 8 | buff[1]);
 
@@ -272,16 +276,15 @@ uint32_t VL53L1X::readReg32Bit(uint16_t reg)
 	buf[0] = (reg >> 8) & 0xFF;
 	buf[1] =  reg       & 0xFF;
 
-	//----- WRITE BYTES -----
-	if (write(file_i2c, buf, 2) != 2)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return -1;
-	}
-	//----- READ BYTES -----
-	if (read(file_i2c, buff, 4) != 4)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
-	{
-		return -1;
-	}
+	uint8_t value;
+
+	bcm2835_i2c_begin();                //Start I2C operations.
+	bcm2835_i2c_setSlaveAddress(address);  //I2C address
+	bcm2835_i2c_set_baudrate(10000);
+	bcm2835_i2c_write(buf,2);
+
+  	value = bcm2835_i2c_read(buff,4);
+  	bcm2835_i2c_end();
 
 	return (uint32_t)(buff[0]<< 24|buff[1] << 16 |buff[2] << 8 | buff[3]);
 }
@@ -483,8 +486,6 @@ void VL53L1X::stopContinuous()
 uint16_t VL53L1X::readData(bool blocking)
 {
 
-	// enable sensor
-	//bcm2835_gpio_set(cs_pin);
 	if (blocking)
 	{
 		startTimeout();
@@ -515,9 +516,6 @@ uint16_t VL53L1X::readData(bool blocking)
 	getRangingData();
 
 	writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
-
-	// disable sensor
-	//bcm2835_gpio_clr(cs_pin);
 
 	return ranging_data.range_mm;
 }
@@ -608,28 +606,33 @@ void VL53L1X::setupManualCalibration()
 void VL53L1X::readResults()
 {
 	uint8_t value;
+	char out[17];
+	char in[2]; //Start I2C operations.
+	in[0] = ((RESULT__RANGE_STATUS >> 8) & 0xFF); // reg high byte
+	in[1] =  RESULT__RANGE_STATUS       & 0xFF;;
 
-	char buf[17];
+
+
 	bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
 	bcm2835_i2c_set_baudrate(10000);
-	buf[0] = ((RESULT__RANGE_STATUS >> 8) & 0xFF); // reg high byte
-	buf[1] =  RESULT__RANGE_STATUS       & 0xFF;
-	bcm2835_i2c_write(buf,2);
+	in[0] = ((RESULT__RANGE_STATUS >> 8) & 0xFF); // reg high byte
+	in[1] =  RESULT__RANGE_STATUS       & 0xFF;;
+	bcm2835_i2c_write(in,2);
 
-  	value = bcm2835_i2c_read(buf,17);
+  	value = bcm2835_i2c_read(out,17);
   	bcm2835_i2c_end();
 
-    results.range_status = buf[0];
-    results.stream_count = buf[2];
-    results.dss_actual_effective_spads_sd0  = (uint16_t)buf[3] << 8; // high byte
-    results.dss_actual_effective_spads_sd0 |=           buf[4];      // low byte
-    results.ambient_count_rate_mcps_sd0  = (uint16_t)buf[7] << 8; // high byte
-    results.ambient_count_rate_mcps_sd0 |=           buf[8];      // low byte
-    results.final_crosstalk_corrected_range_mm_sd0  = (uint16_t)buf[13] << 8; // high byte
-    results.final_crosstalk_corrected_range_mm_sd0 |=           buf[14];      // low byte
-    results.peak_signal_count_rate_crosstalk_corrected_mcps_sd0  = (uint16_t)buf[15] << 8; // high byte
-    results.peak_signal_count_rate_crosstalk_corrected_mcps_sd0 |=           buf[16];      // low byte
+    results.range_status = out[0];
+    results.stream_count = out[2];
+    results.dss_actual_effective_spads_sd0  = (uint16_t)out[3] << 8; // high byte
+    results.dss_actual_effective_spads_sd0 |=           out[4];      // low byte
+    results.ambient_count_rate_mcps_sd0  = (uint16_t)out[7] << 8; // high byte
+    results.ambient_count_rate_mcps_sd0 |=           out[8];      // low byte
+    results.final_crosstalk_corrected_range_mm_sd0  = (uint16_t)out[13] << 8; // high byte
+    results.final_crosstalk_corrected_range_mm_sd0 |=           out[14];      // low byte
+    results.peak_signal_count_rate_crosstalk_corrected_mcps_sd0  = (uint16_t)out[15] << 8; // high byte
+    results.peak_signal_count_rate_crosstalk_corrected_mcps_sd0 |=           out[16];      // low byte
 }
 
 // perform Dynamic SPAD Selection calculation/update

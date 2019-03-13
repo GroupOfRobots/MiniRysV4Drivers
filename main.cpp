@@ -32,10 +32,13 @@ void stepperTest();
 void tofTest();
 void IMUtest();
 Motors *globalBoard;
+VL53L1X *globalSensors[2];
 
 void sigintHandler(int signum) {
 	if (signum == SIGINT) {
 		globalBoard->stop();
+		globalSensors[0]->disable();
+		globalSensors[1]->disable();
 		exit(signum);
 	}
 }
@@ -89,16 +92,36 @@ void tofTest(){
 
 		puts("gpio initialised");
 
-		uint16_t measurement;
-		VL53L1X sensors(GPIO_TOF_0, VL53L1X::Medium);
 		bcm2835_delay(100);
+		uint16_t measurement[10];
+
+
+		//enable sensor one and change address
+		bcm2835_gpio_set(GPIO_TOF_0);
+		globalSensors[0] = new VL53L1X(VL53L1X::Medium);
+		delay(1000);
+		globalSensors[0]->setAddress(0x6d);
+		bcm2835_gpio_clr(GPIO_TOF_0);
+		delay(1000);
+		bcm2835_gpio_set(GPIO_TOF_1);
+		globalSensors[1] = new VL53L1X(VL53L1X::Medium);
+		delay(1000);
+		globalSensors[1]->setAddress(0x6e);
+		bcm2835_gpio_clr(GPIO_TOF_1);
+		delay(1000);
+		bcm2835_gpio_set(GPIO_TOF_0);
+		bcm2835_gpio_set(GPIO_TOF_1);
+
+
+		//enable sensor one and change address
 
 		while(1){
-				for(int i=0; i<1; i++){
-					measurement = sensors.readData(0);
-					printf("Distance sensor%d: %d\n",i,measurement);
+				//for(int i=0; i<2; i++){
+					measurement[0] = globalSensors[0]->readData(0);
+					measurement[1] = globalSensors[1]->readData(0);
+					printf("Distance sensor1: %d: sensor2: %d\n",measurement[0],measurement[1]);
 					bcm2835_delay(100);
-				}
+				//}
 		}
 }
 

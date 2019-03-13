@@ -1270,7 +1270,7 @@ class VL53L1X
 
     uint8_t last_status; // status of last I2C transmission
 
-    VL53L1X(uint8_t, DistanceMode);
+    VL53L1X(DistanceMode);
 
     void setAddress(uint8_t new_addr);
     uint8_t getAddress() { return address; }
@@ -1304,6 +1304,8 @@ class VL53L1X
     void setTimeout(uint16_t timeout) { io_timeout = timeout; }
     uint16_t getTimeout() { return io_timeout; }
     bool timeoutOccurred();
+
+    void disable();
 
   private:
 
