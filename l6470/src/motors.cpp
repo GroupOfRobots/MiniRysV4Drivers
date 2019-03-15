@@ -92,10 +92,10 @@ void Motors::setUp(){
 	temp = this->getParam(L6470_PARAM_CONFIG);
 	temp = this->getStatus();
 
-	this->configStepMode(0x07);   // 0 microsteps per step
-	this->setMaxSpeed(200);        // 10000 steps/s max
+	this->configStepMode(0x00);   // 0 microsteps per step
+	this->setMaxSpeed(400);        // 10000 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setFullSpeed(300);       // microstep below 10000 steps/s
+	this->setFullSpeed(400);       // microstep below 10000 steps/s
 	this->setAcc(30);             // accelerate at 10000 steps/s/s
 	this->setDec(100);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
@@ -113,10 +113,10 @@ void Motors::setUp(){
 	temp = this->getParam(L6470_PARAM_CONFIG);
 	temp = this->getStatus();
 
-	this->configStepMode(0x07);   // 0 microsteps per step
-	this->setMaxSpeed(200);        // 10000 steps/s max
+	this->configStepMode(0x00);   // 0 microsteps per step
+	this->setMaxSpeed(400);        // 10000 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setFullSpeed(300);       // microstep below 10000 steps/s
+	this->setFullSpeed(400);       // microstep below 10000 steps/s
 	this->setAcc(30);             // accelerate at 10000 steps/s/s
 	this->setDec(100);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
