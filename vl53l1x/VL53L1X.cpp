@@ -12,8 +12,8 @@
 #include "../bcm/bcm2835.h"
 // Constructor ////////////////////////////////////////////////////////////////
 
-VL53L1X::VL53L1X(DistanceMode dist){
-	  address = AddressDefault;
+VL53L1X::VL53L1X(DistanceMode dist,uint8_t adr){
+	  address = adr;
 	  io_timeout = 10;  // no timeout
 	  did_timeout = false;
 	  calibrated = false;
@@ -22,27 +22,20 @@ VL53L1X::VL53L1X(DistanceMode dist){
 	  distance_mode= dist;
 
 	  this->init(true);
-	  this->startContinuous(100);
 }
 
 void VL53L1X::disable()
 {
 	this->stopContinuous();
- 	//close(file_i2c);
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
 
 void VL53L1X::setAddress(uint8_t new_addr)
 {
-
-	this->stopContinuous();
 	delay(100);
 	writeReg(I2C_SLAVE__DEVICE_ADDRESS, new_addr & 0x7F);
 	address = new_addr;
-
-  	//this->init(true);
-	//this->startContinuous(100);
 }
 
 // Initialize sensor using settings taken mostly from VL53L1_DataInit() and
@@ -52,28 +45,13 @@ void VL53L1X::setAddress(uint8_t new_addr)
 bool VL53L1X::init(bool io_2v8)
 {
 
-	/*filename = (char*)"/dev/i2c-1";
-
-	if ((file_i2c = open(filename, O_RDWR)) < 0)
-	{
-		printf("fatal error i2c\n");
-		return false;
-	}
-
-
-	if (ioctl(file_i2c, I2C_SLAVE, address) < 0)
-	{
-		printf("fatal error i2c addr\n");
-		return false;
-	}
-
-	// check model ID and module type registers (values specified in datasheet)
+// check model ID and module type registers (values specified in datasheet)
 	if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC)
 	{
 		printf("register%d",readReg16Bit(IDENTIFICATION__MODEL_ID));
 		printf("fatal sensor init %d \n");
 		return false;
-	}*/
+	}
 
 
 
@@ -84,7 +62,7 @@ bool VL53L1X::init(bool io_2v8)
 
 	// give it some time to boot; otherwise the sensor NACKs during the readReg()
 	// call below and the Arduino 101 doesn't seem to handle that well
-	delay(100);
+	delay(10);
 
 	startTimeout();
 
@@ -185,11 +163,11 @@ void VL53L1X::writeReg(uint16_t reg, uint8_t value)
 	buf[1] =  reg       & 0xFF;
 	buf[2] = value;
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	//bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	bcm2835_i2c_write(buf,3);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 }
 
 // Write a 16-bit register
@@ -201,11 +179,11 @@ void VL53L1X::writeReg16Bit(uint16_t reg, uint16_t value)
 	buf[2] = (value >> 8) & 0xFF;
 	buf[3] = value       & 0xFF;
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	//bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	bcm2835_i2c_write(buf,4);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 }
 
 // Write a 32-bit register
@@ -219,11 +197,11 @@ void VL53L1X::writeReg32Bit(uint16_t reg, uint32_t value)
 	buf[4] = (value >> 8) & 0xFF;
 	buf[5] = value       & 0xFF;
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	//bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	bcm2835_i2c_write(buf,6);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 }
 
 // Read an 8-bit register
@@ -236,12 +214,12 @@ uint8_t VL53L1X::readReg(regAddr reg)
 
 	uint8_t value;
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	//bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	bcm2835_i2c_write(buf,2);
   	value = bcm2835_i2c_read(buff,1);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 
 	return buff[0];
 }
@@ -256,12 +234,12 @@ uint16_t VL53L1X::readReg16Bit(uint16_t reg)
 
 	uint8_t value;
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	//bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	bcm2835_i2c_write(buf,2);
   	value = bcm2835_i2c_read(buff,2);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 
 	return (uint16_t)(buff[0] << 8 | buff[1]);
 
@@ -278,13 +256,13 @@ uint32_t VL53L1X::readReg32Bit(uint16_t reg)
 
 	uint8_t value;
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	//bcm2835_i2c_begin();                //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	bcm2835_i2c_write(buf,2);
 
   	value = bcm2835_i2c_read(buff,4);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 
 	return (uint32_t)(buff[0]<< 24|buff[1] << 16 |buff[2] << 8 | buff[3]);
 }
@@ -613,15 +591,15 @@ void VL53L1X::readResults()
 
 
 
-	bcm2835_i2c_begin();                //Start I2C operations.
+	               //Start I2C operations.
 	bcm2835_i2c_setSlaveAddress(address);  //I2C address
-	bcm2835_i2c_set_baudrate(10000);
+	//bcm2835_i2c_set_baudrate(10000);
 	in[0] = ((RESULT__RANGE_STATUS >> 8) & 0xFF); // reg high byte
 	in[1] =  RESULT__RANGE_STATUS       & 0xFF;;
 	bcm2835_i2c_write(in,2);
 
   	value = bcm2835_i2c_read(out,17);
-  	bcm2835_i2c_end();
+  	//bcm2835_i2c_end();
 
     results.range_status = out[0];
     results.stream_count = out[2];

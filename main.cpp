@@ -16,16 +16,16 @@
 #include <math.h>
 #include <fstream>
 
-#define GPIO_TOF_0 	RPI_V2_GPIO_P1_29
-#define GPIO_TOF_1 	RPI_V2_GPIO_P1_31
-#define GPIO_TOF_2 	RPI_V2_GPIO_P1_33
-#define GPIO_TOF_3 	RPI_V2_GPIO_P1_35
-#define GPIO_TOF_4	RPI_V2_GPIO_P1_37
-#define GPIO_TOF_5 	RPI_V2_GPIO_P1_12
-#define GPIO_TOF_6 	RPI_V2_GPIO_P1_16
-#define GPIO_TOF_7 	RPI_V2_GPIO_P1_18
-#define GPIO_TOF_8 	RPI_V2_GPIO_P1_32
+#define GPIO_TOF_1 	RPI_V2_GPIO_P1_12
+#define GPIO_TOF_2 	RPI_V2_GPIO_P1_16
+#define GPIO_TOF_3 	RPI_V2_GPIO_P1_18
+#define GPIO_TOF_4 	RPI_V2_GPIO_P1_29
+#define GPIO_TOF_5	RPI_V2_GPIO_P1_32
+#define GPIO_TOF_6 	RPI_V2_GPIO_P1_31
+#define GPIO_TOF_7 	RPI_V2_GPIO_P1_33
+#define GPIO_TOF_8 	RPI_V2_GPIO_P1_35
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
+#define GPIO_TOF_10 	RPI_V2_GPIO_P1_37
 #define NDEBUG
 
 void stepperTest();
@@ -69,8 +69,6 @@ int main(void) {
 void tofTest(){
 
 		//disable all sensors first
-		bcm2835_gpio_fsel(GPIO_TOF_0, BCM2835_GPIO_FSEL_OUTP);
-		bcm2835_gpio_set(GPIO_TOF_0);
 		bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
 		bcm2835_gpio_clr(GPIO_TOF_1);
 		bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
@@ -89,40 +87,61 @@ void tofTest(){
 		bcm2835_gpio_clr(GPIO_TOF_8);
 		bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
 		bcm2835_gpio_clr(GPIO_TOF_9);
+		bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_set(GPIO_TOF_10);
 
-		puts("gpio initialised");
+		bcm2835_i2c_begin(); //begin I2C
+		bcm2835_i2c_set_baudrate(10000);
+
+		puts("all sensors powered down");
 
 		bcm2835_delay(100);
 		uint16_t measurement[10];
 
 
 		//enable sensor one and change address
-		bcm2835_gpio_set(GPIO_TOF_0);
-		globalSensors[0] = new VL53L1X(VL53L1X::Medium);
-		delay(1000);
-		globalSensors[0]->setAddress(0x6d);
-		bcm2835_gpio_clr(GPIO_TOF_0);
-		delay(1000);
 		bcm2835_gpio_set(GPIO_TOF_1);
-		globalSensors[1] = new VL53L1X(VL53L1X::Medium);
-		delay(1000);
-		globalSensors[1]->setAddress(0x6e);
-		bcm2835_gpio_clr(GPIO_TOF_1);
-		delay(1000);
-		bcm2835_gpio_set(GPIO_TOF_0);
-		bcm2835_gpio_set(GPIO_TOF_1);
+		delay(100);
+		globalSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
+		delay(100);
+		globalSensors[0]->setAddress(0x20);
+		delay(100);
+		puts("Sensor one started at addr: 0x20");
+
+		bcm2835_gpio_set(GPIO_TOF_2);
+		delay(100);
+		globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
+		delay(100);
+		globalSensors[1]->setAddress(0x21);
+		delay(100);
+		puts("Sensor one started at addr: 0x21");
+
+		bcm2835_gpio_set(GPIO_TOF_3);
+		delay(100);
+		globalSensors[2] = new VL53L1X(VL53L1X::Medium,0x29);
+		delay(100);
+		globalSensors[2]->setAddress(0x22);
+		delay(100);
+		puts("Sensor one started at addr: 0x22");
 
 
-		//enable sensor one and change address
 
-		while(1){
-				//for(int i=0; i<2; i++){
+
+		globalSensors[0]->startContinuous(100);
+		globalSensors[1]->startContinuous(100);
+		globalSensors[2]->startContinuous(100);
+
+		for(int i=0; i<10; i++){
 					measurement[0] = globalSensors[0]->readData(0);
 					measurement[1] = globalSensors[1]->readData(0);
-					printf("Distance sensor1: %d: sensor2: %d\n",measurement[0],measurement[1]);
+					measurement[2] = globalSensors[2]->readData(0);
+					printf("Distance sensor1: %d: sensor2: %d sensor3: %d\n",measurement[0],measurement[1],measurement[2]);
 					bcm2835_delay(100);
-				//}
 		}
+		globalSensors[0]->disable();
+		globalSensors[1]->disable();
+		globalSensors[2]->disable();
+		//bcm2835_i2c_end();
 }
 
 void stepperTest(){

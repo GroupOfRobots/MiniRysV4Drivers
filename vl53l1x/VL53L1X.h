@@ -1270,7 +1270,7 @@ class VL53L1X
 
     uint8_t last_status; // status of last I2C transmission
 
-    VL53L1X(DistanceMode);
+    VL53L1X(DistanceMode,uint8_t addr);
 
     void setAddress(uint8_t new_addr);
     uint8_t getAddress() { return address; }
@@ -1352,7 +1352,7 @@ class VL53L1X
     //I2C configuration
 	int file_i2c;
 	int length;
-	unsigned char buffer[60] = {0};
+	unsigned char buffer[60];
 	char *filename;
 	uint8_t address;
 
