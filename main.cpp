@@ -188,6 +188,7 @@ void tofTest(){
 					printf("Sensor %d: %5d	",i,measurement[i]);
 		}
 		printf("\n");
+		printf("\033[H\033[J");
 	}
 
 	for(int i=0; i<10; i++){
