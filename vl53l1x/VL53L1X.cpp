@@ -35,7 +35,7 @@ void VL53L1X::setAddress(uint8_t new_addr)
 {
 	delay(100);
 	writeReg(I2C_SLAVE__DEVICE_ADDRESS, new_addr & 0x7F);
-	address = new_addr;
+	this->address = new_addr;
 }
 
 // Initialize sensor using settings taken mostly from VL53L1_DataInit() and
@@ -44,6 +44,7 @@ void VL53L1X::setAddress(uint8_t new_addr)
 // mode.
 bool VL53L1X::init(bool io_2v8)
 {
+
 
 // check model ID and module type registers (values specified in datasheet)
 	if (readReg16Bit(IDENTIFICATION__MODEL_ID) != 0xEACC)
