@@ -31,6 +31,7 @@
 void stepperTest();
 void tofTest();
 void IMUtest();
+void distanceTest();
 Motors *globalBoard;
 VL53L1X *globalSensors[10];
 uint16_t measurement[10];
@@ -53,10 +54,11 @@ int main(void) {
 	}
 
 
-
-	tofTest();
-	//IMUtest();
 	//stepperTest();
+	//tofTest();
+	//IMUtest();
+	distanceTest();
+
 
 
 
@@ -81,8 +83,8 @@ void tofTest(){
 	bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
 
 	//disable all sensors first
-	bcm2835_gpio_clr(GPIO_TOF_1);
-	bcm2835_gpio_clr(GPIO_TOF_2);
+	bcm2835_gpio_clr(GPIO_TOF_1); // górny
+	bcm2835_gpio_clr(GPIO_TOF_2); // górny
 	bcm2835_gpio_clr(GPIO_TOF_3);
 	bcm2835_gpio_clr(GPIO_TOF_4);
 	bcm2835_gpio_clr(GPIO_TOF_5);
@@ -90,7 +92,7 @@ void tofTest(){
 	bcm2835_gpio_clr(GPIO_TOF_7);
 	bcm2835_gpio_clr(GPIO_TOF_8);
 	bcm2835_gpio_clr(GPIO_TOF_9);
-	bcm2835_gpio_set(GPIO_TOF_10);
+	bcm2835_gpio_clr(GPIO_TOF_10);
 
 	bcm2835_i2c_begin(); //begin I2C
 	bcm2835_i2c_set_baudrate(40000);
@@ -100,81 +102,81 @@ void tofTest(){
 	delay(10);
 	globalSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[0]->setAddress(0x20);
+	globalSensors[0]->setAddress(0x30);
 	delay(10);
-	puts("Sensor one started at: 0x20");
+	puts("Sensor one started at: 0x30");
 
 	bcm2835_gpio_set(GPIO_TOF_2);
 	delay(10);
 	globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[1]->setAddress(0x21);
+	globalSensors[1]->setAddress(0x31);
 	delay(10);
-	puts("Sensor two started at: 0x21");
+	puts("Sensor two started at: 0x31");
 
 	bcm2835_gpio_set(GPIO_TOF_3);
 	delay(10);
 	globalSensors[2] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[2]->setAddress(0x22);
+	globalSensors[2]->setAddress(0x32);
 	delay(10);
-	puts("Sensor three started at: 0x22");
+	puts("Sensor three started at: 0x32");
 
 	bcm2835_gpio_set(GPIO_TOF_4);
 	delay(10);
 	globalSensors[3] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[3]->setAddress(0x23);
+	globalSensors[3]->setAddress(0x33);
 	delay(10);
-	puts("Sensor four started at: 0x23");
+	puts("Sensor four started at: 0x33");
 
 	bcm2835_gpio_set(GPIO_TOF_5);
 	delay(10);
 	globalSensors[4] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[4]->setAddress(0x24);
+	globalSensors[4]->setAddress(0x34);
 	delay(10);
-	puts("Sensor five started at: 0x24");
+	puts("Sensor five started at: 0x34");
 
 	bcm2835_gpio_set(GPIO_TOF_6);
 	delay(10);
 	globalSensors[5] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[5]->setAddress(0x25);
+	globalSensors[5]->setAddress(0x35);
 	delay(10);
-	puts("Sensor six started at: 0x25");
+	puts("Sensor six started at: 0x35");
 
 	bcm2835_gpio_set(GPIO_TOF_7);
 	delay(10);
 	globalSensors[6] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[6]->setAddress(0x26);
+	globalSensors[6]->setAddress(0x36);
 	delay(10);
-	puts("Sensor seven started at: 0x26");
+	puts("Sensor seven started at: 0x36");
 
 	bcm2835_gpio_set(GPIO_TOF_8);
 	delay(10);
 	globalSensors[7] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[7]->setAddress(0x27);
+	globalSensors[7]->setAddress(0x37);
 	delay(10);
-	puts("Sensor eight started at: 0x27");
+	puts("Sensor eight started at: 0x37");
 
 	bcm2835_gpio_set(GPIO_TOF_9);
 	delay(10);
 	globalSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[8]->setAddress(0x28);
+	globalSensors[8]->setAddress(0x38);
 	delay(10);
-	puts("Sensor nine started at: 0x28");
+	puts("Sensor nine started at: 0x38");
 
 	bcm2835_gpio_set(GPIO_TOF_10);
 	delay(10);
 	globalSensors[9] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	globalSensors[9]->setAddress(0x29);
+	globalSensors[9]->setAddress(0x39);
 	delay(10);
-	puts("Sensor ten started at: 0x29");
+	puts("Sensor ten started at: 0x39");
 
 
 	for(int i=0; i<10; i++){
@@ -185,7 +187,7 @@ void tofTest(){
 	while(1){
 		for(int i=0; i<10; i++){
 					measurement[i] = globalSensors[i]->readData(1);
-					printf("Sensor %d: %5d	",i,measurement[i]);
+					printf("%d:%5d ",i,measurement[i]);
 		}
 		printf("\n");
 		printf("\033[H\033[J");
@@ -363,6 +365,91 @@ void IMUtest(){
 void TMPtest(){ //
 	tmp102 czujnik(0x48,"/dev/i2c-0");
 	printf("Rys temperature: %f \n",czujnik.readTemperature());
+
+}
+
+
+void distanceTest(){
+
+	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_6, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_7, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_8, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
+
+	//disable all sensors first
+	bcm2835_gpio_clr(GPIO_TOF_1); // górny
+	bcm2835_gpio_clr(GPIO_TOF_2); // górny
+	bcm2835_gpio_clr(GPIO_TOF_3);
+	bcm2835_gpio_clr(GPIO_TOF_4);
+	bcm2835_gpio_clr(GPIO_TOF_5);
+	bcm2835_gpio_clr(GPIO_TOF_6);
+	bcm2835_gpio_clr(GPIO_TOF_7);
+	bcm2835_gpio_clr(GPIO_TOF_8);
+	bcm2835_gpio_clr(GPIO_TOF_9);
+	bcm2835_gpio_clr(GPIO_TOF_10);
+
+	long positionLeft,positionRight;
+	int voltage;
+	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+	globalBoard = &board;
+	board.setUp();
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+
+	bcm2835_i2c_begin(); //begin I2C
+	bcm2835_i2c_set_baudrate(40000);
+
+	//enable sensor one and change address
+	bcm2835_gpio_set(GPIO_TOF_1);
+	delay(10);
+	globalSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[0]->setAddress(0x30);
+	delay(10);
+	puts("Sensor one started at: 0x30");
+
+	bcm2835_gpio_set(GPIO_TOF_2);
+	delay(10);
+	globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[1]->setAddress(0x31);
+	delay(10);
+	puts("Sensor two started at: 0x31");
+
+	for(int i=0; i<2; i++){
+			globalSensors[i]->startContinuous(20);
+			delay(10);
+		}
+
+	while(1){
+
+		measurement[0] = globalSensors[0]->readData(1);
+		measurement[1] = globalSensors[1]->readData(1);
+		if(measurement[0]> 100 && measurement[1] >100){
+			board.setSpeed(120,120);
+		}
+		else{
+			board.setSpeed(0,0);
+		}
+	}
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	board.stop();
+
+
+	for(int i=0; i<2; i++){
+		globalSensors[i]->disable();
+		delay(10);
+	}
 
 }
 

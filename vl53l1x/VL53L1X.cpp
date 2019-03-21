@@ -16,7 +16,7 @@ VL53L1X::VL53L1X(DistanceMode dist,uint8_t adr){
 	  address = adr;
 	  io_timeout = 10;  // no timeout
 	  did_timeout = false;
-	  calibrated = false;
+	  calibrated = true;
 	  saved_vhv_init = 0;
 	  saved_vhv_timeout = 0;
 	  distance_mode= dist;
@@ -430,7 +430,6 @@ void VL53L1X::startContinuous(uint32_t period_ms)
 
   writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01); // sys_interrupt_clear_range
   writeReg(SYSTEM__MODE_START, 0x40); // mode_range__timed
-
 }
 
 // Stop continuous measurements

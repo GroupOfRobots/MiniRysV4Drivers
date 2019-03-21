@@ -92,12 +92,12 @@ void Motors::setUp(){
 	temp = this->getParam(L6470_PARAM_CONFIG);
 	temp = this->getStatus();
 
-	this->configStepMode(0x00);   // 0 microsteps per step
+	this->configStepMode(0x05);   // 0 microsteps per step
 	this->setMaxSpeed(400);        // 10000 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
 	this->setFullSpeed(400);       // microstep below 10000 steps/s
-	this->setAcc(30);             // accelerate at 10000 steps/s/s
-	this->setDec(100);
+	this->setAcc(400);             // accelerate at 10000 steps/s/s
+	this->setDec(400);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -113,12 +113,12 @@ void Motors::setUp(){
 	temp = this->getParam(L6470_PARAM_CONFIG);
 	temp = this->getStatus();
 
-	this->configStepMode(0x00);   // 0 microsteps per step
+	this->configStepMode(0x05);   // 0 microsteps per step
 	this->setMaxSpeed(400);        // 10000 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
 	this->setFullSpeed(400);       // microstep below 10000 steps/s
-	this->setAcc(30);             // accelerate at 10000 steps/s/s
-	this->setDec(100);
+	this->setAcc(400);             // accelerate at 10000 steps/s/s
+	this->setDec(400);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
