@@ -38,6 +38,7 @@ uint16_t measurement[10];
 
 void sigintHandler(int signum) {
 	if (signum == SIGINT) {
+		globalBoard->Dump();
 		globalBoard->stop();
 		for(int i=0; i<10; i++)
 			globalSensors[i]->disable();
@@ -428,16 +429,40 @@ void distanceTest(){
 			delay(10);
 		}
 
+	board.setMicrostep(0x07);
+
+	board.Dump();
+
+	int value=1;
+	int target = 100;
+	int speed=0;
+
 	while(1){
+
+
+
 
 		measurement[0] = globalSensors[0]->readData(1);
 		measurement[1] = globalSensors[1]->readData(1);
-		if(measurement[0]> 100 && measurement[1] >100){
-			board.setSpeed(120,120);
+		if(measurement[0]> target){
+			speed = abs(measurement[0]-target+10);
+			if(speed>150){
+				if(value)board.stop();
+				board.setMicrostep(0x00);
+				value = 0;
+			}
+			else{
+				board.setMicrostep(0x06);
+			}
+			if(speed>330)speed=330;
+			board.setSpeed(speed,speed);
 		}
 		else{
 			board.setSpeed(0,0);
 		}
+		printf("Speed:%d\n",speed);
+		printf("FullSpeed: %f\n",board.getFullSpeed());
+		//board.getParam(L6470_PARAM_SPEED)
 	}
 	positionLeft = board.getPositionLeft();
 	positionRight = board.getPositionRight();

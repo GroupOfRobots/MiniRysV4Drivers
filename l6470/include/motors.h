@@ -49,6 +49,7 @@ public:
 	long getPositionLeft();
 	long getPositionRight();
 	int getBatteryVoltage();
+	void setMicrostep(uint8_t);
 
 private:
 	uint8_t SPIXfer(uint8_t);

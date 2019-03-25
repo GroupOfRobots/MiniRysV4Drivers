@@ -187,5 +187,6 @@ int L6470::getStatus() {
 	SPIXfer(L6470_CMD_GET_STATUS);
 	bytePointer[1] = SPIXfer(0);
 	bytePointer[0] = SPIXfer(0);
+	temp = (uint16_t)bytePointer[0] | bytePointer[1]<<8;
 	return temp;
 }

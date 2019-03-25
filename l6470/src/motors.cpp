@@ -86,45 +86,50 @@ Motors::~Motors(void) {
 
 void Motors::setUp(){
 
-	int temp;
-
 	m_nPosition = 0;
-	temp = this->getParam(L6470_PARAM_CONFIG);
-	temp = this->getStatus();
 
-	this->configStepMode(0x05);   // 0 microsteps per step
-	this->setMaxSpeed(400);        // 10000 steps/s max
-	this->setMinSpeed(0);        // 10 steps/s min
-	this->setFullSpeed(400);       // microstep below 10000 steps/s
-	this->setAcc(400);             // accelerate at 10000 steps/s/s
-	this->setDec(400);
+
+	this->setParam(L6470_PARAM_CONFIG,0x2e8B); //16MHz
+	this->configStepMode(0x00);   // 128microsteps per step
+	this->setMaxSpeed(5000);        // 10000 steps/s max
+	this->setMinSpeed(10);        // 10 steps/s min
+	this->setFullSpeed(100);       // microstep below 10000 steps/s
+	this->setAcc(600);              // accelerate at 10000 steps/s/s
+	this->setDec(600);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
 	this->setOCShutdown(0x0000); // don't shutdown on OC
 	this->setVoltageComp(0x0000); // don't compensate for motor V
 	this->setSwitchMode(0x0010);    // Switch is not hard stop
+	this->setParam(L6470_PARAM_ST_SLP,0x00);
+	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
+	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
+	this->setParam(L6470_PARAM_ALARM_EN,0x00);
 	this->setAccKVAL(0xFF);           // We'll tinker with these later, if needed.
 	this->setDecKVAL(0xFF);
 	this->setRunKVAL(0xFF);
 	this->setHoldKVAL(32);           // This controls the holding current; keep it low.
 
 	m_nPosition = 1;
-	temp = this->getParam(L6470_PARAM_CONFIG);
-	temp = this->getStatus();
 
-	this->configStepMode(0x05);   // 0 microsteps per step
-	this->setMaxSpeed(400);        // 10000 steps/s max
-	this->setMinSpeed(0);        // 10 steps/s min
-	this->setFullSpeed(400);       // microstep below 10000 steps/s
-	this->setAcc(400);             // accelerate at 10000 steps/s/s
-	this->setDec(400);
+	this->setParam(L6470_PARAM_CONFIG,0x2e8B); //16MHz
+	this->configStepMode(0x00);   // 128microsteps per step
+	this->setMaxSpeed(5000);        // 10000 steps/s max
+	this->setMinSpeed(10);        // 10 steps/s min
+	this->setFullSpeed(100);       // microstep below 10000 steps/s
+	this->setAcc(600);             // accelerate at 10000 steps/s/s
+	this->setDec(600);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
 	this->setOCShutdown(0x0000); // don't shutdown on OC
 	this->setVoltageComp(0x0000); // don't compensate for motor V
 	this->setSwitchMode(0x0010);    // Switch is not hard stop
+	this->setParam(L6470_PARAM_ST_SLP,0x00);
+	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
+	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
+	this->setParam(L6470_PARAM_ALARM_EN,0x00);
 	this->setAccKVAL(0xFF);           // We'll tinker with these later, if needed.
 	this->setDecKVAL(0xFF);
 	this->setRunKVAL(0xFF);
@@ -145,6 +150,16 @@ void Motors::setSpeed(int speedLeft, int speedRight){
 	m_nPosition=1;
 	if (speedRight>=0)this->run(L6470_DIR_FWD,speedRight);
 	else this->run(L6470_DIR_REV,-1*speedRight);
+}
+
+void Motors::setMicrostep(uint8_t step){
+
+
+		m_nPosition = 0;
+		this->configStepMode(step);
+
+		m_nPosition = 1;
+		this->configStepMode(step);
 }
 
 void Motors::stop(){
