@@ -429,32 +429,17 @@ void distanceTest(){
 			delay(10);
 		}
 
-	board.setMicrostep(0x07);
-
-	board.Dump();
-
-	int value=1;
 	int target = 100;
 	int speed=0;
 
 	while(1){
-
-
-
-
 		measurement[0] = globalSensors[0]->readData(1);
 		measurement[1] = globalSensors[1]->readData(1);
 		if(measurement[0]> target){
 			speed = abs(measurement[0]-target+10);
-			if(speed>150){
-				if(value)board.stop();
-				board.setMicrostep(0x00);
-				value = 0;
+			if(speed>250){
+			speed=250;
 			}
-			else{
-				board.setMicrostep(0x06);
-			}
-			if(speed>330)speed=330;
 			board.setSpeed(speed,speed);
 		}
 		else{

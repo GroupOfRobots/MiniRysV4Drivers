@@ -72,7 +72,6 @@ void L6470::run(TL6470Direction dir, float stepsPerSec) {
 	unsigned long integerSpeed = spdCalc(stepsPerSec);
 	if (integerSpeed > 0xFFFFF)
 		integerSpeed = 0xFFFFF;
-
 	// Now we need to push this value out to the dSPIN. The 32-bit value is
 	//  stored in memory in little-endian format, but the dSPIN expects a
 	//  big-endian output, so we need to reverse the uint8_t-order of the
@@ -83,7 +82,7 @@ void L6470::run(TL6470Direction dir, float stepsPerSec) {
 	uint8_t* bytePointer = (uint8_t*) &integerSpeed;
 	// Next, we'll iterate through a for loop, indexing across the bytes in
 	//  integerSpeed starting with uint8_t 2 and ending with uint8_t 0.
-	for (int8_t i = 2; i >= 0; i--) {
+	for (int i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -98,7 +97,7 @@ void L6470::move(TL6470Direction dir, unsigned long numSteps) {
 		numSteps = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &numSteps;
-	for (int8_t i = 2; i >= 0; i--) {
+	for (uint8_t i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -109,7 +108,7 @@ void L6470::goTo(long pos) {
 		pos = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &pos;
-	for (int8_t i = 2; i >= 0; i--) {
+	for (uint8_t i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -120,7 +119,7 @@ void L6470::goToDir(TL6470Direction dir, long pos) {
 		pos = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &pos;
-	for (int8_t i = 2; i >= 0; i--) {
+	for (uint8_t i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -132,7 +131,7 @@ void L6470::goUntil(TL6470Action action, TL6470Direction dir, float stepsPerSec)
 		integerSpeed = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &integerSpeed;
-	for (int8_t i = 2; i >= 0; i--) {
+	for (uint8_t i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
