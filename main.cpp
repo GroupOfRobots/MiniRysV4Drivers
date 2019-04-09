@@ -15,6 +15,13 @@
 #include <csignal>
 #include <math.h>
 #include <fstream>
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/joystick.h>
+
+#define JOY_DEV "/dev/input/js0"
 
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_12
 #define GPIO_TOF_2 	RPI_V2_GPIO_P1_16
@@ -32,6 +39,7 @@ void stepperTest();
 void tofTest();
 void IMUtest();
 void distanceTest();
+void joyControl();
 Motors *globalBoard;
 VL53L1X *globalSensors[10];
 uint16_t measurement[10];
@@ -58,7 +66,8 @@ int main(void) {
 	//stepperTest();
 	//tofTest();
 	//IMUtest();
-	distanceTest();
+	//distanceTest();
+	joyControl();
 
 
 
@@ -259,14 +268,13 @@ void stepperTest(){
 //	positionRight = board.getPositionRight();
 //	voltage = board.getBatteryVoltage();
 //	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-	board.setSpeed(320,320);
-	bcm2835_delay(30000);
+	board.setSpeed(30,0);
+	bcm2835_delay(10000);
 	positionLeft = board.getPositionLeft();
 	positionRight = board.getPositionRight();
 	voltage = board.getBatteryVoltage();
 	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
 	board.stop();
-
 	////////////////////////////////////////////////////////////////////////////////////////
 }
 
@@ -437,10 +445,10 @@ void distanceTest(){
 		measurement[1] = globalSensors[1]->readData(1);
 		if(measurement[0]> target){
 			speed = abs(measurement[0]-target+10);
-			if(speed>250){
-			speed=250;
+			if(speed>300){
+			speed=300;
 			}
-			board.setSpeed(speed,speed);
+			board.setSpeed(speed,-speed);
 		}
 		else{
 			board.setSpeed(0,0);
@@ -461,5 +469,75 @@ void distanceTest(){
 		delay(10);
 	}
 
+}
+
+void joyControl(){
+
+	int speedLeft, speedRight;
+
+	int f;
+	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0, x;
+	char *button=NULL, name_of_joystick[80];
+	struct js_event js;
+
+	if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
+	{
+	printf( "Couldn't open joystick\n" );
+	return;
+	}
+
+	ioctl( joy_fd, JSIOCGAXES, &num_of_axis );
+	ioctl( joy_fd, JSIOCGBUTTONS, &num_of_buttons );
+	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
+
+	axis = (int *) calloc( num_of_axis, sizeof( int ) );
+	button = (char *) calloc( num_of_buttons, sizeof( char ) );
+
+	printf("Joystick detected: %s\n\t%d axis\n\t%d buttons\n\n"
+	, name_of_joystick
+	, num_of_axis
+	, num_of_buttons );
+
+	fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
+
+	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+	globalBoard = &board;
+	board.setUp();
+
+	while( 1 )  /* infinite loop */
+	{
+
+	/* read the joystick state */
+	read(joy_fd, &js, sizeof(struct js_event));
+
+	/* see what to do with the event */
+	switch (js.type & ~JS_EVENT_INIT)
+	{
+	case JS_EVENT_AXIS:
+	axis   [ js.number ] = js.value;
+	break;
+	case JS_EVENT_BUTTON:
+	button [ js.number ] = js.value;
+	break;
+	}
+
+	/* print the results */
+	printf( "X: %6d  Y: %6d  ", axis[0], axis[1] );
+
+	speedLeft = axis[1]/150;
+	speedRight = axis[1]/150;
+
+	speedLeft+= axis[0]/300;
+	speedRight-= axis[0]/300;
+
+	board.setSpeed(speedLeft,-1*speedRight);
+	//bcm2835_delay(10);
+
+	printf("  \r");
+	fflush(stdout);
+	}
+	board.stop();
+	close( joy_fd ); /* too bad we never get here */
+	return;
 }
 

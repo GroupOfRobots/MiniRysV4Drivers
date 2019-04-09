@@ -93,7 +93,7 @@ void Motors::setUp(){
 	this->configStepMode(0x07);   // 128microsteps per step
 	this->setMaxSpeed(300);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(100);              // accelerate at 10000 steps/s/s
+	this->setAcc(200);              // accelerate at 10000 steps/s/s
 	this->setDec(1000);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
@@ -104,11 +104,11 @@ void Motors::setUp(){
 	this->setParam(L6470_PARAM_ST_SLP,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
-	//this->setParam(L6470_PARAM_ALARM_EN,0x00);
+	this->setParam(L6470_PARAM_ALARM_EN,0x00);
 	this->setAccKVAL(0xFF);           // We'll tinker with these later, if needed.
 	this->setDecKVAL(0xFF);
 	this->setRunKVAL(0xFF);
-	this->setHoldKVAL(0x40);           // This controls the holding current; keep it low.
+	this->setHoldKVAL(0x20);           // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep below 120 steps/s
 
 	m_nPosition = 1;
@@ -117,7 +117,7 @@ void Motors::setUp(){
 	this->configStepMode(0x07);   // 128microsteps per step
 	this->setMaxSpeed(300);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(100);             // accelerate at 10000 steps/s/s
+	this->setAcc(200);             // accelerate at 10000 steps/s/s
 	this->setDec(1000);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
@@ -128,11 +128,11 @@ void Motors::setUp(){
 	this->setParam(L6470_PARAM_ST_SLP,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
-	//this->setParam(L6470_PARAM_ALARM_EN,0x00);
+	this->setParam(L6470_PARAM_ALARM_EN,0x00);
 	this->setAccKVAL(0xFF);           // We'll tinker with these later, if needed.
 	this->setDecKVAL(0xFF);
 	this->setRunKVAL(0xFF);
-	this->setHoldKVAL(0x40);         // This controls the holding current; keep it low.
+	this->setHoldKVAL(0x20);         // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep below 120 steps/s
 }
 
