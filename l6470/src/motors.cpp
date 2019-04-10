@@ -93,7 +93,7 @@ void Motors::setUp(){
 	this->configStepMode(0x07);   // 128microsteps per step
 	this->setMaxSpeed(300);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(200);              // accelerate at 10000 steps/s/s
+	this->setAcc(400);              // accelerate at 10000 steps/s/s
 	this->setDec(1000);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.
@@ -117,7 +117,7 @@ void Motors::setUp(){
 	this->configStepMode(0x07);   // 128microsteps per step
 	this->setMaxSpeed(300);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(200);             // accelerate at 10000 steps/s/s
+	this->setAcc(400);             // accelerate at 10000 steps/s/s
 	this->setDec(1000);
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_320V_us);   // Upping the edge speed increases torque.

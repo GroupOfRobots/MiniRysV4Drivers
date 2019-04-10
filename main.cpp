@@ -472,8 +472,20 @@ void distanceTest(){
 }
 
 void joyControl(){
-
 	int speedLeft, speedRight;
+	float  ax;
+
+	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+
+	if( SensorOne.begin() != 0 )
+	{
+		  printf("Problem starting the sensor \n");
+	}
+	else
+	{
+		  printf("Sensor with CS1 started.\n");
+	}
+	int i, n = 1000;
 
 	int f;
 	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0, x;
@@ -521,8 +533,13 @@ void joyControl(){
 	break;
 	}
 
+	//read accelerometer
+	ax = SensorOne.readFloatAccelX();
+
+
 	/* print the results */
 	printf( "X: %6d  Y: %6d  ", axis[0], axis[1] );
+	printf("  \r");
 
 	speedLeft = axis[1]/150;
 	speedRight = axis[1]/150;
@@ -530,12 +547,23 @@ void joyControl(){
 	speedLeft+= axis[0]/300;
 	speedRight-= axis[0]/300;
 
+	if(speedLeft>280)speedLeft=280;
+	if(speedLeft<-280)speedLeft=-280;
+	if(speedRight>280)speedRight=280;
+	if(speedRight<-280)speedRight=-280;
+
+	if(ax>0.5){
+		speedLeft = -1*speedLeft;
+		speedRight = -1*speedRight;
+	}
+
 	board.setSpeed(speedLeft,-1*speedRight);
 	//bcm2835_delay(10);
 
-	printf("  \r");
+
 	fflush(stdout);
 	}
+	SensorOne.close_i2c();
 	board.stop();
 	close( joy_fd ); /* too bad we never get here */
 	return;
