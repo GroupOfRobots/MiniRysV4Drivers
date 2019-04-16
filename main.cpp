@@ -268,8 +268,8 @@ void stepperTest(){
 //	positionRight = board.getPositionRight();
 //	voltage = board.getBatteryVoltage();
 //	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-	board.setSpeed(30,0);
-	bcm2835_delay(10000);
+	board.setSpeed(400,400);
+	bcm2835_delay(5000);
 	positionLeft = board.getPositionLeft();
 	positionRight = board.getPositionRight();
 	voltage = board.getBatteryVoltage();
@@ -537,27 +537,23 @@ void joyControl(){
 	ax = SensorOne.readFloatAccelX();
 
 
-	/* print the results */
-	printf( "X: %6d  Y: %6d  ", axis[0], axis[1] );
-	printf("  \r");
 
-	speedLeft = axis[1]/150;
-	speedRight = axis[1]/150;
+	speedLeft = axis[1]/100;
+	speedRight = axis[1]/100;
 
-	speedLeft+= axis[0]/300;
-	speedRight-= axis[0]/300;
+	speedLeft+= axis[3]/200;
+	speedRight-= axis[3]/200;
 
-	if(speedLeft>280)speedLeft=280;
-	if(speedLeft<-280)speedLeft=-280;
-	if(speedRight>280)speedRight=280;
-	if(speedRight<-280)speedRight=-280;
+	if(speedLeft>360)speedLeft=360;
+	if(speedLeft<-360)speedLeft=-360;
+	if(speedRight>360)speedRight=360;
+	if(speedRight<-360)speedRight=-360;
 
-	if(ax>0.5){
 		speedLeft = -1*speedLeft;
 		speedRight = -1*speedRight;
-	}
 
-	board.setSpeed(speedLeft,-1*speedRight);
+
+	board.setSpeed(speedLeft,speedRight);
 	//bcm2835_delay(10);
 
 
