@@ -13,6 +13,7 @@ RM := rm -rf
 -include l6470/src/subdir.mk
 -include gpio/subdir.mk
 -include bcm/subdir.mk
+-include Controller/subdir.mk
 -include subdir.mk
 -include objects.mk
 

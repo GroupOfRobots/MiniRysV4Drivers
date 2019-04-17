@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
+#include "Controller/controller.h"
 
 #define JOY_DEV "/dev/input/js0"
 
@@ -40,13 +41,14 @@ void tofTest();
 void IMUtest();
 void distanceTest();
 void joyControl();
+void BalancingTest();
 Motors *globalBoard;
 VL53L1X *globalSensors[10];
 uint16_t measurement[10];
 
 void sigintHandler(int signum) {
 	if (signum == SIGINT) {
-		globalBoard->Dump();
+		//globalBoard->Dump();
 		globalBoard->stop();
 		for(int i=0; i<10; i++)
 			globalSensors[i]->disable();
@@ -62,21 +64,13 @@ int main(void) {
 			return -1;
 	}
 
-
 	//stepperTest();
 	//tofTest();
 	//IMUtest();
 	//distanceTest();
-	joyControl();
-
-
-
-
-
+	//joyControl();
 	//stepperTest();
-
-	puts("Done!");
-
+	BalancingTest();
 }
 
 void tofTest(){
@@ -220,54 +214,7 @@ void stepperTest(){
 	positionRight = board.getPositionRight();
 	voltage = board.getBatteryVoltage();
 	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(50,50);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(-50,-50);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(30,30);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(-30,-30);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(20,-20);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(-20,20);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(200,200);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-//	board.setSpeed(-200,-200);
-//	bcm2835_delay(5000);
-//	positionLeft = board.getPositionLeft();
-//	positionRight = board.getPositionRight();
-//	voltage = board.getBatteryVoltage();
-//	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+
 	board.setSpeed(400,400);
 	bcm2835_delay(5000);
 	positionLeft = board.getPositionLeft();
@@ -275,7 +222,6 @@ void stepperTest(){
 	voltage = board.getBatteryVoltage();
 	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
 	board.stop();
-	////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void IMUtest(){
@@ -358,7 +304,7 @@ void IMUtest(){
 		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
 
 		//Write to file
-		file << i*0.1 << " " << rgy << " " << ty << " " << f_gy << " " << f_ty << std::endl;
+		//file << i*0.1 << " " << rgy << " " << ty << " " << f_gy << " " << f_ty << std::endl;
 
 		delay(100);
 	}
@@ -473,22 +419,8 @@ void distanceTest(){
 
 void joyControl(){
 	int speedLeft, speedRight;
-	float  ax;
 
-	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
-
-	if( SensorOne.begin() != 0 )
-	{
-		  printf("Problem starting the sensor \n");
-	}
-	else
-	{
-		  printf("Sensor with CS1 started.\n");
-	}
-	int i, n = 1000;
-
-	int f;
-	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0, x;
+	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
 	char *button=NULL, name_of_joystick[80];
 	struct js_event js;
 
@@ -525,19 +457,13 @@ void joyControl(){
 	/* see what to do with the event */
 	switch (js.type & ~JS_EVENT_INIT)
 	{
-	case JS_EVENT_AXIS:
-	axis   [ js.number ] = js.value;
-	break;
-	case JS_EVENT_BUTTON:
-	button [ js.number ] = js.value;
-	break;
+		case JS_EVENT_AXIS:
+		axis   [ js.number ] = js.value;
+		break;
+		case JS_EVENT_BUTTON:
+		button [ js.number ] = js.value;
+		break;
 	}
-
-	//read accelerometer
-	ax = SensorOne.readFloatAccelX();
-
-
-
 	speedLeft = axis[1]/100;
 	speedRight = axis[1]/100;
 
@@ -549,15 +475,135 @@ void joyControl(){
 	if(speedRight>360)speedRight=360;
 	if(speedRight<-360)speedRight=-360;
 
-		speedLeft = -1*speedLeft;
-		speedRight = -1*speedRight;
-
+	speedLeft = -1*speedLeft;
+	speedRight = -1*speedRight;
 
 	board.setSpeed(speedLeft,speedRight);
-	//bcm2835_delay(10);
-
 
 	fflush(stdout);
+	}
+	board.stop();
+	close( joy_fd ); /* too bad we never get here */
+	return;
+}
+
+void BalancingTest(){
+
+	float speedLeft, speedRight, oldSpeedLeft, oldSpeedRight;
+	Controller pid;
+
+	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+
+	if( SensorOne.begin() != 0 )printf("Problem starting the sensor \n");
+	else  printf("Sensor with CS1 started.\n");
+
+	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
+	char *button=NULL, name_of_joystick[80];
+	struct js_event js;
+
+	if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
+	{
+	printf( "Couldn't open joystick\n" );
+	return;
+	}
+
+	ioctl( joy_fd, JSIOCGAXES, &num_of_axis );
+	ioctl( joy_fd, JSIOCGBUTTONS, &num_of_buttons );
+	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
+
+	axis = (int *) calloc( num_of_axis, sizeof( int ) );
+	button = (char *) calloc( num_of_buttons, sizeof( char ) );
+
+	fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
+
+	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+	globalBoard = &board;
+	board.setUp();
+
+	// Acceleration
+	float  ax, ay, az;
+	ax = SensorOne.readFloatAccelX();
+	ay = SensorOne.readFloatAccelY();
+	az = SensorOne.readFloatAccelZ();
+
+	// Gyro
+	float rgx, rgy, rgz;
+	const float offX = 3.597539, offY = -5.142877, offZ = -3.623744;
+	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+
+	// Sum of gyro readings
+	float sumgx = 0, sumgy = 0, sumgz = 0;
+
+	// Tilt
+	float ty = atan2(ax,sqrt(ay*ay+az*az));
+
+	// Filtering
+	filter f(ty,0.5,10);
+	float f_gy, f_ty;
+	float angle;
+	int steering;
+	int throttle;
+
+	while( 1 )  /* infinite loop *////////////////////////////////////////////////////
+	{
+
+		/* read the joystick state
+		read(joy_fd, &js, sizeof(struct js_event));
+
+		switch (js.type & ~JS_EVENT_INIT)
+		{
+		case JS_EVENT_AXIS:
+		axis   [ js.number ] = js.value;
+		break;
+		case JS_EVENT_BUTTON:
+		button [ js.number ] = js.value;
+		break;
+		}
+
+
+		speedLeft = axis[1]/100;
+		speedRight = axis[1]/100;
+
+		speedLeft+= axis[3]/200;
+		speedRight-= axis[3]/200;
+
+		*/
+		//Get all parameters
+		ax = SensorOne.readFloatAccelX();
+		ay = SensorOne.readFloatAccelY();
+		az = SensorOne.readFloatAccelZ();
+
+		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+
+		ty = atan2(ax,sqrt(ay*ay+az*az));
+
+		f_ty = f.getAngle(ty,rgy);
+		f_gy = f.getGyro();
+
+
+		angle = f_ty;
+		delay(15);
+
+		angle =angle*180/3.1415;
+		angle -=14.5;
+		printf(" Angle: %f\n", angle);
+		pid.calculate_speed(angle,oldSpeedLeft,oldSpeedRight,0,0,speedLeft,speedRight);
+
+
+		if(speedLeft>360)speedLeft=360;
+		if(speedLeft<-360)speedLeft=-360;
+		if(speedRight>360)speedRight=360;
+		if(speedRight<-360)speedRight=-360;
+
+		board.setSpeed((int)speedLeft,(int)speedRight);
+		oldSpeedLeft = speedLeft;
+		oldSpeedRight = speedRight;
+
+		fflush(stdout);
 	}
 	SensorOne.close_i2c();
 	board.stop();
