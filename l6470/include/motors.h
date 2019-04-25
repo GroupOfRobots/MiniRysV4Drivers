@@ -48,6 +48,7 @@ public:
 	void stop(void);
 	long getPositionLeft();
 	long getPositionRight();
+	void resetPosition();
 	int getBatteryVoltage();
 	void setMicrostep(uint8_t);
 

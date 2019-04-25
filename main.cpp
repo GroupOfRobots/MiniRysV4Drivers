@@ -42,13 +42,16 @@ void IMUtest();
 void distanceTest();
 void joyControl();
 void BalancingTest();
+void ResponseTimeTest();
 Motors *globalBoard;
 VL53L1X *globalSensors[10];
 uint16_t measurement[10];
+std::ofstream file;
 
 void sigintHandler(int signum) {
 	if (signum == SIGINT) {
 		//globalBoard->Dump();
+		file.close();
 		globalBoard->stop();
 		for(int i=0; i<10; i++)
 			globalSensors[i]->disable();
@@ -68,12 +71,16 @@ int main(void) {
 	//tofTest();
 	//IMUtest();
 	//distanceTest();
-	//joyControl();
+	joyControl();
 	//stepperTest();
-	BalancingTest();
+	//BalancingTest();
+	//ResponseTimeTest();
 }
 
 void tofTest(){
+
+	// Log file
+	file.open("distance_log_report70cm");
 
 	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
@@ -188,11 +195,18 @@ void tofTest(){
 		delay(10);
 	}
 
-	while(1){
-		for(int i=0; i<10; i++){
-					measurement[i] = globalSensors[i]->readData(1);
-					printf("%d:%5d ",i,measurement[i]);
-		}
+	for(int j=0; j<1000; j++){
+	//while(1){
+		//for(int i=0; i<10; i++){
+		//			measurement[i] = globalSensors[i]->readData(1);
+		//			printf("%d:%5d ",i,measurement[i]);
+		//}
+				measurement[5] = globalSensors[5]->readData(1);
+				printf("5:%5d ",measurement[5]);
+				measurement[8] = globalSensors[8]->readData(1);
+				printf("8:%5d ",measurement[8]);
+
+		file << measurement[5] <<" "<< measurement[8]<<std::endl;
 		printf("\n");
 		printf("\033[H\033[J");
 	}
@@ -201,27 +215,36 @@ void tofTest(){
 		globalSensors[i]->disable();
 		delay(10);
 	}
+
+	file.close();
 }
 
 void stepperTest(){
+
+	file.open("odometry_log_report1000ms-200");
 
 	long positionLeft,positionRight;
 	int voltage;
 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 	globalBoard = &board;
 	board.setUp();
+	board.resetPosition();
 	positionLeft = board.getPositionLeft();
 	positionRight = board.getPositionRight();
-	voltage = board.getBatteryVoltage();
+	//voltage = board.getBatteryVoltage();
 	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	file <<"start_left:"<< positionLeft <<"start_right:"<< positionRight<<std::endl;
+	board.setSpeed(200,200);
+	bcm2835_delay(1000);
+	positionLeft = board.getPositionLeft();
+	positionRight = board.getPositionRight();
+	//voltage = board.getBatteryVoltage();
+	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	file <<"end_left:"<< positionLeft <<"end_right:"<< positionRight<<std::endl;
+	bcm2835_delay(1000);
 
-	board.setSpeed(400,400);
-	bcm2835_delay(5000);
-	positionLeft = board.getPositionLeft();
-	positionRight = board.getPositionRight();
-	voltage = board.getBatteryVoltage();
-	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
 	board.stop();
+	file.close();
 }
 
 void IMUtest(){
@@ -235,7 +258,7 @@ void IMUtest(){
 	{
 		  printf("Sensor with CS1 started.\n");
 	}
-	int i, n = 1000;
+	int i, n = 10000;
 
 	// Acceleration
 	float  ax, ay, az;
@@ -261,8 +284,7 @@ void IMUtest(){
 	float f_gy, f_ty;
 
 	// Log file
-	std::ofstream file;
-	file.open("imu_log");
+	file.open("imu_log_report");
 
 	for(i=0; i<n; i++){
 		//Get all parameters
@@ -304,9 +326,8 @@ void IMUtest(){
 		printf(" Non-success = %d\n",SensorOne.nonSuccessCounter);
 
 		//Write to file
-		//file << i*0.1 << " " << rgy << " " << ty << " " << f_gy << " " << f_ty << std::endl;
-
-		delay(100);
+		file << i << " " << rgy << " " << ty << " " << f_gy << " " << f_ty << std::endl;
+		delay(1);
 	}
 	file.close();
 
@@ -323,8 +344,8 @@ void TMPtest(){ //
 
 }
 
-
 void distanceTest(){
+
 
 	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
@@ -420,6 +441,19 @@ void distanceTest(){
 void joyControl(){
 	int speedLeft, speedRight;
 
+	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+
+		if( SensorOne.begin() != 0 )
+		{
+			  printf("Problem starting the sensor \n");
+		}
+		else
+		{
+			  printf("Sensor with CS1 started.\n");
+		}
+		int i, n = 10000;
+
+
 	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
 	char *button=NULL, name_of_joystick[80];
 	struct js_event js;
@@ -447,41 +481,44 @@ void joyControl(){
 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 	globalBoard = &board;
 	board.setUp();
+	int filter=0;
 
 	while( 1 )  /* infinite loop */
 	{
+			filter++;
 
-	/* read the joystick state */
-	read(joy_fd, &js, sizeof(struct js_event));
+		/* read the joystick state */
+		read(joy_fd, &js, sizeof(struct js_event));
 
-	/* see what to do with the event */
-	switch (js.type & ~JS_EVENT_INIT)
-	{
-		case JS_EVENT_AXIS:
-		axis   [ js.number ] = js.value;
-		break;
-		case JS_EVENT_BUTTON:
-		button [ js.number ] = js.value;
-		break;
+		/* see what to do with the event */
+		switch (js.type & ~JS_EVENT_INIT)
+		{
+			case JS_EVENT_AXIS:
+			axis   [ js.number ] = js.value;
+			break;
+			case JS_EVENT_BUTTON:
+			button [ js.number ] = js.value;
+			break;
+		}
+		speedLeft = axis[1]/100;
+		speedRight = axis[1]/100;
+
+		speedLeft+= axis[3]/200;
+		speedRight-= axis[3]/200;
+
+		if(speedLeft>360)speedLeft=360;
+		if(speedLeft<-360)speedLeft=-360;
+		if(speedRight>360)speedRight=360;
+		if(speedRight<-360)speedRight=-360;
+
+		speedLeft = -1*speedLeft;
+		speedRight = -1*speedRight;
+
+		board.setSpeed(speedLeft,speedRight);
+
+		fflush(stdout);
 	}
-	speedLeft = axis[1]/100;
-	speedRight = axis[1]/100;
 
-	speedLeft+= axis[3]/200;
-	speedRight-= axis[3]/200;
-
-	if(speedLeft>360)speedLeft=360;
-	if(speedLeft<-360)speedLeft=-360;
-	if(speedRight>360)speedRight=360;
-	if(speedRight<-360)speedRight=-360;
-
-	speedLeft = -1*speedLeft;
-	speedRight = -1*speedRight;
-
-	board.setSpeed(speedLeft,speedRight);
-
-	fflush(stdout);
-	}
 	board.stop();
 	close( joy_fd ); /* too bad we never get here */
 	return;
@@ -610,4 +647,261 @@ void BalancingTest(){
 	close( joy_fd ); /* too bad we never get here */
 	return;
 }
+
+void ResponseTimeTest(){
+
+	// Log file
+	std::ofstream file;
+	file.open("response_log");
+	std::chrono::high_resolution_clock::time_point timer_old = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point timer_value;
+
+
+	/////////////////////////////////////TOF////////////////////////////
+	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_6, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_7, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_8, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
+
+	//disable all sensors first
+	bcm2835_gpio_clr(GPIO_TOF_1); // górny
+	bcm2835_gpio_clr(GPIO_TOF_2); // górny
+	bcm2835_gpio_clr(GPIO_TOF_3);
+	bcm2835_gpio_clr(GPIO_TOF_4);
+	bcm2835_gpio_clr(GPIO_TOF_5);
+	bcm2835_gpio_clr(GPIO_TOF_6);
+	bcm2835_gpio_clr(GPIO_TOF_7);
+	bcm2835_gpio_clr(GPIO_TOF_8);
+	bcm2835_gpio_clr(GPIO_TOF_9);
+	bcm2835_gpio_clr(GPIO_TOF_10);
+
+	bcm2835_i2c_begin(); //begin I2C
+	bcm2835_i2c_set_baudrate(40000);
+
+	//enable sensor one and change address
+	bcm2835_gpio_set(GPIO_TOF_1);
+	delay(10);
+	globalSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[0]->setAddress(0x30);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_2);
+	delay(10);
+	globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[1]->setAddress(0x31);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_3);
+	delay(10);
+	globalSensors[2] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[2]->setAddress(0x32);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_4);
+	delay(10);
+	globalSensors[3] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[3]->setAddress(0x33);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_5);
+	delay(10);
+	globalSensors[4] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[4]->setAddress(0x34);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_6);
+	delay(10);
+	globalSensors[5] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[5]->setAddress(0x35);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_7);
+	delay(10);
+	globalSensors[6] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[6]->setAddress(0x36);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_8);
+	delay(10);
+	globalSensors[7] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[7]->setAddress(0x37);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_9);
+	delay(10);
+	globalSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[8]->setAddress(0x38);
+	delay(10);
+
+	bcm2835_gpio_set(GPIO_TOF_10);
+	delay(10);
+	globalSensors[9] = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	globalSensors[9]->setAddress(0x39);
+	delay(10);
+
+
+	for(int i=0; i<10; i++){
+		globalSensors[i]->startContinuous(20);
+		delay(10);
+	}
+
+
+	timer_old = std::chrono::high_resolution_clock::now();
+	for (int j=0; j<1000; j++){
+		for(int i=0; i<10; i++){
+					measurement[i] = globalSensors[i]->readData(1);
+		}
+	}
+	timer_value = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+
+	file << "10xTOF average time:" << std::endl;
+	file << time_span.count()/1000.0 << std::endl;
+
+	timer_old = std::chrono::high_resolution_clock::now();
+	for (int j=0; j<1000; j++){
+		measurement[0] = globalSensors[0]->readData(1);
+	}
+	timer_value = std::chrono::high_resolution_clock::now();
+	time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+
+	file << "1xTOF average time:" << std::endl;
+	file << time_span.count()/1000.0 << std::endl;
+
+	for(int i=0; i<10; i++){
+		globalSensors[i]->disable();
+		delay(10);
+	}
+
+	puts("TOF done");
+
+	/////////////////////////////////////IMU///////////////////////////////
+
+	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+
+	if( SensorOne.begin() != 0 )
+	{
+		  printf("Problem starting the sensor \n");
+	}
+	else
+	{
+		  printf("Sensor with CS1 started.\n");
+	}
+	int i, n = 1000;
+
+	// Acceleration
+	float  ax, ay, az;
+	ax = SensorOne.readFloatAccelX();
+	ay = SensorOne.readFloatAccelY();
+	az = SensorOne.readFloatAccelZ();
+
+	// Gyro
+	float rgx, rgy, rgz;
+	const float offX = 3.597539, offY = -5.142877, offZ = -3.623744;
+	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+
+	// Sum of gyro readings
+	float sumgx = 0, sumgy = 0, sumgz = 0;
+
+	// Tilt
+	float ty = atan2(ax,sqrt(ay*ay+az*az));
+
+	// Filtering
+	filter f(ty,0.5,10);
+	float f_gy, f_ty,temperature;
+
+
+	timer_old = std::chrono::high_resolution_clock::now();
+	for(i=0; i<n; i++){
+		//Get all parameters
+		ax = SensorOne.readFloatAccelX();
+		ay = SensorOne.readFloatAccelY();
+		az = SensorOne.readFloatAccelZ();
+		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+		temperature = SensorOne.readTempC();
+	}
+	timer_value = std::chrono::high_resolution_clock::now();
+	time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+
+	file << "IMU_all average time:" << std::endl;
+	file << time_span.count()/1000.0 << std::endl;
+
+	SensorOne.close_i2c();
+
+	puts("IMU done");
+	/////////////////////////////////////TMP102///////////////////////////////
+	tmp102 czujnik(0x48,"/dev/i2c-0");
+
+	timer_old = std::chrono::high_resolution_clock::now();
+	for (int j=0; j<1000; j++){
+		temperature = czujnik.readTemperature();
+	}
+	timer_value = std::chrono::high_resolution_clock::now();
+	time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+
+	file << "1xTEMP average time:" << std::endl;
+	file << time_span.count()/1000.0 << std::endl;
+
+	puts("TMP done");
+
+	/////////////////////////////////////Steppers///////////////////////////////
+
+	long positionLeft,positionRight;
+	int voltage;
+	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+	globalBoard = &board;
+	board.setUp();
+
+	timer_old = std::chrono::high_resolution_clock::now();
+	for (int j=0; j<1000; j++){
+		board.setSpeed(400,400);
+		positionLeft = board.getPositionLeft();
+		positionRight = board.getPositionRight();
+	}
+	timer_value = std::chrono::high_resolution_clock::now();
+	time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+
+	file << "2xSTEPPER + position average time:" << std::endl;
+	file << time_span.count()/1000.0 << std::endl;
+
+	puts("Steppers done");
+
+	timer_old = std::chrono::high_resolution_clock::now();
+	for (int j=0; j<1000; j++){
+		voltage = board.getBatteryVoltage();
+	}
+	timer_value = std::chrono::high_resolution_clock::now();
+	time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+
+	file << "1xBatteryV average time:" << std::endl;
+	file << time_span.count()/1000.0 << std::endl;
+
+	puts("temp done");
+
+	board.stop();
+
+
+	file.close();
+}
+
 

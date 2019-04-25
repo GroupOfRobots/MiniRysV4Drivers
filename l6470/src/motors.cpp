@@ -93,8 +93,8 @@ void Motors::setUp(){
 	this->configStepMode(0x07);   // 128microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(500);              // accelerate at 10000 steps/s/s
-	this->setDec(1000);
+	this->setAcc(350);              // accelerate at 500 steps/s/s
+	this->setDec(1000);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -117,8 +117,8 @@ void Motors::setUp(){
 	this->configStepMode(0x07);   // 128microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(500);             // accelerate at 10000 steps/s/s
-	this->setDec(1000);
+	this->setAcc(350);             // accelerate at 500 steps/s/s
+	this->setDec(1000);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -235,7 +235,18 @@ long Motors::getPositionLeft(){
 long Motors::getPositionRight(){
 		m_nPosition=1;
 		return this->getPos();
+		this->resetPos();
 }
+
+void Motors::resetPosition(){
+		m_nPosition=0;
+		this->resetPos();
+		m_nPosition=1;
+		this->resetPos();
+}
+
+
+
 
 int Motors::getBatteryVoltage(){
 	int voltage;
