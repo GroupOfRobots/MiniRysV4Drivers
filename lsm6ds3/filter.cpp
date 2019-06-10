@@ -26,7 +26,7 @@ float filter::getAngle(float angle, float gyro){
 	previousAngles[2] = previousAngles[1];
 	previousAngles[1] = previousAngles[0];
 	previousAngles[0] = angle;
-	return filteredAngle;
+	return newAngle;
 }
 
 float filter::getGyro(){

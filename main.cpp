@@ -69,9 +69,9 @@ int main(void) {
 
 	//stepperTest();
 	//tofTest();
-	//IMUtest();
+	IMUtest();
 	//distanceTest();
-	joyControl();
+	//joyControl();
 	//stepperTest();
 	//BalancingTest();
 	//ResponseTimeTest();
@@ -253,12 +253,17 @@ void IMUtest(){
 	if( SensorOne.begin() != 0 )
 	{
 		  printf("Problem starting the sensor \n");
+		  return;
 	}
 	else
 	{
-		  printf("Sensor with CS1 started.\n");
+		  printf("Sensor with CS1 started, awaiting calibration.\n");
+		  for (int i = 10; i>0; i--){
+			  printf("%d\n",i);
+			  delay(1000);
+		  }
 	}
-	int i, n = 10000;
+	int i, n = 1000;
 
 	// Acceleration
 	float  ax, ay, az;
@@ -268,10 +273,11 @@ void IMUtest(){
 
 	// Gyro
 	float rgx, rgy, rgz;
-	const float offX = 3.597539, offY = -5.142877, offZ = -3.623744;
-	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
-	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
-	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+	const float offX = 3.755909, offY = -5.435584, offZ = -3.461446;
+	const float offXRad = -0.000329, offYRad = -0.000224, offZRad = 0.000880;
+	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180 - offXRad;
+	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180 - offYRad;
+	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180 - offZRad;
 
 	// Sum of gyro readings
 	float sumgx = 0, sumgy = 0, sumgz = 0;
@@ -280,11 +286,15 @@ void IMUtest(){
 	float ty = atan2(ax,sqrt(ay*ay+az*az));
 
 	// Filtering
-	filter f(ty,0.5,10);
+	float param = 0.1;
+	float freq = 100;
+	filter f(ty,param,freq);
 	float f_gy, f_ty;
 
 	// Log file
-	file.open("imu_log_report");
+	char filename [25];
+	sprintf(filename,"imu_log_report_%.3f_%04.0f", param, freq);
+	file.open(filename);
 
 	for(i=0; i<n; i++){
 		//Get all parameters
@@ -298,24 +308,24 @@ void IMUtest(){
 		printf(" ACC = %f\n", sqrt(ax*ax+ay*ay+az*az));
 
 		printf("\nGyroscope:\n");
-		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
-		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
-		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180 - offXRad;
+		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180 - offYRad;
+		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180 - offZRad;
 		sumgx += rgx;
 		sumgy += rgy;
 		sumgz += rgz;
 		printf(" X = %f\n",rgx);
-		printf(" Y = %f\n",rgy);
+		printf(" Y = %f",rgy);
 		printf(" Z = %f\n",rgz);
 
 		printf("\nTilt:\n");
 		ty = atan2(ax,sqrt(ay*ay+az*az));
-		printf(" Y = %f\n", ty);
+		printf(" Tilt = %f", ty);
 
 		printf("\nAfter filtering:\n");
 		f_ty = f.getAngle(ty,rgy);
 		f_gy = f.getGyro();
-		printf(" Gyro Y: %f\n", f_gy);
+		printf(" Gyro Y: %f", f_gy);
 		printf(" Tilt Y: %f\n", f_ty);
 
 		printf("\nThermometer:\n");
@@ -327,7 +337,7 @@ void IMUtest(){
 
 		//Write to file
 		file << i << " " << rgy << " " << ty << " " << f_gy << " " << f_ty << std::endl;
-		delay(1);
+		delay(1000/freq);
 	}
 	file.close();
 
