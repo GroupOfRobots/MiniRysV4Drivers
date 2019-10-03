@@ -221,29 +221,23 @@ void tofTest(){
 
 void stepperTest(){
 
-	file.open("odometry_log_report1000ms-200");
-
 	long positionLeft,positionRight;
-	int voltage;
 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 	globalBoard = &board;
 	board.setUp();
 	board.resetPosition();
 	positionLeft = board.getPositionLeft();
 	positionRight = board.getPositionRight();
-	//voltage = board.getBatteryVoltage();
-	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-	file <<"start_left:"<< positionLeft <<"start_right:"<< positionRight<<std::endl;
-	board.setSpeed(200,200);
-	bcm2835_delay(1000);
+	printf("Absolute position: Left:%lu		Right:%lu \n",positionLeft, positionRight);
+	board.setSpeed(-20,-20);
+	bcm2835_delay(500);
 	positionLeft = board.getPositionLeft();
 	positionRight = board.getPositionRight();
-	//voltage = board.getBatteryVoltage();
-	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+	printf("Absolute position: Left:%lu		Right:%lu \n",positionLeft, positionRight);
 	file <<"end_left:"<< positionLeft <<"end_right:"<< positionRight<<std::endl;
-	bcm2835_delay(1000);
 
 	board.stop();
+
 	file.close();
 }
 
