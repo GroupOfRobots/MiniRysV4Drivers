@@ -90,7 +90,7 @@ void Motors::setUp(){
 
 
 	this->setParam(L6470_PARAM_CONFIG,0x2e8B); //16MHz
-	this->configStepMode(0x06);   // 128microsteps per step
+	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
 	this->setAcc(350);              // accelerate at 350 steps/s/s
@@ -114,7 +114,7 @@ void Motors::setUp(){
 	m_nPosition = 1;
 
 	this->setParam(L6470_PARAM_CONFIG,0x2e8B); //16MHz
-	this->configStepMode(0x06);   // 128microsteps per step
+	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
 	this->setAcc(350);             // accelerate at 350 steps/s/s

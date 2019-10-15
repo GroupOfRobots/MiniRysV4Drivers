@@ -69,9 +69,9 @@ int main(void) {
 
 	//stepperTest();
 	//tofTest();
-	IMUtest();
+	//IMUtest();
 	//distanceTest();
-	//joyControl();
+	joyControl();
 	//stepperTest();
 	//BalancingTest();
 	//ResponseTimeTest();
@@ -443,7 +443,7 @@ void distanceTest(){
 }
 
 void joyControl(){
-	int speedLeft, speedRight;
+	int speedLeft = 0, speedRight = 0, speedLeftPast = 0, speedRightPast = 0;
 
 	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
 
@@ -459,7 +459,8 @@ void joyControl(){
 
 
 	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
-	char *button=NULL, name_of_joystick[80];
+	bool *button=NULL, *buttonPast=NULL;
+	char name_of_joystick[80];//*button=NULL,
 	struct js_event js;
 
 	if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
@@ -473,7 +474,15 @@ void joyControl(){
 	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
 
 	axis = (int *) calloc( num_of_axis, sizeof( int ) );
-	button = (char *) calloc( num_of_buttons, sizeof( char ) );
+	for(int i = 0; i < num_of_axis; i++){
+		axis[i] = 0;
+	}
+	button = (bool *) calloc( num_of_buttons, sizeof( bool ) );
+	buttonPast = (bool *) calloc( num_of_buttons, sizeof( bool ) );
+	for(int i = 0; i < num_of_buttons; i++){
+		button[i] = false;
+		buttonPast[i] = false;
+	}
 
 	printf("Joystick detected: %s\n\t%d axis\n\t%d buttons\n\n"
 	, name_of_joystick
@@ -485,11 +494,14 @@ void joyControl(){
 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 	globalBoard = &board;
 	board.setUp();
-	int filter=0;
+	board.setSpeed(0,0);
+	int filter=0, voltage = 0;
 
 	while( 1 )  /* infinite loop */
 	{
-			filter++;
+		filter++;
+		voltage = board.getBatteryVoltage();
+		if (filter%10000 == 0) printf("Battery:\t%d\n", voltage);
 
 		/* read the joystick state */
 		read(joy_fd, &js, sizeof(struct js_event));
@@ -502,21 +514,26 @@ void joyControl(){
 			break;
 			case JS_EVENT_BUTTON:
 			button [ js.number ] = js.value;
+			if (button [ js.number ] != buttonPast[js.number]) printf("Button %d:\t%d\n", js.number, button[js.number]);
+			buttonPast[js.number] = button[js.number];
 			break;
 		}
-		speedLeft = axis[1]/100;
-		speedRight = axis[1]/100;
+		speedLeft = axis[1]/80;
+		speedRight = axis[1]/80;
 
-		speedLeft+= axis[3]/200;
-		speedRight-= axis[3]/200;
+		speedLeft+= axis[2]/200;
+		speedRight-= axis[2]/200;
 
-		if(speedLeft>360)speedLeft=360;
-		if(speedLeft<-360)speedLeft=-360;
-		if(speedRight>360)speedRight=360;
-		if(speedRight<-360)speedRight=-360;
+		if(speedLeft>400)speedLeft=400;
+		if(speedLeft<-400)speedLeft=-400;
+		if(speedRight>400)speedRight=400;
+		if(speedRight<-400)speedRight=-400;
 
-		speedLeft = -1*speedLeft;
-		speedRight = -1*speedRight;
+		//speedLeft = -1*speedLeft;
+		//speedRight = -1*speedRight;
+		if (speedLeft != speedLeftPast || speedRight != speedRightPast) printf("Velocity:\tLeft:%d\tRight:%d\n",speedLeft, speedRight);
+		speedLeftPast = speedLeft;
+		speedRightPast = speedRight;
 
 		board.setSpeed(speedLeft,speedRight);
 
