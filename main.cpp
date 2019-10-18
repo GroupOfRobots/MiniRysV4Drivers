@@ -21,6 +21,18 @@
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
 #include "Controller/controller.h"
+// For testing of old executor
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <chrono>
+#include <cstring>
+#include <functional>
+#include <utility>
+#include <sched.h>
+#include <sys/mman.h>
+#include <pthread.h>
+#include "MyExecutor/MyExecutor.hpp"
 
 #define JOY_DEV "/dev/input/js0"
 
@@ -48,14 +60,19 @@ VL53L1X *globalSensors[10];
 uint16_t measurement[10];
 std::ofstream file;
 
+void execTest();
+void f1(bool&, std::mutex&, bool&, std::string, std::chrono::milliseconds);
+bool destroy = false;
+
 void sigintHandler(int signum) {
 	if (signum == SIGINT) {
 		//globalBoard->Dump();
-		file.close();
-		globalBoard->stop();
-		for(int i=0; i<10; i++)
-			globalSensors[i]->disable();
-		exit(signum);
+		if (file.is_open()) file.close();
+		if (globalBoard != nullptr) globalBoard->stop();
+		for(int i = 0; i < 10; i++)
+			if (globalSensors[i] != nullptr) globalSensors[i]->disable();
+		destroy = true;
+		//exit(signum);
 	}
 }
 
@@ -71,10 +88,72 @@ int main(void) {
 	//tofTest();
 	//IMUtest();
 	//distanceTest();
-	joyControl();
+	//joyControl();
 	//stepperTest();
 	//BalancingTest();
 	//ResponseTimeTest();
+	execTest();
+}
+
+void execTest(){
+	MyExecutor *exec = new MyExecutor(std::ref(destroy));
+
+	bool f1_bool = false;
+	std::mutex f1_mutex;
+	std::string f1_name = "F10";
+	std::thread t1(f1, std::ref(f1_bool), std::ref(f1_mutex), std::ref(destroy), f1_name, std::chrono::milliseconds(10));
+	exec->addExec(std::ref(f1_mutex), std::ref(f1_bool), std::chrono::milliseconds(10), f1_name);
+
+	bool f2_bool = false;
+	std::mutex f2_mutex;
+	std::string f2_name = "F20";
+	std::thread t2(f1, std::ref(f2_bool), std::ref(f2_mutex), std::ref(destroy), f2_name, std::chrono::milliseconds(20));
+	exec->addExec(std::ref(f2_mutex), std::ref(f2_bool), std::chrono::milliseconds(20), f2_name);
+
+	bool f3_bool = false;
+	std::mutex f3_mutex;
+	std::string f3_name = "F40";
+	std::thread t3(f1, std::ref(f3_bool), std::ref(f3_mutex), std::ref(destroy), f3_name, std::chrono::milliseconds(40));
+	exec->addExec(std::ref(f3_mutex), std::ref(f3_bool), std::chrono::milliseconds(40), f3_name);
+
+	exec->list();
+	exec->spin();
+	t1.join();
+	t2.join();
+	t3.join();
+	delete exec;
+	return;
+}
+
+void f1(bool& activate, std::mutex& m, bool& destroy, std::string name, std::chrono::milliseconds period){
+	pthread_setname_np(pthread_self(), name.c_str());
+	int numOfRuns = 0;
+	float frequency = 0;
+	std::chrono::time_point<std::chrono::high_resolution_clock> previous = std::chrono::high_resolution_clock::now();
+	std::chrono::time_point<std::chrono::high_resolution_clock> timeNow = std::chrono::high_resolution_clock::now();
+
+	while(!destroy){
+		m.lock();
+		if(activate){
+			activate = false;
+			m.unlock();
+			numOfRuns++;
+			if (numOfRuns >= 1000) {
+				previous = timeNow;
+				timeNow = std::chrono::high_resolution_clock::now();
+				auto loopTimeSpan = std::chrono::duration_cast<std::chrono::duration<float>>(timeNow - previous);
+				float loopTime = loopTimeSpan.count();
+				frequency = numOfRuns/loopTime;
+				printf("%s Frequency %fHz after %d runs.\n", name.c_str(), frequency, numOfRuns);
+				numOfRuns = 0;
+			}
+		    std::this_thread::sleep_for(period/2);
+		} else {
+	     m.unlock();
+	    }
+	    std::this_thread::sleep_for(period/100);
+	}
+	std::cout << name << ": I'm dying.." << std::endl;
 }
 
 void tofTest(){
