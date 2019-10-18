@@ -9,7 +9,15 @@ This repo contains basic firmware drivers for robot pheripherials
 git clone git://github.com/raspberrypi/tools.git
 ```
 3. Import project from this repo: File->Import->General->Existing project into workspace, and selest this repo folder.
-4. Right click on project in project list three and enter project properties. Properties->C/C++ Build->Settings. In Cross compiler prefix type "arm-linux-gnueabihf-". In the "Cross compiler path" field type the full path to the toolchain: "/home/'hostname'/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/". In "Cross GCC Compiler -> Includes" add path "/home/'hostname'/raspberrypi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/arm-linux-gnueabihf/include/c++/4.8.3". In "Cross G++ Compiler -> Includes" add path "../__GXX_EXPERIMENTAL_CXX0X__". In "Cross G++ Compiler -> Includes" type "-c -fmessage-length=0 -std=c++11".
+4. Right click on project in project list three and enter project properties. Properties->C/C++ Build->Settings. 
+- In "Cross Settings" set compiler prefix type to "arm-linux-gnueabihf-".
+- In the "Cross Settings" set path to the full path to the toolchain: "/home/'hostname'/tools/arm-bcm2708/gcc-linaro-arm-linux- gnueabihf-raspbian-x64/bin/".
+- In "Cross GCC Compiler -> Includes" add path "/home/'hostname'/raspberrypi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/arm-linux-gnueabihf/include/c++/4.8.3".
+- In "Cross GCC Compiler -> Miscellanous" add flags "-c -fmessage-length=0 -pthread".
+- In "Cross G++ Compiler -> Dialect" set language standard to "ISO C++11".
+- In "Cross G++ Compiler -> Includes" add path "../__GXX_EXPERIMENTAL_CXX0X__". 
+- In "Cross G++ Compiler -> Miscellanous" type "-c -fmessage-length=0 -std=c++11 -pthread".
+- In "Cross G++ Linker -> Miscellanous" add linker flags "-lpthread".
 5. Build project. 
 
 ## Running program on Raspberry PI: 
