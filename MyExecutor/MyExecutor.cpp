@@ -24,11 +24,12 @@ MyExecutor::~MyExecutor() {
 	// *this->destroy = true;
 	Exec *temp = this->firstExec;
 	Exec *temp2 = temp->next;
-	if (temp2){
+	while (temp2){
 		delete temp;
 		temp = temp2;
 		temp2 = temp->next;
 	}
+	delete temp;
 }
 
 void MyExecutor::addExec(std::mutex& mut, bool& activationBool, std::chrono::milliseconds threadDelay, std::string name = "Exec") {
