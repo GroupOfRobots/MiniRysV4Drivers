@@ -456,7 +456,7 @@ void IMUtest(){
 }
 
 void TMPtest(){ //
-	tmp102 czujnik(0x48,"/dev/i2c-0");
+	tmp102 czujnik(0x48,"/dev/i2c-1");
 	printf("Rys temperature: %f \n",czujnik.readTemperature());
 
 }

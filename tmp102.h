@@ -23,7 +23,7 @@
 #include "bcm/bcm2835.h"
 
 
-#define DEFAULT_I2C_BUS		"/dev/i2c-0"
+#define DEFAULT_I2C_BUS		"/dev/i2c-1"
 #define GPIO_TMP	RPI_V2_GPIO_P1_07
 
 
