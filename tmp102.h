@@ -19,10 +19,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdint.h>
-#include "gpio/gpio.h"
+// #include "gpio/gpio.h"
+#include "bcm/bcm2835.h"
 
 
 #define DEFAULT_I2C_BUS		"/dev/i2c-0"
+#define GPIO_TMP	RPI_V2_GPIO_P1_07
 
 
 class tmp102 {
@@ -32,7 +34,7 @@ public:
 private:
     int file;
 	char filename[40];
-	GPIO* gpio4;
+	// GPIO* gpio4;
 };
 
 

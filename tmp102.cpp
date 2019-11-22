@@ -12,9 +12,14 @@
 
 tmp102::tmp102(uint8_t addr, char* i2c_bus){
 
-	gpio4 = new GPIO("4");
-	gpio4->setdir_gpio("out");
-	gpio4->setval_gpio("1");
+	// gpio4 = new GPIO("4");
+	// gpio4->setdir_gpio("out");
+	// gpio4->setval_gpio("1");
+	bcm2835_gpio_fsel(GPIO_TMP, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_clr(GPIO_TMP);
+	bcm2835_i2c_begin(); //begin I2C
+	bcm2835_i2c_set_baudrate(40000);
+	bcm2835_gpio_set(GPIO_TMP);
 
 	sprintf(filename, i2c_bus);
 		if ((file = open(filename, O_RDWR)) < 0) {

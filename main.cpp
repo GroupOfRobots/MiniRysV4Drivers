@@ -89,7 +89,7 @@ int main(void) {
 
 	//stepperTest();
 	//tofTest();
-	TMPtest2();
+	TMPtest();
 	//IMUtest();
 	//distanceTest();
 	//joyControl();
