@@ -33,6 +33,7 @@ public:
     float readTemperature();
 private:
     int file;
+    uint8_t addres;
 	char filename[40];
 	// GPIO* gpio4;
 };

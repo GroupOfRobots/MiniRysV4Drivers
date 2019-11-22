@@ -20,6 +20,7 @@ tmp102::tmp102(uint8_t addr, char* i2c_bus){
 	bcm2835_i2c_begin(); //begin I2C
 	bcm2835_i2c_set_baudrate(40000);
 	bcm2835_gpio_set(GPIO_TMP);
+	addres = addr;
 
 	sprintf(filename, i2c_bus);
 		if ((file = open(filename, O_RDWR)) < 0) {
@@ -43,6 +44,7 @@ float tmp102::readTemperature(){
 	float data;
 
 	// Read 2 uint8 using I2C Read
+	bcm2835_i2c_setSlaveAddress(addres);
 	int k = bcm2835_i2c_read(buf, 2);
 	if ((k != 2)) {
 		printf("error: %s (%d) %d\n", strerror(errno), errno,2);
