@@ -62,7 +62,7 @@ LSM6DS3Core::LSM6DS3Core( uint8_t busType, uint8_t inputArg) : commInterface(I2C
 	{
 		chipSelectPin = inputArg;
 	}
-	filename = (char*)"/dev/i2c-0";
+	filename = (char*)"/dev/i2c-1";
 	addr = 0x6b;          //<<<<<The I2C address of the slave
 
 }

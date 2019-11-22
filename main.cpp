@@ -161,35 +161,6 @@ void f1(bool& activate, std::mutex& m, bool& destroy, std::string name, std::chr
 }
 */
 
-void TMPtest2(){
-	bcm2835_gpio_fsel(GPIO_TMP, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_clr(GPIO_TMP);
-	bcm2835_i2c_begin(); //begin I2C
-	bcm2835_i2c_set_baudrate(40000);
-	bcm2835_gpio_set(GPIO_TMP);
-	delay(10);
-	VL53L1X* tmp_sensor = new VL53L1X(VL53L1X::Medium,0x29);
-	delay(10);
-	tmp_sensor->setAddress(0x48);
-	delay(10);
-	puts("TMP sensor started at: 0x48");
-	tmp_sensor->startContinuous(20);
-	delay(10);
-	uint16_t measurement;
-	for(int j=0; j<1000; j++){
-		measurement = tmp_sensor->readData(1);
-		measurement >>= 4;
-		if (measurement & (1 << 11))
-			measurement |= 0xF800;
-		printf("tmp:%f C",((float)measurement * 0.0625));
-		delay(20);
-		printf("\n");
-		// printf("\033[H\033[J");
-		if (destroy) break;
-	}
-	tmp_sensor->disable();
-}
-
 void tofTest(){
 
 	// Log file
