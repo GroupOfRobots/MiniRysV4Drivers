@@ -181,7 +181,7 @@ void TMPtest2(){
 		measurement >>= 4;
 		if (measurement & (1 << 11))
 			measurement |= 0xF800;
-		printf("tmp:%f C",((float)measurement * 0.0625);
+		printf("tmp:%f C",((float)measurement * 0.0625));
 		delay(20);
 		printf("\n");
 		// printf("\033[H\033[J");
