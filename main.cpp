@@ -46,8 +46,10 @@
 #define GPIO_TOF_8 	RPI_V2_GPIO_P1_35
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
 #define GPIO_TOF_10 RPI_V2_GPIO_P1_37
+#define GPIO_TMP	RPI_V2_GPIO_P1_07
 #define NDEBUG
 
+void TMPtest2();
 void stepperTest();
 void TMPtest();
 void tofTest();
@@ -87,8 +89,8 @@ int main(void) {
 
 	//stepperTest();
 	//tofTest();
-	//TMPtest();
-	IMUtest();
+	TMPtest2();
+	//IMUtest();
 	//distanceTest();
 	//joyControl();
 	//stepperTest();
@@ -158,6 +160,32 @@ void f1(bool& activate, std::mutex& m, bool& destroy, std::string name, std::chr
 	std::cout << name << ": I'm dying.." << std::endl;
 }
 */
+
+void TMPtest2(){
+	bcm2835_gpio_fsel(GPIO_TMP, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_clr(GPIO_TMP);
+	bcm2835_i2c_begin(); //begin I2C
+	bcm2835_i2c_set_baudrate(40000);
+	bcm2835_gpio_set(GPIO_TMP);
+	delay(10);
+	VL53L1X* tmp_sensor = new VL53L1X(VL53L1X::Medium,0x29);
+	delay(10);
+	tmp_sensor->setAddress(0x40);
+	delay(10);
+	puts("TMP sensor started at: 0x40");
+	tmp_sensor->startContinuous(20);
+	delay(10);
+	uint16_t measurement;
+	for(int j=0; j<1000; j++){
+		measurement = tmp_sensor->readData(1);
+		printf("tmp:%f C",measurement * 0.0625);
+		delay(20);
+		printf("\n");
+		// printf("\033[H\033[J");
+	}
+	tmp_sensor->disable();
+}
+
 void tofTest(){
 
 	// Log file

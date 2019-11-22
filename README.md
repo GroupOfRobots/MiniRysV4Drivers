@@ -2,7 +2,7 @@
 
 This repo contains basic firmware drivers for robot pheripherials 
 
-## Eclipse IDE setup
+## Eclipse IDE setup for master branch - do not use in raspberry4 branch, perform 'make all' command in Debug/ folder instead
 1. Download and install Eclipse C++ IDE.
 2. Clone raspberryPi cross compilation tools.
 ```
