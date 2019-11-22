@@ -178,7 +178,10 @@ void TMPtest2(){
 	uint16_t measurement;
 	for(int j=0; j<1000; j++){
 		measurement = tmp_sensor->readData(1);
-		printf("tmp:%f C",measurement * 0.0625);
+		measurement >>= 4;
+		if (measurement & (1 << 11))
+			measurement |= 0xF800;
+		printf("tmp:%f C",((float)measurement * 0.0625);
 		delay(20);
 		printf("\n");
 		// printf("\033[H\033[J");
