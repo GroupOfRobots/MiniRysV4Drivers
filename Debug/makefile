@@ -13,6 +13,7 @@ RM := rm -rf
 -include l6470/src/subdir.mk
 -include gpio/subdir.mk
 -include bcm/subdir.mk
+-include MyExecutor/subdir.mk
 -include Controller/subdir.mk
 -include subdir.mk
 -include objects.mk
@@ -48,8 +49,9 @@ all: RobotDrivers
 # Tool invocations
 RobotDrivers: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: Cross G++ Linker'
-	arm-linux-gnueabihf-g++  -o "RobotDrivers" $(OBJS) $(USER_OBJS) $(LIBS)
+#	@echo 'Invoking: Cross G++ Linker'
+#	arm-linux-gnueabihf-g++ 
+	g++ -lpthread -o "RobotDrivers" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -49,6 +49,7 @@
 #define NDEBUG
 
 void stepperTest();
+void TMPtest();
 void tofTest();
 void IMUtest();
 void distanceTest();
@@ -86,15 +87,16 @@ int main(void) {
 
 	//stepperTest();
 	//tofTest();
-	//IMUtest();
+	//TMPtest();
+	IMUtest();
 	//distanceTest();
 	//joyControl();
 	//stepperTest();
 	//BalancingTest();
 	//ResponseTimeTest();
-	execTest();
+	//execTest();
 }
-
+/*
 void execTest(){
 	MyExecutor *exec = new MyExecutor(std::ref(destroy));
 
@@ -155,7 +157,7 @@ void f1(bool& activate, std::mutex& m, bool& destroy, std::string name, std::chr
 	}
 	std::cout << name << ": I'm dying.." << std::endl;
 }
-
+*/
 void tofTest(){
 
 	// Log file
@@ -284,7 +286,7 @@ void tofTest(){
 				printf("5:%5d ",measurement[5]);
 				measurement[8] = globalSensors[8]->readData(1);
 				printf("8:%5d ",measurement[8]);
-
+		delay(20);
 		file << measurement[5] <<" "<< measurement[8]<<std::endl;
 		printf("\n");
 		printf("\033[H\033[J");

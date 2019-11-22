@@ -24,6 +24,7 @@ CPP_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Controller \
+MyExecutor \
 bcm \
 gpio \
 l6470/src \

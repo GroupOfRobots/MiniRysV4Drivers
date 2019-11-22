@@ -157,7 +157,7 @@ status_t LSM6DS3Core::readRegisterRegion(uint8_t *outputPointer , uint8_t offset
 	switch (commInterface) {
 
 	case I2C_MODE:
-
+	{
 
 		int i;
 		char buf[1];
@@ -182,8 +182,9 @@ status_t LSM6DS3Core::readRegisterRegion(uint8_t *outputPointer , uint8_t offset
 		}
 
 		break;
-
+	}
 	case SPI_MODE:
+	{
 		// take the chip select low to select the device:
 		bcm2835_gpio_clr(BCM2835_SPI_CS1);
 		bcm2835_spi_chipSelect(BCM2835_SPI_CS1);
@@ -214,10 +215,11 @@ status_t LSM6DS3Core::readRegisterRegion(uint8_t *outputPointer , uint8_t offset
 		// take the chip select high to de-select:
 		bcm2835_gpio_set(BCM2835_SPI_CS1);
 		break;
-
-	default:
-		break;
 	}
+	default:
+	{
+		break;
+	}}
 
 	return returnError;
 }
