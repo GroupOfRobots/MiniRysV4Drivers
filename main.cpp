@@ -170,9 +170,9 @@ void TMPtest2(){
 	delay(10);
 	VL53L1X* tmp_sensor = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
-	tmp_sensor->setAddress(0x40);
+	tmp_sensor->setAddress(0x48);
 	delay(10);
-	puts("TMP sensor started at: 0x40");
+	puts("TMP sensor started at: 0x48");
 	tmp_sensor->startContinuous(20);
 	delay(10);
 	uint16_t measurement;
@@ -182,6 +182,7 @@ void TMPtest2(){
 		delay(20);
 		printf("\n");
 		// printf("\033[H\033[J");
+		if (destroy) break;
 	}
 	tmp_sensor->disable();
 }
