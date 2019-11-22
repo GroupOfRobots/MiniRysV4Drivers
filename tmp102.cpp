@@ -43,7 +43,7 @@ float tmp102::readTemperature(){
 	float data;
 
 	// Read 2 uint8 using I2C Read
-	int k = read(file, buf, 2);
+	int k = bcm2835_i2c_read(buf, 2);
 	if ((k != 2)) {
 		printf("error: %s (%d) %d\n", strerror(errno), errno,2);
 	} else {
