@@ -24,7 +24,8 @@
 
 
 #define DEFAULT_I2C_BUS		"/dev/i2c-1"
-#define GPIO_TMP	RPI_V2_GPIO_P1_07
+#define GPIO_TMP	RPI_V2_GPIO_P1_16
+// #define GPIO_TMP	RPI_V2_GPIO_P1_07
 
 
 class tmp102 {

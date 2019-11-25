@@ -43,10 +43,17 @@ float tmp102::readTemperature(){
 
 	float data;
 
+	printf("Address: %x\n", addres);
 	// Read 2 uint8 using I2C Read
+	bcm2835_gpio_fsel(GPIO_TMP, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_clr(GPIO_TMP);
+	bcm2835_i2c_begin(); //begin I2C
+	bcm2835_i2c_set_baudrate(40000);
+	bcm2835_gpio_set(GPIO_TMP);
 	bcm2835_i2c_setSlaveAddress(addres);
 	int k = bcm2835_i2c_read(buf, 2);
 	if ((k != 2)) {
+		printf("Amount of data read: %d\n", k);
 		printf("error: %s (%d) %d\n", strerror(errno), errno,2);
 	} else {
 

@@ -46,7 +46,7 @@
 #define GPIO_TOF_8 	RPI_V2_GPIO_P1_35
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
 #define GPIO_TOF_10 RPI_V2_GPIO_P1_37
-#define GPIO_TMP	RPI_V2_GPIO_P1_07
+// #define GPIO_TMP	RPI_V2_GPIO_P1_07
 #define NDEBUG
 
 void TMPtest2();
@@ -90,7 +90,7 @@ int main(void) {
 	//stepperTest();
 	//tofTest();
 	TMPtest();
-	//IMUtest();
+	IMUtest();
 	//distanceTest();
 	//joyControl();
 	//stepperTest();
@@ -328,15 +328,21 @@ void stepperTest(){
 void IMUtest(){
 	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
 
-	if( SensorOne.begin() != 0 )
+	SensorOne.begin();
+	int a = SensorOne.begin();
+	if( a != 0 )
 	{
-		  printf("Problem starting the sensor \n");
+		  printf("Problem number %d starting the sensor \n", a);
 		  return;
 	}
 	else
 	{
 		  printf("Sensor with CS1 started, awaiting calibration.\n");
 		  for (int i = 10; i>0; i--){
+			if (destroy) {
+				SensorOne.close_i2c();
+				return;
+			}
 			  printf("%d\n",i);
 			  delay(1000);
 		  }
@@ -365,7 +371,7 @@ void IMUtest(){
 
 	// Filtering
 	float param = 0.1;
-	float freq = 100;
+	float freq = 10;
 	filter f(ty,param,freq);
 	float f_gy, f_ty;
 
@@ -375,6 +381,11 @@ void IMUtest(){
 	file.open(filename);
 
 	for(i=0; i<n; i++){
+		if (destroy) {
+			SensorOne.close_i2c();
+			file.close();
+			return;
+		}
 		//Get all parameters
 		printf("\nAccelerometer:\n");
 		ax = SensorOne.readFloatAccelX();
@@ -430,6 +441,10 @@ void TMPtest(){ //
 	tmp102 czujnik(0x48,"/dev/i2c-1");
 	printf("Rys temperature: %f \n",czujnik.readTemperature());
 
+	printf("Rys temperature: %f \n",czujnik.readTemperature());
+	printf("Rys temperature: %f \n",czujnik.readTemperature());
+	printf("Rys temperature: %f \n",czujnik.readTemperature());
+	printf("Rys temperature: %f \n",czujnik.readTemperature());
 }
 
 void distanceTest(){
