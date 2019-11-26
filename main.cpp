@@ -328,11 +328,11 @@ void stepperTest(){
 void IMUtest(){
 	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
 
-	SensorOne.begin();
-	int a = SensorOne.begin();
-	if( a != 0 )
+	// SensorOne.begin();
+	int status = SensorOne.begin();
+	if( status != 0 )
 	{
-		  printf("Problem number %d starting the sensor \n", a);
+		  printf("Problem number %d starting the sensor \n", status);
 		  return;
 	}
 	else
