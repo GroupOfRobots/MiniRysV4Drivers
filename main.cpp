@@ -49,7 +49,6 @@
 // #define GPIO_TMP	RPI_V2_GPIO_P1_07
 #define NDEBUG
 
-void TMPtest2();
 void stepperTest();
 void TMPtest();
 void tofTest();
@@ -90,7 +89,8 @@ int main(void) {
 	//stepperTest();
 	//tofTest();
 	TMPtest();
-	IMUtest();
+	//delay(5000);
+	//IMUtest();
 	//distanceTest();
 	//joyControl();
 	//stepperTest();
@@ -438,12 +438,7 @@ void IMUtest(){
 }
 
 void TMPtest(){ //
-	tmp102 czujnik(0x48,"/dev/i2c-1");
-	printf("Rys temperature: %f \n",czujnik.readTemperature());
-
-	printf("Rys temperature: %f \n",czujnik.readTemperature());
-	printf("Rys temperature: %f \n",czujnik.readTemperature());
-	printf("Rys temperature: %f \n",czujnik.readTemperature());
+	tmp102 czujnik(0x48,"/dev/i2c-0");
 	printf("Rys temperature: %f \n",czujnik.readTemperature());
 }
 

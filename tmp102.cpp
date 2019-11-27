@@ -12,14 +12,9 @@
 
 tmp102::tmp102(uint8_t addr, char* i2c_bus){
 
-	// gpio4 = new GPIO("4");
-	// gpio4->setdir_gpio("out");
-	// gpio4->setval_gpio("1");
-	bcm2835_gpio_fsel(GPIO_TMP, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_clr(GPIO_TMP);
-	bcm2835_i2c_begin(); //begin I2C
-	bcm2835_i2c_set_baudrate(40000);
-	bcm2835_gpio_set(GPIO_TMP);
+	gpio4 = new GPIO("4");
+	gpio4->setdir_gpio("out");
+	gpio4->setval_gpio("1");
 	addres = addr;
 
 	sprintf(filename, i2c_bus);
@@ -39,27 +34,28 @@ tmp102::tmp102(uint8_t addr, char* i2c_bus){
 
 float tmp102::readTemperature(){
 
-	char buf[1] = { 0 };
+	int i = 10;
+	unsigned char buf[i];
 
 	float data;
 
-	printf("Address: %x\n", addres);
+	// printf("Address: %x\n", addres);
 	// Read 2 uint8 using I2C Read
-	bcm2835_gpio_fsel(GPIO_TMP, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_clr(GPIO_TMP);
-	bcm2835_i2c_begin(); //begin I2C
-	bcm2835_i2c_set_baudrate(40000);
-	bcm2835_gpio_set(GPIO_TMP);
-	bcm2835_i2c_setSlaveAddress(addres);
-	int k = bcm2835_i2c_read(buf, 2);
-	if ((k != 2)) {
+	int k = read(file, buf, i);
+	if ((k != i)) {
 		printf("Amount of data read: %d\n", k);
 		printf("error: %s (%d) %d\n", strerror(errno), errno,2);
 	} else {
-
+		printf("Data read:");
+		for (int j = 0; j < i; j++){
+			printf(" %x", buf[j]);
+		}
+		printf("\n");
 		int temperature;
-		temperature = ((buf[0]) << 8) | (buf[1]);
-		temperature >>= 4;
+		temperature = ((buf[0] << 4) | (buf[1] >> 4));// + (1 << 8);
+		printf("Temp pre scaling: %x\n", temperature);
+		// temperature = ((buf[0]) << 8) | (buf[1]);
+		// temperature >>= 4;
 
 		if (temperature & (1 << 11))
 			temperature |= 0xF800;
