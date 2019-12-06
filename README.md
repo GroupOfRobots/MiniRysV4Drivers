@@ -2,7 +2,7 @@
 
 This repo contains basic firmware drivers for robot pheripherials 
 
-## Eclipse IDE setup
+## Eclipse IDE setup for master branch
 1. Download and install Eclipse C++ IDE.
 2. Clone raspberryPi cross compilation tools.
 ```
@@ -19,6 +19,38 @@ git clone git://github.com/raspberrypi/tools.git
 - In "Cross G++ Compiler -> Miscellanous" type "-c -fmessage-length=0 -std=c++11 -pthread".
 - In "Cross G++ Linker -> Miscellanous" add linker flags "-lpthread".
 5. Build project. 
+
+## Setup and building on raspberry4 branch
+1. Clone repository and enter raspberry4 branch
+2. Perform 'make all' command in Debug/ folder.
+
+## Setup and building on ros2_rasp4 branch
+1. Download and setup 'ros2 dashing diademata' and 'colcon'
+2. Source ros2:
+```
+source /opt/ros2/dashing/setup.bash
+```
+3. Create workspace folder e.g. 'ros2_ws' and enter it
+4. Create 'src' folder and enter it
+5. Clone repository and enter ros2_rasp4 branch
+6. Change folder name from 'RobotDrivers' to 'minirys_drivers' with command:
+```
+mv RobotDrivers/ minirys_drivers
+```
+7. Go back to 'ros2_ws' and run following command to build:
+```
+colcon build --packages-select minirys_drivers
+```
+8. Source the new setup:
+```
+. install/setup.bash
+```
+9. Run selected program:
+```
+ros2 run minirys_drivers <executable>
+```
+10. (OPTIONAL) Some executables may require root authorization to run. You can't do 'sudo ros2...'!!! You will have to enter 'sudo su' command.
+
 
 ## Running program on Raspberry PI: 
 1. Copy bin file from project Debug folder and scp to raspberryPi. 
