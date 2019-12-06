@@ -3,13 +3,13 @@
 // or paraphrased from the API source code, API user manual (UM2356), and
 // VL53L1X datasheet.
 
-#include "VL53L1X.h"
+#include "vl53l1x/VL53L1X.h"
 #include <unistd.h>				//Needed for I2C port
 #include <fcntl.h>				//Needed for I2C port
 #include <sys/ioctl.h>			//Needed for I2C port
 #include <linux/i2c-dev.h>		//Needed for I2C port"
 #include <stdio.h>
-#include "../bcm/bcm2835.h"
+#include "bcm/bcm2835.h"
 // Constructor ////////////////////////////////////////////////////////////////
 
 VL53L1X::VL53L1X(DistanceMode dist,uint8_t adr){

@@ -5,12 +5,11 @@
  *      Author: kamil
  */
 
-#include "tmp102.h"
 #include "lsm6ds3/LSM6DS3.h"
 #include "lsm6ds3/filter.h"
 #include "bcm/bcm2835.h"
-#include "l6470/include/l6470constants.h"
-#include "l6470/include/motors.h"
+#include "l6470/l6470constants.h"
+#include "l6470/motors.h"
 #include "vl53l1x/VL53L1X.h"
 #include <csignal>
 #include <math.h>
@@ -20,7 +19,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
-#include "Controller/controller.h"
+// #include "Controller/controller.h"
 // For testing of old executor
 #include <iostream>
 #include <thread>
@@ -32,7 +31,7 @@
 #include <sched.h>
 #include <sys/mman.h>
 #include <pthread.h>
-#include "MyExecutor/MyExecutor.hpp"
+// #include "MyExecutor/MyExecutor.hpp"
 
 #define JOY_DEV "/dev/input/js0"
 
@@ -46,7 +45,6 @@
 #define GPIO_TOF_8 	RPI_V2_GPIO_P1_35
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
 #define GPIO_TOF_10 RPI_V2_GPIO_P1_37
-// #define GPIO_TMP	RPI_V2_GPIO_P1_07
 #define NDEBUG
 
 void stepperTest();
@@ -88,8 +86,6 @@ int main(void) {
 
 	//stepperTest();
 	//tofTest();
-	TMPtest();
-	//delay(5000);
 	//IMUtest();
 	//distanceTest();
 	//joyControl();
@@ -437,10 +433,10 @@ void IMUtest(){
 	SensorOne.close_i2c();
 }
 
-void TMPtest(){ //
-	tmp102 czujnik(0x48,"/dev/i2c-0");
-	printf("Rys temperature: %f \n",czujnik.readTemperature());
-}
+// void TMPtest(){ //
+// 	tmp102 czujnik(0x48,"/dev/i2c-0");
+// 	printf("Rys temperature: %f \n",czujnik.readTemperature());
+// }
 
 void distanceTest(){
 
@@ -639,129 +635,129 @@ void joyControl(){
 	return;
 }
 
-void BalancingTest(){
+// void BalancingTest(){
 
-	float speedLeft, speedRight, oldSpeedLeft, oldSpeedRight;
-	Controller pid;
+// 	float speedLeft, speedRight, oldSpeedLeft, oldSpeedRight;
+// 	Controller pid;
 
-	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
+// 	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
 
-	if( SensorOne.begin() != 0 )printf("Problem starting the sensor \n");
-	else  printf("Sensor with CS1 started.\n");
+// 	if( SensorOne.begin() != 0 )printf("Problem starting the sensor \n");
+// 	else  printf("Sensor with CS1 started.\n");
 
-	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
-	char *button=NULL, name_of_joystick[80];
-	struct js_event js;
+// 	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
+// 	char *button=NULL, name_of_joystick[80];
+// 	struct js_event js;
 
-	if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
-	{
-	printf( "Couldn't open joystick\n" );
-	return;
-	}
+// 	if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
+// 	{
+// 	printf( "Couldn't open joystick\n" );
+// 	return;
+// 	}
 
-	ioctl( joy_fd, JSIOCGAXES, &num_of_axis );
-	ioctl( joy_fd, JSIOCGBUTTONS, &num_of_buttons );
-	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
+// 	ioctl( joy_fd, JSIOCGAXES, &num_of_axis );
+// 	ioctl( joy_fd, JSIOCGBUTTONS, &num_of_buttons );
+// 	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
 
-	axis = (int *) calloc( num_of_axis, sizeof( int ) );
-	button = (char *) calloc( num_of_buttons, sizeof( char ) );
+// 	axis = (int *) calloc( num_of_axis, sizeof( int ) );
+// 	button = (char *) calloc( num_of_buttons, sizeof( char ) );
 
-	fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
+// 	fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
 
-	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
-	globalBoard = &board;
-	board.setUp();
+// 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+// 	globalBoard = &board;
+// 	board.setUp();
 
-	// Acceleration
-	float  ax, ay, az;
-	ax = SensorOne.readFloatAccelX();
-	ay = SensorOne.readFloatAccelY();
-	az = SensorOne.readFloatAccelZ();
+// 	// Acceleration
+// 	float  ax, ay, az;
+// 	ax = SensorOne.readFloatAccelX();
+// 	ay = SensorOne.readFloatAccelY();
+// 	az = SensorOne.readFloatAccelZ();
 
-	// Gyro
-	float rgx, rgy, rgz;
-	const float offX = 3.597539, offY = -5.142877, offZ = -3.623744;
-	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
-	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
-	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+// 	// Gyro
+// 	float rgx, rgy, rgz;
+// 	const float offX = 3.597539, offY = -5.142877, offZ = -3.623744;
+// 	rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+// 	rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+// 	rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
 
-	// Sum of gyro readings
-	float sumgx = 0, sumgy = 0, sumgz = 0;
+// 	// Sum of gyro readings
+// 	float sumgx = 0, sumgy = 0, sumgz = 0;
 
-	// Tilt
-	float ty = atan2(ax,sqrt(ay*ay+az*az));
+// 	// Tilt
+// 	float ty = atan2(ax,sqrt(ay*ay+az*az));
 
-	// Filtering
-	filter f(ty,0.5,10);
-	float f_gy, f_ty;
-	float angle;
-	int steering;
-	int throttle;
+// 	// Filtering
+// 	filter f(ty,0.5,10);
+// 	float f_gy, f_ty;
+// 	float angle;
+// 	int steering;
+// 	int throttle;
 
-	while( 1 )  /* infinite loop *////////////////////////////////////////////////////
-	{
+// 	while( 1 )  /* infinite loop *////////////////////////////////////////////////////
+// 	{
 
-		/* read the joystick state
-		read(joy_fd, &js, sizeof(struct js_event));
+// 		/* read the joystick state
+// 		read(joy_fd, &js, sizeof(struct js_event));
 
-		switch (js.type & ~JS_EVENT_INIT)
-		{
-		case JS_EVENT_AXIS:
-		axis   [ js.number ] = js.value;
-		break;
-		case JS_EVENT_BUTTON:
-		button [ js.number ] = js.value;
-		break;
-		}
-
-
-		speedLeft = axis[1]/100;
-		speedRight = axis[1]/100;
-
-		speedLeft+= axis[3]/200;
-		speedRight-= axis[3]/200;
-
-		*/
-		//Get all parameters
-		ax = SensorOne.readFloatAccelX();
-		ay = SensorOne.readFloatAccelY();
-		az = SensorOne.readFloatAccelZ();
-
-		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
-		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
-		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
-
-		ty = atan2(ax,sqrt(ay*ay+az*az));
-
-		f_ty = f.getAngle(ty,rgy);
-		f_gy = f.getGyro();
+// 		switch (js.type & ~JS_EVENT_INIT)
+// 		{
+// 		case JS_EVENT_AXIS:
+// 		axis   [ js.number ] = js.value;
+// 		break;
+// 		case JS_EVENT_BUTTON:
+// 		button [ js.number ] = js.value;
+// 		break;
+// 		}
 
 
-		angle = f_ty;
-		delay(15);
+// 		speedLeft = axis[1]/100;
+// 		speedRight = axis[1]/100;
 
-		angle =angle*180/3.1415;
-		angle -=14.5;
-		printf(" Angle: %f\n", angle);
-		pid.calculate_speed(angle,oldSpeedLeft,oldSpeedRight,0,0,speedLeft,speedRight);
+// 		speedLeft+= axis[3]/200;
+// 		speedRight-= axis[3]/200;
+
+// 		*/
+// 		//Get all parameters
+// 		ax = SensorOne.readFloatAccelX();
+// 		ay = SensorOne.readFloatAccelY();
+// 		az = SensorOne.readFloatAccelZ();
+
+// 		rgx = (SensorOne.readFloatGyroX() - offX)*M_PI/180;
+// 		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180;
+// 		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180;
+
+// 		ty = atan2(ax,sqrt(ay*ay+az*az));
+
+// 		f_ty = f.getAngle(ty,rgy);
+// 		f_gy = f.getGyro();
 
 
-		if(speedLeft>360)speedLeft=360;
-		if(speedLeft<-360)speedLeft=-360;
-		if(speedRight>360)speedRight=360;
-		if(speedRight<-360)speedRight=-360;
+// 		angle = f_ty;
+// 		delay(15);
 
-		board.setSpeed((int)speedLeft,(int)speedRight);
-		oldSpeedLeft = speedLeft;
-		oldSpeedRight = speedRight;
+// 		angle =angle*180/3.1415;
+// 		angle -=14.5;
+// 		printf(" Angle: %f\n", angle);
+// 		pid.calculate_speed(angle,oldSpeedLeft,oldSpeedRight,0,0,speedLeft,speedRight);
 
-		fflush(stdout);
-	}
-	SensorOne.close_i2c();
-	board.stop();
-	close( joy_fd ); /* too bad we never get here */
-	return;
-}
+
+// 		if(speedLeft>360)speedLeft=360;
+// 		if(speedLeft<-360)speedLeft=-360;
+// 		if(speedRight>360)speedRight=360;
+// 		if(speedRight<-360)speedRight=-360;
+
+// 		board.setSpeed((int)speedLeft,(int)speedRight);
+// 		oldSpeedLeft = speedLeft;
+// 		oldSpeedRight = speedRight;
+
+// 		fflush(stdout);
+// 	}
+// 	SensorOne.close_i2c();
+// 	board.stop();
+// 	close( joy_fd ); /* too bad we never get here */
+// 	return;
+// }
 
 void ResponseTimeTest(){
 
@@ -965,19 +961,19 @@ void ResponseTimeTest(){
 
 	puts("IMU done");
 	/////////////////////////////////////TMP102///////////////////////////////
-	tmp102 czujnik(0x48,"/dev/i2c-0");
+	// tmp102 czujnik(0x48,"/dev/i2c-0");
 
-	timer_old = std::chrono::high_resolution_clock::now();
-	for (int j=0; j<1000; j++){
-		temperature = czujnik.readTemperature();
-	}
-	timer_value = std::chrono::high_resolution_clock::now();
-	time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
+	// timer_old = std::chrono::high_resolution_clock::now();
+	// for (int j=0; j<1000; j++){
+	// 	temperature = czujnik.readTemperature();
+	// }
+	// timer_value = std::chrono::high_resolution_clock::now();
+	// time_span = std::chrono::duration_cast<std::chrono::duration<double>>(timer_value - timer_old);
 
-	file << "1xTEMP average time:" << std::endl;
-	file << time_span.count()/1000.0 << std::endl;
+	// file << "1xTEMP average time:" << std::endl;
+	// file << time_span.count()/1000.0 << std::endl;
 
-	puts("TMP done");
+	// puts("TMP done");
 
 	/////////////////////////////////////Steppers///////////////////////////////
 

@@ -5,7 +5,7 @@
  *      Author: dangield
  */
 
-#include "filter.h"
+#include "lsm6ds3/filter.h"
 
 filter::filter(float angle, float x = 1, float hz = 100){
 	previousAngles[0] = angle;

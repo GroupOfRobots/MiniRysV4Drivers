@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "../../bcm/bcm2835.h"
+#include "bcm/bcm2835.h"
 
 #if defined(__linux__)
 #else
@@ -38,9 +38,9 @@
  #include "bcm2835_spi.h"
 #endif
 
-#include "../include/motors.h"
+#include "l6470/motors.h"
 
-#include "../include/l6470constants.h"
+#include "l6470/l6470constants.h"
 
 #define BUSY_PIN_NOT_USED	0xFF
 
