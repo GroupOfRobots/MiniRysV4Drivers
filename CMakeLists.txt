@@ -17,17 +17,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 
 # including headers
-#set(HEADER_FILES
-#	src/FrequencyCounter.hpp
-#)
-
-#FILE(GLOB ${PROJECT_NAME}_headers ${HEADER_FILES})
-
 install(
-#       FILES ${${PROJECT_NAME}_headers}
         DIRECTORY include/
         DESTINATION include
 )
@@ -37,7 +31,7 @@ set(AMENT_DEPENDENCIES
 	rclcpp
 )
 
-# building libraries
+# building and installing libraries
 set(SOURCE_FILES
 	src/FrequencyCounter/FrequencyCounter.cpp
   src/bcm/bcm2835.c
@@ -68,7 +62,7 @@ install(TARGETS
 	INCLUDES DESTINATION include
 )
 
-# building executables
+# building and installing executables
 add_executable(frequency_test src/freqmain.cpp)
 target_link_libraries(frequency_test ${PROJECT_NAME}_source)
 ament_target_dependencies(frequency_test ${AMENT_DEPENDENCIES})
@@ -92,6 +86,14 @@ install(TARGETS
 	frequency_test
   main
 	DESTINATION lib/${PROJECT_NAME}
+)
+
+# installing python scripts
+ament_python_install_package(scripts/tmp102)
+install(PROGRAMS
+  scripts/tmp102/tmp102.py
+  scripts/tmp102/example.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

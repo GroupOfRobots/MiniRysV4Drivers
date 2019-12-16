@@ -84,9 +84,9 @@ int main(void) {
 			return -1;
 	}
 
-	//stepperTest();
-	//tofTest();
-	//IMUtest();
+	stepperTest();
+	// tofTest();
+	// IMUtest();
 	//distanceTest();
 	//joyControl();
 	//stepperTest();
@@ -277,18 +277,19 @@ void tofTest(){
 
 	for(int j=0; j<1000; j++){
 	//while(1){
-		//for(int i=0; i<10; i++){
-		//			measurement[i] = globalSensors[i]->readData(1);
-		//			printf("%d:%5d ",i,measurement[i]);
-		//}
-				measurement[5] = globalSensors[5]->readData(1);
-				printf("5:%5d ",measurement[5]);
-				measurement[8] = globalSensors[8]->readData(1);
-				printf("8:%5d ",measurement[8]);
+		for(int i=0; i<10; i++){
+					measurement[i] = globalSensors[i]->readData(1);
+					printf("%d:%5d ",i,measurement[i]);
+		}
+				// measurement[5] = globalSensors[5]->readData(1);
+				// printf("5:%5d ",measurement[5]);
+				// measurement[8] = globalSensors[8]->readData(1);
+				// printf("8:%5d ",measurement[8]);
 		delay(20);
-		file << measurement[5] <<" "<< measurement[8]<<std::endl;
+		// file << measurement[5] <<" "<< measurement[8]<<std::endl;
 		printf("\n");
 		printf("\033[H\033[J");
+		if (destroy) break;
 	}
 
 	for(int i=0; i<10; i++){
