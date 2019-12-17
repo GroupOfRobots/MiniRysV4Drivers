@@ -89,12 +89,16 @@ install(TARGETS
 )
 
 # installing python scripts
-ament_python_install_package(scripts/tmp102)
-ament_python_install_package(scripts/mcp3221)
-install(PROGRAMS
+# ament_python_install_package(scripts/tmp102)
+# ament_python_install_package(scripts/mcp3221)
+install(FILES
   scripts/tmp102/tmp102.py
-  scripts/tmp102/example.py
   scripts/mcp3221/mcp3221.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/tmp102/example.py
   scripts/mcp3221/voltage_example.py
   DESTINATION lib/${PROJECT_NAME}
 )
