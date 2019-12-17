@@ -89,8 +89,6 @@ install(TARGETS
 )
 
 # installing python scripts
-# ament_python_install_package(scripts/tmp102)
-# ament_python_install_package(scripts/mcp3221)
 install(FILES
   scripts/tmp102/tmp102.py
   scripts/mcp3221/mcp3221.py
@@ -98,8 +96,8 @@ install(FILES
 )
 
 install(PROGRAMS
-  scripts/tmp102/example.py
-  scripts/mcp3221/voltage_example.py
+  scripts/temperature_sensor_test.py
+  scripts/voltage_sensor_test.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
