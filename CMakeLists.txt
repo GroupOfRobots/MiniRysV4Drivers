@@ -19,6 +19,9 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 # including headers
 install(
@@ -98,7 +101,14 @@ install(FILES
 install(PROGRAMS
   scripts/temperature_sensor_test.py
   scripts/voltage_sensor_test.py
+  scripts/temperature_publisher.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# install the launch directory
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 if(BUILD_TESTING)
