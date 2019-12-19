@@ -102,6 +102,7 @@ install(PROGRAMS
   scripts/temperature_sensor_test.py
   scripts/voltage_sensor_test.py
   scripts/temperature_publisher.py
+  scripts/voltage_publisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

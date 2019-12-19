@@ -18,4 +18,10 @@ def generate_launch_description():
 			package= package, node_executable='temperature_publisher.py', output='screen',
 			parameters=[full_path + "/yaml/temperature_publisher_params.yaml"]),
 
+		launch_ros.actions.Node(
+			# the name of the executable is set in CMakeLists.txt, towards the end of
+			# the file, in add_executable(...) and the directives following it
+			package= package, node_executable='voltage_publisher.py', output='screen',
+			parameters=[full_path + "/yaml/voltage_publisher_params.yaml"]),
+
 	])

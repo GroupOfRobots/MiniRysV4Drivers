@@ -1,0 +1,3 @@
+voltage_publisher:
+    ros__parameters:
+        period: 0.5 #in seconds

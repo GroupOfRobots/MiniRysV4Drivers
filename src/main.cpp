@@ -69,7 +69,7 @@ void sigintHandler(int signum) {
 		//globalBoard->Dump();
 		if (file.is_open()) file.close();
 		if (globalBoard != nullptr) globalBoard->stop();
-		for(int i = 0; i < 10; i++)
+		for(int i = 0; i < 9; i++)
 			if (globalSensors[i] != nullptr) globalSensors[i]->disable();
 		destroy = true;
 		//exit(signum);
@@ -85,8 +85,8 @@ int main(void) {
 	}
 
 	stepperTest();
-	// tofTest();
-	// IMUtest();
+	IMUtest();
+	tofTest();
 	//distanceTest();
 	//joyControl();
 	//stepperTest();
@@ -171,7 +171,7 @@ void tofTest(){
 	bcm2835_gpio_fsel(GPIO_TOF_7, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_8, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
+	// bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
 
 	//disable all sensors first
 	bcm2835_gpio_clr(GPIO_TOF_1); // górny
@@ -183,7 +183,7 @@ void tofTest(){
 	bcm2835_gpio_clr(GPIO_TOF_7);
 	bcm2835_gpio_clr(GPIO_TOF_8);
 	bcm2835_gpio_clr(GPIO_TOF_9);
-	bcm2835_gpio_clr(GPIO_TOF_10);
+	// bcm2835_gpio_clr(GPIO_TOF_10);
 
 	bcm2835_i2c_begin(); //begin I2C
 	bcm2835_i2c_set_baudrate(40000);
@@ -261,23 +261,26 @@ void tofTest(){
 	delay(10);
 	puts("Sensor nine started at: 0x38");
 
-	bcm2835_gpio_set(GPIO_TOF_10);
-	delay(10);
-	globalSensors[9] = new VL53L1X(VL53L1X::Medium,0x29);
-	delay(10);
-	globalSensors[9]->setAddress(0x39);
-	delay(10);
-	puts("Sensor ten started at: 0x39");
+	// bcm2835_gpio_set(GPIO_TOF_10);
+	// delay(10);
+	// globalSensors[9] = new VL53L1X(VL53L1X::Medium,0x29);
+	// delay(10);
+	// globalSensors[9]->setAddress(0x39);
+	// delay(10);
+	// puts("Sensor ten started at: 0x39");
 
 
-	for(int i=0; i<10; i++){
+	for(int i=0; i<9; i++){
 		globalSensors[i]->startContinuous(20);
+		// printf("Sth\n");
 		delay(10);
 	}
 
-	for(int j=0; j<1000; j++){
+	for(int j=0; j<100; j++){
+		// printf("Sth2\n");
 	//while(1){
-		for(int i=0; i<10; i++){
+		for(int i=0; i<9; i++){
+			// printf("Sth3\n");
 					measurement[i] = globalSensors[i]->readData(1);
 					printf("%d:%5d ",i,measurement[i]);
 		}
@@ -292,7 +295,7 @@ void tofTest(){
 		if (destroy) break;
 	}
 
-	for(int i=0; i<10; i++){
+	for(int i=0; i<9; i++){
 		globalSensors[i]->disable();
 		delay(10);
 	}
@@ -344,7 +347,7 @@ void IMUtest(){
 			  delay(1000);
 		  }
 	}
-	int i, n = 1000;
+	int i, n = 100;
 
 	// Acceleration
 	float  ax, ay, az;
@@ -439,99 +442,99 @@ void IMUtest(){
 // 	printf("Rys temperature: %f \n",czujnik.readTemperature());
 // }
 
-void distanceTest(){
+// void distanceTest(){
 
 
-	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_6, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_7, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_8, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_6, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_7, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_8, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_9, BCM2835_GPIO_FSEL_OUTP);
+// 	bcm2835_gpio_fsel(GPIO_TOF_10, BCM2835_GPIO_FSEL_OUTP);
 
-	//disable all sensors first
-	bcm2835_gpio_clr(GPIO_TOF_1); // górny
-	bcm2835_gpio_clr(GPIO_TOF_2); // górny
-	bcm2835_gpio_clr(GPIO_TOF_3);
-	bcm2835_gpio_clr(GPIO_TOF_4);
-	bcm2835_gpio_clr(GPIO_TOF_5);
-	bcm2835_gpio_clr(GPIO_TOF_6);
-	bcm2835_gpio_clr(GPIO_TOF_7);
-	bcm2835_gpio_clr(GPIO_TOF_8);
-	bcm2835_gpio_clr(GPIO_TOF_9);
-	bcm2835_gpio_clr(GPIO_TOF_10);
+// 	//disable all sensors first
+// 	bcm2835_gpio_clr(GPIO_TOF_1); // górny
+// 	bcm2835_gpio_clr(GPIO_TOF_2); // górny
+// 	bcm2835_gpio_clr(GPIO_TOF_3);
+// 	bcm2835_gpio_clr(GPIO_TOF_4);
+// 	bcm2835_gpio_clr(GPIO_TOF_5);
+// 	bcm2835_gpio_clr(GPIO_TOF_6);
+// 	bcm2835_gpio_clr(GPIO_TOF_7);
+// 	bcm2835_gpio_clr(GPIO_TOF_8);
+// 	bcm2835_gpio_clr(GPIO_TOF_9);
+// 	bcm2835_gpio_clr(GPIO_TOF_10);
 
-	long positionLeft,positionRight;
-	int voltage;
-	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
-	globalBoard = &board;
-	board.setUp();
-	positionLeft = board.getPositionLeft();
-	positionRight = board.getPositionRight();
-	voltage = board.getBatteryVoltage();
+// 	long positionLeft,positionRight;
+// 	int voltage;
+// 	Motors board( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+// 	globalBoard = &board;
+// 	board.setUp();
+// 	positionLeft = board.getPositionLeft();
+// 	positionRight = board.getPositionRight();
+// 	voltage = board.getBatteryVoltage();
 
-	bcm2835_i2c_begin(); //begin I2C
-	bcm2835_i2c_set_baudrate(40000);
+// 	bcm2835_i2c_begin(); //begin I2C
+// 	bcm2835_i2c_set_baudrate(40000);
 
-	//enable sensor one and change address
-	bcm2835_gpio_set(GPIO_TOF_1);
-	delay(10);
-	globalSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
-	delay(10);
-	globalSensors[0]->setAddress(0x30);
-	delay(10);
-	puts("Sensor one started at: 0x30");
+// 	//enable sensor one and change address
+// 	bcm2835_gpio_set(GPIO_TOF_1);
+// 	delay(10);
+// 	globalSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
+// 	delay(10);
+// 	globalSensors[0]->setAddress(0x30);
+// 	delay(10);
+// 	puts("Sensor one started at: 0x30");
 
-	bcm2835_gpio_set(GPIO_TOF_2);
-	delay(10);
-	globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
-	delay(10);
-	globalSensors[1]->setAddress(0x31);
-	delay(10);
-	puts("Sensor two started at: 0x31");
+// 	bcm2835_gpio_set(GPIO_TOF_2);
+// 	delay(10);
+// 	globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
+// 	delay(10);
+// 	globalSensors[1]->setAddress(0x31);
+// 	delay(10);
+// 	puts("Sensor two started at: 0x31");
 
-	for(int i=0; i<2; i++){
-			globalSensors[i]->startContinuous(20);
-			delay(10);
-		}
+// 	for(int i=0; i<2; i++){
+// 			globalSensors[i]->startContinuous(20);
+// 			delay(10);
+// 		}
 
-	int target = 100;
-	int speed=0;
+// 	int target = 100;
+// 	int speed=0;
 
-	while(1){
-		measurement[0] = globalSensors[0]->readData(1);
-		measurement[1] = globalSensors[1]->readData(1);
-		if(measurement[0]> target){
-			speed = abs(measurement[0]-target+10);
-			if(speed>300){
-			speed=300;
-			}
-			board.setSpeed(speed,-speed);
-		}
-		else{
-			board.setSpeed(0,0);
-		}
-		printf("Speed:%d\n",speed);
-		printf("FullSpeed: %f\n",board.getFullSpeed());
-		//board.getParam(L6470_PARAM_SPEED)
-	}
-	positionLeft = board.getPositionLeft();
-	positionRight = board.getPositionRight();
-	voltage = board.getBatteryVoltage();
-	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
-	board.stop();
+// 	while(1){
+// 		measurement[0] = globalSensors[0]->readData(1);
+// 		measurement[1] = globalSensors[1]->readData(1);
+// 		if(measurement[0]> target){
+// 			speed = abs(measurement[0]-target+10);
+// 			if(speed>300){
+// 			speed=300;
+// 			}
+// 			board.setSpeed(speed,-speed);
+// 		}
+// 		else{
+// 			board.setSpeed(0,0);
+// 		}
+// 		printf("Speed:%d\n",speed);
+// 		printf("FullSpeed: %f\n",board.getFullSpeed());
+// 		//board.getParam(L6470_PARAM_SPEED)
+// 	}
+// 	positionLeft = board.getPositionLeft();
+// 	positionRight = board.getPositionRight();
+// 	voltage = board.getBatteryVoltage();
+// 	printf("Absolute position: Left:%lu		Right:%lu	Voltage:%d\n",positionLeft, positionRight,voltage);
+// 	board.stop();
 
 
-	for(int i=0; i<2; i++){
-		globalSensors[i]->disable();
-		delay(10);
-	}
+// 	for(int i=0; i<2; i++){
+// 		globalSensors[i]->disable();
+// 		delay(10);
+// 	}
 
-}
+// }
 
 void joyControl(){
 	int speedLeft = 0, speedRight = 0, speedLeftPast = 0, speedRightPast = 0;
