@@ -84,10 +84,20 @@ target_include_directories(main
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
+add_executable(imu_sensor_test src/imu_sensor_test.cpp)
+target_link_libraries(imu_sensor_test ${PROJECT_NAME}_source)
+ament_target_dependencies(imu_sensor_test ${AMENT_DEPENDENCIES})
+
+target_include_directories(imu_sensor_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 
 install(TARGETS
 	frequency_test
   main
+  imu_sensor_test
 	DESTINATION lib/${PROJECT_NAME}
 )
 
