@@ -93,11 +93,31 @@ target_include_directories(imu_sensor_test
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
+add_executable(tof_sensor_test src/tof_sensor_test.cpp)
+target_link_libraries(tof_sensor_test ${PROJECT_NAME}_source)
+ament_target_dependencies(tof_sensor_test ${AMENT_DEPENDENCIES})
+
+target_include_directories(tof_sensor_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(motors_test src/motors_test.cpp)
+target_link_libraries(motors_test ${PROJECT_NAME}_source)
+ament_target_dependencies(motors_test ${AMENT_DEPENDENCIES})
+
+target_include_directories(motors_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 
 install(TARGETS
 	frequency_test
   main
   imu_sensor_test
+  tof_sensor_test
+  motors_test
 	DESTINATION lib/${PROJECT_NAME}
 )
 
