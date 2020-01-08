@@ -6,11 +6,11 @@
 #include "lsm6ds3/LSM6DS3.h"
 #include "lsm6ds3/filter.h"
 
-bool destroy = false;
+bool endProcess = false;
 
 void sigintHandler(int signum) {
 	if (signum == SIGINT) {
-		destroy = true;
+		endProcess = true;
 	}
 }
 
@@ -28,20 +28,20 @@ int main(void)
 	int status = SensorOne.begin();
 	if( status != 0 )
 	{
-		  printf("Problem number %d starting the sensor \n", status);
-		  return 0;
+		printf("Problem number %d starting the sensor \n", status);
+		return 0;
 	}
 	else
 	{
-		  printf("Sensor with CS1 started, awaiting calibration.\n");
-		  for (int i = 10; i>0; i--){
-			if (destroy) {
+		printf("Sensor with CS1 started, awaiting calibration.\n");
+		for (int i = 10; i>0; i--){
+			if (endProcess) {
 				SensorOne.close_i2c();
 				return 0;
 			}
-			  printf("%d\n",i);
-			  delay(1000);
-		  }
+			printf("%d\n",i);
+			delay(1000);
+		}
 	}
 
 	// Acceleration
@@ -67,7 +67,7 @@ int main(void)
 	filter f(ty,param,freq);
 	float f_gy, f_ty;
 
-	while(!destroy) {
+	while(!endProcess) {
 		printf("\033[H\033[J");
 		//Get all parameters
 		printf("\nAccelerometer:\n");
