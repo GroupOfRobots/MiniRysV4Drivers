@@ -85,10 +85,10 @@ int main(void) {
 	}
 
 	stepperTest();
-	IMUtest();
-	tofTest();
+	// IMUtest();
+	// tofTest();
 	//distanceTest();
-	//joyControl();
+	// joyControl();
 	//stepperTest();
 	//BalancingTest();
 	//ResponseTimeTest();
@@ -591,11 +591,11 @@ void joyControl(){
 	board.setSpeed(0,0);
 	int filter=0, voltage = 0;
 
-	while( 1 )  /* infinite loop */
+	while( !destroy )  /* infinite loop */
 	{
 		filter++;
 		voltage = board.getBatteryVoltage();
-		if (filter%10000 == 0) printf("Battery:\t%d\n", voltage);
+		if (filter%100 == 0) printf("Battery:\t%d\n", voltage);
 
 		/* read the joystick state */
 		read(joy_fd, &js, sizeof(struct js_event));
@@ -630,8 +630,8 @@ void joyControl(){
 		speedRightPast = speedRight;
 
 		board.setSpeed(speedLeft,speedRight);
-
-		fflush(stdout);
+		delay(10);
+		// fflush(stdout);
 	}
 
 	board.stop();
