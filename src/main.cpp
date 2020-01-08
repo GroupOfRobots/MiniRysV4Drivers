@@ -84,11 +84,11 @@ int main(void) {
 			return -1;
 	}
 
-	stepperTest();
+	// stepperTest();
 	// IMUtest();
 	// tofTest();
 	//distanceTest();
-	// joyControl();
+	joyControl();
 	//stepperTest();
 	//BalancingTest();
 	//ResponseTimeTest();
@@ -539,20 +539,7 @@ void IMUtest(){
 void joyControl(){
 	int speedLeft = 0, speedRight = 0, speedLeftPast = 0, speedRightPast = 0;
 
-	LSM6DS3 SensorOne( I2C_MODE, 0x6B);
-
-		if( SensorOne.begin() != 0 )
-		{
-			  printf("Problem starting the sensor \n");
-		}
-		else
-		{
-			  printf("Sensor with CS1 started.\n");
-		}
-		int i, n = 10000;
-
-
-	int joy_fd, *axis=NULL, num_of_axis=0, num_of_buttons=0;
+	int joy_fd, *axis=NULL, *axisPast=NULL, num_of_axis=0, num_of_buttons=0;
 	bool *button=NULL, *buttonPast=NULL;
 	char name_of_joystick[80];//*button=NULL,
 	struct js_event js;
@@ -568,8 +555,10 @@ void joyControl(){
 	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
 
 	axis = (int *) calloc( num_of_axis, sizeof( int ) );
+	axisPast = (int *) calloc( num_of_axis, sizeof( int ) );
 	for(int i = 0; i < num_of_axis; i++){
 		axis[i] = 0;
+		axisPast[i] = 0;
 	}
 	button = (bool *) calloc( num_of_buttons, sizeof( bool ) );
 	buttonPast = (bool *) calloc( num_of_buttons, sizeof( bool ) );
@@ -593,9 +582,9 @@ void joyControl(){
 
 	while( !destroy )  /* infinite loop */
 	{
-		filter++;
-		voltage = board.getBatteryVoltage();
-		if (filter%100 == 0) printf("Battery:\t%d\n", voltage);
+		// filter++;
+		// voltage = board.getBatteryVoltage();
+		// if (filter%100 == 0) printf("Battery:\t%d\n", voltage);
 
 		/* read the joystick state */
 		read(joy_fd, &js, sizeof(struct js_event));
@@ -605,6 +594,8 @@ void joyControl(){
 		{
 			case JS_EVENT_AXIS:
 			axis   [ js.number ] = js.value;
+			if (axis [ js.number ] != axisPast[js.number]) printf("Axis %d:\t%d\n", js.number, axis[js.number]);
+			axisPast[js.number] = axis[js.number];
 			break;
 			case JS_EVENT_BUTTON:
 			button [ js.number ] = js.value;
