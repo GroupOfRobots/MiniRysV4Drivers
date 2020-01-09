@@ -30,7 +30,7 @@ class JoyconControl : public rclcpp::Node
 		{
 			if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
 			{
-				printf( "Couldn't open joystick\n" );
+				RCLCPP_INFO(this->get_logger(), "Couldn't open joystick\n" );
 				return;
 			}
 
@@ -51,7 +51,7 @@ class JoyconControl : public rclcpp::Node
 				buttonPast[i] = false;
 			}
 
-			printf("Joystick detected: %s\n\t%d axis\n\t%d buttons\n\n"
+			RCLCPP_INFO(this->get_logger(),"Joystick detected: %s\n\t%d axis\n\t%d buttons\n\n"
 			, name_of_joystick
 			, num_of_axis
 			, num_of_buttons );
@@ -109,12 +109,12 @@ class JoyconControl : public rclcpp::Node
 			{
 				case JS_EVENT_AXIS:
 					axis   [ js.number ] = js.value;
-					if (axis [ js.number ] != axisPast[js.number]) printf("Axis %d:\t%d\n", js.number, axis[js.number]);
+					if (axis [ js.number ] != axisPast[js.number]) RCLCPP_INFO(this->get_logger(),"Axis %d:\t%d", js.number, axis[js.number]);
 					axisPast[js.number] = axis[js.number];
 					break;
 				case JS_EVENT_BUTTON:
 					button [ js.number ] = js.value;
-					if (button [ js.number ] != buttonPast[js.number]) printf("Button %d:\t%d\n", js.number, button[js.number]);
+					if (button [ js.number ] != buttonPast[js.number]) RCLCPP_INFO(this->get_logger(),"Button %d:\t%d", js.number, button[js.number]);
 					buttonPast[js.number] = button[js.number];
 					break;
 			}
@@ -123,6 +123,7 @@ class JoyconControl : public rclcpp::Node
 
 int main(int argc, char * argv[])
 {
+	setbuf(stdout, nullptr);
 	signal(SIGINT, sigintHandler);
 	rclcpp::init(argc, argv);
 	auto node = std::make_shared<JoyconControl>();
