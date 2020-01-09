@@ -39,6 +39,6 @@ def generate_launch_description():
 			# env={PYTHONUNBUFFERED : "1"},
 			# emulate_tty=True,
 			# arguments=[('__log_level:=info')],
-			# parameters=[full_path + "/yaml/voltage_publisher_params.yaml"],
+			parameters=[full_path + "/yaml/joycon_control_only_params.yaml"],
 		),
 	])

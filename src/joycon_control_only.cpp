@@ -64,8 +64,10 @@ class JoyconControl : public rclcpp::Node
 			temperature_subscription = this->create_subscription<sensor_msgs::msg::Temperature>(
 			"tmp", 10, std::bind(&JoyconControl::temperature_callback, this, _1));
 
+			rclcpp::ParameterValue default_period(10);
+			rclcpp::ParameterValue period = this->declare_parameter("period", default_period);
 			motor_control_timer = this->create_wall_timer(
-			10ms, std::bind(&JoyconControl::motor_control, this));
+			std::chrono::milliseconds(period.get<int>()), std::bind(&JoyconControl::motor_control, this));
 		}
 
 		~JoyconControl(){

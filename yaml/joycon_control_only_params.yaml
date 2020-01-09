@@ -1,0 +1,3 @@
+joycon_control_only:
+    ros__parameters:
+        period: 10 #in milliseconds
