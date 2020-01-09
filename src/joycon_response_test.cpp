@@ -65,15 +65,15 @@ int main(void)
 		switch (js.type & ~JS_EVENT_INIT)
 		{
 			case JS_EVENT_AXIS:
-			axis   [ js.number ] = js.value;
-			if (axis [ js.number ] != axisPast[js.number]) printf("Axis %d:\t%d\n", js.number, axis[js.number]);
-			axisPast[js.number] = axis[js.number];
-			break;
+				axis   [ js.number ] = js.value;
+				if (axis [ js.number ] != axisPast[js.number]) printf("Axis %d:\t%d\n", js.number, axis[js.number]);
+				axisPast[js.number] = axis[js.number];
+				break;
 			case JS_EVENT_BUTTON:
-			button [ js.number ] = js.value;
-			if (button [ js.number ] != buttonPast[js.number]) printf("Button %d:\t%d\n", js.number, button[js.number]);
-			buttonPast[js.number] = button[js.number];
-			break;
+				button [ js.number ] = js.value;
+				if (button [ js.number ] != buttonPast[js.number]) printf("Button %d:\t%d\n", js.number, button[js.number]);
+				buttonPast[js.number] = button[js.number];
+				break;
 		}
 		delay(10);
 	}

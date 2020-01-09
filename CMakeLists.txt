@@ -32,6 +32,7 @@ install(
 # setting ament dependencies
 set(AMENT_DEPENDENCIES
 	rclcpp
+  sensor_msgs
 )
 
 # building and installing libraries
@@ -111,11 +112,20 @@ target_include_directories(motors_test
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-add_executable(controller_response_test src/controller_response_test.cpp)
-target_link_libraries(controller_response_test ${PROJECT_NAME}_source)
-ament_target_dependencies(controller_response_test ${AMENT_DEPENDENCIES})
+add_executable(joycon_response_test src/joycon_response_test.cpp)
+target_link_libraries(joycon_response_test ${PROJECT_NAME}_source)
+ament_target_dependencies(joycon_response_test ${AMENT_DEPENDENCIES})
 
-target_include_directories(controller_response_test
+target_include_directories(joycon_response_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(joycon_control_only src/joycon_control_only.cpp)
+target_link_libraries(joycon_control_only ${PROJECT_NAME}_source)
+ament_target_dependencies(joycon_control_only ${AMENT_DEPENDENCIES})
+
+target_include_directories(joycon_control_only
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
@@ -127,7 +137,8 @@ install(TARGETS
   imu_sensor_test
   tof_sensor_test
   motors_test
-  controller_response_test
+  joycon_response_test
+  joycon_control_only
 	DESTINATION lib/${PROJECT_NAME}
 )
 
