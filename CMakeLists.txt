@@ -111,6 +111,15 @@ target_include_directories(motors_test
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
+add_executable(controller_response_test src/controller_response_test.cpp)
+target_link_libraries(controller_response_test ${PROJECT_NAME}_source)
+ament_target_dependencies(controller_response_test ${AMENT_DEPENDENCIES})
+
+target_include_directories(controller_response_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 
 install(TARGETS
 	frequency_test
@@ -118,6 +127,7 @@ install(TARGETS
   imu_sensor_test
   tof_sensor_test
   motors_test
+  controller_response_test
 	DESTINATION lib/${PROJECT_NAME}
 )
 
