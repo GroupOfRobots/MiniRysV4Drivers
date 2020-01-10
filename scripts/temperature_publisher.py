@@ -11,9 +11,9 @@ class TmpPublisher(Node):
 	def __init__(self):
 		super().__init__('temperature_publisher')
 
-		period = self.declare_parameter("period")
+		period = self.declare_parameter("period", 5)
 		self.timer_period = period.value
-		units = self.declare_parameter("units")
+		units = self.declare_parameter("units", 'C')
 		self.tmp_units = units.value
 
 		self.publisher_ = self.create_publisher(Temperature, 'tmp', 10)

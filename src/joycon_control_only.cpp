@@ -9,6 +9,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "sensor_msgs/msg/temperature.hpp"
+#include "bcm/bcm2835.h"
+#include "l6470/motors.h"
 
 #define JOY_DEV "/dev/input/js0"
 
@@ -28,9 +30,11 @@ class JoyconControl : public rclcpp::Node
 	public:
 		JoyconControl(): Node("joycon_control_only")
 		{
+			//initialize joycon
 			if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
 			{
-				RCLCPP_INFO(this->get_logger(), "Couldn't open joystick\n" );
+				RCLCPP_ERROR(this->get_logger(), "Couldn't open joystick\n" );
+				endProcess = true;
 				return;
 			}
 
@@ -58,6 +62,24 @@ class JoyconControl : public rclcpp::Node
 
 			fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
 
+			//initialize motors
+			// board = &Motors( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+			board.setUp();
+			board.resetPosition();
+			this->declare_parameter("forwardAxis", rclcpp::ParameterValue(1));
+			forwardAxis = this->get_parameter("forwardAxis").get_value<int>();
+			this->declare_parameter("rotationAxis", rclcpp::ParameterValue(2));
+			rotationAxis = this->get_parameter("rotationAxis").get_value<int>();
+			this->declare_parameter("forwardSpeedFactor", rclcpp::ParameterValue(80));
+			forwardSpeedFactor = this->get_parameter("forwardSpeedFactor").get_value<int>();
+			this->declare_parameter("rotationSpeedFactor", rclcpp::ParameterValue(200));
+			rotationSpeedFactor = this->get_parameter("rotationSpeedFactor").get_value<int>();
+			this->declare_parameter("forwardAxisInverted", rclcpp::ParameterValue(false));
+			forwardAxisInverted = this->get_parameter("forwardAxisInverted").get_value<bool>();
+			this->declare_parameter("rotationAxisInverted", rclcpp::ParameterValue(false));
+			rotationAxisInverted = this->get_parameter("rotationAxisInverted").get_value<bool>();
+
+			//start subscriptions and timer
 			battery_subscription = this->create_subscription<sensor_msgs::msg::BatteryState>(
 			"vol", 10, std::bind(&JoyconControl::battery_callback, this, _1));
 
@@ -72,6 +94,7 @@ class JoyconControl : public rclcpp::Node
 
 		~JoyconControl(){
 			close( joy_fd );
+			board.stop();
 		}
 
   private:
@@ -79,6 +102,9 @@ class JoyconControl : public rclcpp::Node
 		bool *button = NULL, *buttonPast = NULL;
 		char name_of_joystick[80];
 		struct js_event js;
+		Motors board = Motors( BCM2835_SPI_CS0, GPIO_RESET_OUT);
+		int speedLeft = 0, speedRight = 0, forwardAxis, rotationAxis, forwardSpeedFactor, rotationSpeedFactor;
+		bool forwardAxisInverted, rotationAxisInverted;
 
 		rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscription;
 		void battery_callback(const sensor_msgs::msg::BatteryState::SharedPtr msg) const
@@ -104,22 +130,41 @@ class JoyconControl : public rclcpp::Node
 		void motor_control()
 		{
 			/* read the joystick state */
-			read(joy_fd, &js, sizeof(struct js_event));
+			// read(joy_fd, &js, sizeof(struct js_event));
 
 			/* see what to do with the event */
-			switch (js.type & ~JS_EVENT_INIT)
-			{
-				case JS_EVENT_AXIS:
-					axis   [ js.number ] = js.value;
-					if (axis [ js.number ] != axisPast[js.number]) RCLCPP_INFO(this->get_logger(),"Axis %d:\t%d", js.number, axis[js.number]);
-					axisPast[js.number] = axis[js.number];
-					break;
-				case JS_EVENT_BUTTON:
-					button [ js.number ] = js.value;
-					if (button [ js.number ] != buttonPast[js.number]) RCLCPP_INFO(this->get_logger(),"Button %d:\t%d", js.number, button[js.number]);
-					buttonPast[js.number] = button[js.number];
-					break;
+			while(read(joy_fd, &js, sizeof(struct js_event)) == sizeof(struct js_event)){
+				switch (js.type & ~JS_EVENT_INIT)
+				{
+					case JS_EVENT_AXIS:
+						axis   [ js.number ] = js.value;
+						if (axis [ js.number ] != axisPast[js.number]) RCLCPP_INFO(this->get_logger(),"Axis %d:\t%d", js.number, axis[js.number]);
+						axisPast[js.number] = axis[js.number];
+						break;
+					case JS_EVENT_BUTTON:
+						button [ js.number ] = js.value;
+						if (button [ js.number ] != buttonPast[js.number]) RCLCPP_INFO(this->get_logger(),"Button %d:\t%d", js.number, button[js.number]);
+						buttonPast[js.number] = button[js.number];
+						break;
+				}
 			}
+			
+			speedLeft = axis[forwardAxis]/forwardSpeedFactor;
+			speedRight = axis[forwardAxis]/forwardSpeedFactor;
+			if(forwardAxisInverted){
+				speedLeft = -speedLeft;
+				speedRight = -speedRight;
+			}
+
+			if(!rotationAxisInverted){
+				speedLeft+= axis[rotationAxis]/rotationSpeedFactor;
+				speedRight-= axis[rotationAxis]/rotationSpeedFactor;
+			} else {
+				speedLeft-= axis[rotationAxis]/rotationSpeedFactor;
+				speedRight+= axis[rotationAxis]/rotationSpeedFactor;
+			}
+
+			board.setSpeed(speedLeft,speedRight);
 		}
 };
 
@@ -127,6 +172,10 @@ int main(int argc, char * argv[])
 {
 	setbuf(stdout, nullptr);
 	signal(SIGINT, sigintHandler);
+	if (bcm2835_init() == 0) {
+		fprintf(stderr, "Not able to init the bmc2835 library\n");
+		return -1;
+	}
 	rclcpp::init(argc, argv);
 	auto node = std::make_shared<JoyconControl>();
 	while(!endProcess) rclcpp::spin_some(node);

@@ -11,7 +11,7 @@ class VolPublisher(Node):
 	def __init__(self):
 		super().__init__('voltage_publisher')
 
-		period = self.declare_parameter("period")
+		period = self.declare_parameter("period", 5)
 		self.timer_period = period.value
 
 		self.publisher_ = self.create_publisher(BatteryState, 'vol', 10)
