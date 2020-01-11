@@ -63,7 +63,6 @@ class JoyconControl : public rclcpp::Node
 			fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
 
 			//initialize motors
-			// board = &Motors( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 			board.setUp();
 			board.resetPosition();
 			this->declare_parameter("forwardAxis", rclcpp::ParameterValue(1));
@@ -103,7 +102,8 @@ class JoyconControl : public rclcpp::Node
 		char name_of_joystick[80];
 		struct js_event js;
 		Motors board = Motors( BCM2835_SPI_CS0, GPIO_RESET_OUT);
-		int speedLeft = 0, speedRight = 0, forwardAxis, rotationAxis, forwardSpeedFactor, rotationSpeedFactor;
+		float speedLeft = 0, speedRight = 0;
+		int forwardAxis, rotationAxis, forwardSpeedFactor, rotationSpeedFactor;
 		bool forwardAxisInverted, rotationAxisInverted;
 
 		rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_subscription;
@@ -130,8 +130,6 @@ class JoyconControl : public rclcpp::Node
 		void motor_control()
 		{
 			/* read the joystick state */
-			// read(joy_fd, &js, sizeof(struct js_event));
-
 			/* see what to do with the event */
 			while(read(joy_fd, &js, sizeof(struct js_event)) == sizeof(struct js_event)){
 				switch (js.type & ~JS_EVENT_INIT)
@@ -148,7 +146,7 @@ class JoyconControl : public rclcpp::Node
 						break;
 				}
 			}
-			
+
 			speedLeft = axis[forwardAxis]/forwardSpeedFactor;
 			speedRight = axis[forwardAxis]/forwardSpeedFactor;
 			if(forwardAxisInverted){
@@ -164,6 +162,7 @@ class JoyconControl : public rclcpp::Node
 				speedRight+= axis[rotationAxis]/rotationSpeedFactor;
 			}
 
+			RCLCPP_INFO(this->get_logger(), "%f:%f", speedLeft, speedRight);
 			board.setSpeed(speedLeft,speedRight);
 		}
 };

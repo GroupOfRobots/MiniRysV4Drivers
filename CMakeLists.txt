@@ -67,7 +67,7 @@ install(TARGETS
 )
 
 # building and installing executables
-add_executable(frequency_test src/freqmain.cpp)
+add_executable(frequency_test src/freqmain_old.cpp)
 target_link_libraries(frequency_test ${PROJECT_NAME}_source)
 ament_target_dependencies(frequency_test ${AMENT_DEPENDENCIES})
 
@@ -76,11 +76,11 @@ target_include_directories(frequency_test
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-add_executable(main src/main.cpp)
-target_link_libraries(main ${PROJECT_NAME}_source)
-ament_target_dependencies(main ${AMENT_DEPENDENCIES})
+add_executable(main_old src/main_old.cpp)
+target_link_libraries(main_old ${PROJECT_NAME}_source)
+ament_target_dependencies(main_old ${AMENT_DEPENDENCIES})
 
-target_include_directories(main
+target_include_directories(main_old
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
@@ -133,7 +133,7 @@ target_include_directories(joycon_control_only
 
 install(TARGETS
 	frequency_test
-  main
+  main_old
   imu_sensor_test
   tof_sensor_test
   motors_test

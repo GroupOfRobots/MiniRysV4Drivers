@@ -136,7 +136,7 @@ void Motors::setUp(){
 	//this->setFullSpeed(120);       // microstep below 120 steps/s
 }
 
-void Motors::setSpeed(int speedLeft, int speedRight){
+void Motors::setSpeed(float speedLeft, float speedRight){
 	m_nPosition=0;
 	while (this->busyCheck())
 		;

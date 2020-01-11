@@ -44,7 +44,7 @@ public:
 
 	int busyCheck(void);
 	void setUp(void);
-	void setSpeed(int,int);
+	void setSpeed(float,float);
 	void stop(void);
 	long getPositionLeft();
 	long getPositionRight();
