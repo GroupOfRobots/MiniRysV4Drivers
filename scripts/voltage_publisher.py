@@ -31,9 +31,9 @@ class VolPublisher(Node):
 
 		msg.header = h
 		msg.voltage = self.vol.readVoltage()
-		msg.percentage = max(1.0, msg.voltage/12.210)
+		msg.percentage = min(0.0, max(1.0, (msg.voltage-10.0)/2.210))
 		msg.power_supply_status = BatteryState.POWER_SUPPLY_STATUS_FULL if msg.voltage >= 12.0 else BatteryState.POWER_SUPPLY_STATUS_DISCHARGING
-		msg.power_supply_health = BatteryState.POWER_SUPPLY_HEALTH_DEAD if msg.voltage < 10 else BatteryState.POWER_SUPPLY_HEALTH_GOOD
+		msg.power_supply_health = BatteryState.POWER_SUPPLY_HEALTH_DEAD if msg.voltage < 10.0 else BatteryState.POWER_SUPPLY_HEALTH_GOOD
 		msg.power_supply_technology = BatteryState.POWER_SUPPLY_TECHNOLOGY_LION
 		msg.present = True if msg.voltage > 0 else False
 		self.publisher_.publish(msg)

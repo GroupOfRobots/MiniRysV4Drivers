@@ -1,4 +1,5 @@
 from launch import LaunchDescription
+from launch.actions import Shutdown
 from ament_index_python.packages import get_package_prefix
 import launch_ros.actions
 package = "minirys_drivers"
@@ -40,5 +41,6 @@ def generate_launch_description():
 			# emulate_tty=True,
 			# arguments=[('__log_level:=info')],
 			parameters=[full_path + "/yaml/joycon_control_only_params.yaml"],
+			on_exit=Shutdown(),
 		),
 	])

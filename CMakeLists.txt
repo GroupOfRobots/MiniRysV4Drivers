@@ -67,7 +67,7 @@ install(TARGETS
 )
 
 # building and installing executables
-add_executable(frequency_test src/freqmain_old.cpp)
+add_executable(frequency_test src/freqmain.cpp)
 target_link_libraries(frequency_test ${PROJECT_NAME}_source)
 ament_target_dependencies(frequency_test ${AMENT_DEPENDENCIES})
 
