@@ -66,6 +66,15 @@ install(TARGETS
 	INCLUDES DESTINATION include
 )
 
+add_executable(main src/main.cpp)
+target_link_libraries(main ${PROJECT_NAME}_source)
+ament_target_dependencies(main ${AMENT_DEPENDENCIES})
+
+target_include_directories(main
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 # building and installing executables
 add_executable(frequency_test src/freqmain.cpp)
 target_link_libraries(frequency_test ${PROJECT_NAME}_source)
@@ -132,6 +141,7 @@ target_include_directories(joycon_control_only
 
 
 install(TARGETS
+  main
 	frequency_test
   main_old
   imu_sensor_test
