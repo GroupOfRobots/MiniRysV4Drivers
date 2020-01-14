@@ -1,0 +1,21 @@
+joycon_receiver:
+  ros__parameters:
+    forwardAxis: 1
+    rotationAxis: 2
+    forwardSpeedFactor: 80
+    rotationSpeedFactor: 200
+    forwardAxisInverted: true
+    rotationAxisInverted: false
+    standUpButton: 1
+    layDownButton: 3
+    period: 10 #in milliseconds
+imu_reader:
+  ros__parameters:
+    gyroOffsetX: 3.755909 #in deg
+    gyroOffsetY: -5.435584 #in deg
+    gyroOffsetZ: -3.461446 #in deg
+    filterFactor: 0.05
+    period: 10 #in milliseconds
+tof_reader:
+  ros__parameters:
+      period: 100 #in milliseconds

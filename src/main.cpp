@@ -166,7 +166,7 @@ class JoyconReceiver : public rclcpp::Node{
 						break;
 					case JS_EVENT_BUTTON:
 						button [ js.number ] = js.value;
-						// if (button [ js.number ] != buttonPast[js.number]) RCLCPP_INFO(this->get_logger(),"Button %d:\t%d", js.number, button[js.number]);
+						if (button [ js.number ] != buttonPast[js.number]) RCLCPP_INFO(this->get_logger(),"Button %d:\t%d", js.number, button[js.number]);
 						buttonPast[js.number] = button[js.number];
 						break;
 				}
@@ -204,14 +204,14 @@ class ImuReader : public rclcpp::Node{
 					RCLCPP_ERROR(this->get_logger(), "Problem number %d starting the sensor, retrying...", status);
 				} else break;
 			}
-			if (i == 9) {
-				RCLCPP_ERROR(this->get_logger(), "Unable to start imu senser...");
-				endProcess = true;
-				return;
-			}
 
-			RCLCPP_INFO(this->get_logger(), "IMU sensor started, awaiting calibration.");
+			if (i == 10) {
+				RCLCPP_ERROR(this->get_logger(), "Unable to start imu sensor...");
+				endProcess = true;
+			} else RCLCPP_INFO(this->get_logger(), "IMU sensor started, awaiting calibration.");
+
 			for (i = 10; i>0; i--){
+				if (endProcess) break;
 				RCLCPP_INFO(this->get_logger(), "%d seconds to calibration...",i);
 				delay(1000);
 			}
@@ -299,81 +299,53 @@ class TOFReader : public rclcpp::Node{
 
 			//enable sensor one and change address
 			bcm2835_gpio_set(GPIO_TOF_1);
-			delay(10);
 			tofSensors[0] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[0]->setAddress(0x30);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor one started at: 0x30");
 
 			bcm2835_gpio_set(GPIO_TOF_2);
-			delay(10);
 			tofSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[1]->setAddress(0x31);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor two started at: 0x31");
 
 			bcm2835_gpio_set(GPIO_TOF_3);
-			delay(10);
 			tofSensors[2] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[2]->setAddress(0x32);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor three started at: 0x32");
 
 			bcm2835_gpio_set(GPIO_TOF_4);
-			delay(10);
 			tofSensors[3] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[3]->setAddress(0x33);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor four started at: 0x33");
 
 			bcm2835_gpio_set(GPIO_TOF_5);
-			delay(10);
 			tofSensors[4] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[4]->setAddress(0x34);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor five started at: 0x34");
 
 			bcm2835_gpio_set(GPIO_TOF_6);
-			delay(10);
 			tofSensors[5] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[5]->setAddress(0x35);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor six started at: 0x35");
 
 			bcm2835_gpio_set(GPIO_TOF_7);
-			delay(10);
 			tofSensors[6] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[6]->setAddress(0x36);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor seven started at: 0x36");
 
 			bcm2835_gpio_set(GPIO_TOF_8);
-			delay(10);
 			tofSensors[7] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[7]->setAddress(0x37);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor eight started at: 0x37");
 
 			bcm2835_gpio_set(GPIO_TOF_9);
-			delay(10);
 			tofSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
-			delay(10);
 			tofSensors[8]->setAddress(0x38);
-			delay(10);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor nine started at: 0x38");
 
-			this->declare_parameter("period", rclcpp::ParameterValue(10));
+			this->declare_parameter("period", rclcpp::ParameterValue(100));
 			for(int i = 0; i < NUM_OF_TOF; i++){
 				tofSensors[i]->startContinuous(this->get_parameter("period").get_value<int>());
-				delay(10);
 			}
 			read_tof_data_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&TOFReader::read_tof_data, this));
@@ -382,16 +354,15 @@ class TOFReader : public rclcpp::Node{
 		~TOFReader() {
 			for(int i = 0; i < NUM_OF_TOF; i++){
 				tofSensors[i]->disable();
-				delay(10);
 			}
 		}
 	private:
 		VL53L1X *tofSensors[NUM_OF_TOF];
 		tof_data *dataStructure = NULL;
-		// uint16_t measurement[NUM_OF_TOF];
 
 		rclcpp::TimerBase::SharedPtr read_tof_data_timer;
 		void read_tof_data() {
+			// RCLCPP_INFO(this->get_logger(), "Debug text");
 			dataStructure->tof_data_access.lock();
 			for(int i = 0; i < NUM_OF_TOF; i++){
 				dataStructure->measurement[i] = tofSensors[i]->readData(1);
@@ -405,13 +376,13 @@ class TOFReader : public rclcpp::Node{
 
 int main(int argc, char * argv[]) {
 	setbuf(stdout, nullptr);
-	signal(SIGINT, sigintHandler);
 	setRTPriority();
 	if (bcm2835_init() == 0) {
 		fprintf(stderr, "Not able to init the bmc2835 library\n");
 		return -1;
 	}
 	rclcpp::init(argc, argv);
+	signal(SIGINT, sigintHandler);
 	rclcpp::executors::MultiThreadedExecutor executor;
 
 	joycon_data joycon_data_structure;
