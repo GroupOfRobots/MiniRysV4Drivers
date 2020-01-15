@@ -48,6 +48,7 @@ set(SOURCE_FILES
   src/lsm6ds3/LSM6DS3.cpp
   src/lsm6ds3/filter.cpp
   src/vl53l1x/VL53L1X.cpp
+  src/MotorsController/MotorsController.cpp
 )
 
 add_library(${PROJECT_NAME}_source ${SOURCE_FILES})
