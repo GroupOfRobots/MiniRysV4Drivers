@@ -7,7 +7,7 @@ MotorsController::MotorsController() {
 	this->board = new Motors( BCM2835_SPI_CS0, GPIO_RESET_OUT);
 	this->board->setUp();
 	this->board->resetPosition();
-	this->balancing = true;
+	this->balancing = false;
 
 	this->pidSpeedRegulatorEnabled = true;
 	this->pidSpeedKp = 0;
@@ -27,7 +27,7 @@ MotorsController::MotorsController() {
 	this->motorSpeedRight = 0;
 	this->invertLeftSpeed = false;
 	this->invertRightSpeed = false;
-	this->maxAcceleration = 0.2;
+	this->maxAcceleration = 400.0;
 	this->maxSpeed = 400.0;
 
 	this->disableMotors();
@@ -36,6 +36,7 @@ MotorsController::MotorsController() {
 MotorsController::~MotorsController() {
 	this->disableMotors();
 	this->board->stop();
+	delete this->board;
 }
 
 void clipValue(float & value, float max) {
@@ -178,13 +179,13 @@ void MotorsController::calculateSpeedsPID(float angle, float rotationX, float th
 	float angleFactor2 = this->pidAngleKp * this->pidAngleTd / loopTime;
 
 	float output = angleFactor0 * angleError + angleFactor1 * this->pidAnglePreviousError1 + angleFactor2 * this->pidAnglePreviousError2 + speed;
-	clipValue(output, 1.0);
-	clipValue(rotation, 0.3);
+	clipValue(output, this->maxSpeed);
+	clipValue(rotation, this->maxSpeed);
 
 	speedLeftNew = output + rotation;
 	speedRightNew = output - rotation;
-	clipValue(speedLeftNew, 1.0);
-	clipValue(speedRightNew, 1.0);
+	clipValue(speedLeftNew, this->maxSpeed);
+	clipValue(speedRightNew, this->maxSpeed);
 
 	this->pidAnglePreviousError2 = this->pidAnglePreviousError1;
 	this->pidAnglePreviousError1 = angleError;
@@ -203,16 +204,8 @@ void MotorsController::disableMotors() {
 
 void MotorsController::setMotorSpeeds(float speedLeft, float speedRight, bool ignoreAcceleration) {
 	// Clip speed values
-	if (speedLeft > 1.0f) {
-		speedLeft = 1.0f;
-	} else if (speedLeft < -1.0f) {
-		speedLeft = -1.0f;
-	}
-	if (speedRight > 1.0f) {
-		speedRight = 1.0f;
-	} else if (speedRight < -1.0f) {
-		speedRight = -1.0f;
-	}
+	clipValue(speedLeft, this->maxSpeed);
+	clipValue(speedRight, this->maxSpeed);
 
 	// If needed, invert the speeds
 	if (this->invertLeftSpeed) {

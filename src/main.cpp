@@ -13,10 +13,13 @@
 #include "lsm6ds3/LSM6DS3.h"
 #include "lsm6ds3/filter.h"
 #include "vl53l1x/VL53L1X.h"
+#include "MotorsController/MotorsController.hpp"
+#include "FrequencyCounter/FrequencyCounter.hpp"
+
 
 #define JOY_DEV "/dev/input/js0"
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_12
-#define GPIO_TOF_2 	RPI_V2_GPIO_P1_16
+// #define GPIO_TOF_2 	RPI_V2_GPIO_P1_16
 #define GPIO_TOF_3 	RPI_V2_GPIO_P1_18
 #define GPIO_TOF_4 	RPI_V2_GPIO_P1_29
 #define GPIO_TOF_5	RPI_V2_GPIO_P1_32
@@ -24,7 +27,8 @@
 #define GPIO_TOF_7 	RPI_V2_GPIO_P1_33
 #define GPIO_TOF_8 	RPI_V2_GPIO_P1_35
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
-#define NUM_OF_TOF 9
+#define NUM_OF_TOF 8
+// #define NUM_OF_TOF 9
 
 using std::placeholders::_1;
 using namespace std::chrono_literals;
@@ -151,9 +155,11 @@ class JoyconReceiver : public rclcpp::Node{
 		int standUpButton, layDownButton;
 
 		joycon_data *dataStructure = NULL; 
+		FrequencyCounter counter;
 
 		rclcpp::TimerBase::SharedPtr get_joycon_state_timer;
 		void get_joycon_state() {
+			counter.count();
 			/* read the joystick state */
 			/* see what to do with the event */
 			while(read(joy_fd, &js, sizeof(struct js_event)) == sizeof(struct js_event)){
@@ -196,9 +202,10 @@ class JoyconReceiver : public rclcpp::Node{
 class ImuReader : public rclcpp::Node{
 	public:
 		ImuReader(imu_data &structure): Node("imu_reader") {
+			SensorOne = new LSM6DS3( I2C_MODE, 0x6B);
 			int status, i;
 			for (i = 0; i < 10; i++){
-				status = SensorOne.begin();
+				status = SensorOne->begin();
 				if( status != 0 )
 				{
 					RCLCPP_ERROR(this->get_logger(), "Problem number %d starting the sensor, retrying...", status);
@@ -218,52 +225,56 @@ class ImuReader : public rclcpp::Node{
 
 			dataStructure = &structure;
 
-			accelerationX = SensorOne.readFloatAccelX();
-			accelerationY = SensorOne.readFloatAccelY();
-			accelerationZ = SensorOne.readFloatAccelZ();
+			accelerationX = SensorOne->readFloatAccelX();
+			accelerationY = SensorOne->readFloatAccelY();
+			accelerationZ = SensorOne->readFloatAccelZ();
 
 			this->declare_parameter("gyroOffsetX", rclcpp::ParameterValue(3.755909));
 			this->declare_parameter("gyroOffsetY", rclcpp::ParameterValue(-5.435584));
 			this->declare_parameter("gyroOffsetZ", rclcpp::ParameterValue(-3.461446));
-			gyroX = (SensorOne.readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
-			gyroY = (SensorOne.readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
-			gyroZ = (SensorOne.readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
+			gyroX = (SensorOne->readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
+			gyroY = (SensorOne->readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
+			gyroZ = (SensorOne->readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
 
 			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ));
 			this->declare_parameter("filterFactor", rclcpp::ParameterValue(0.05));
 			this->declare_parameter("period", rclcpp::ParameterValue(10));
-			imu_filter = filter(tilt, this->get_parameter("filterFactor").get_value<float>(), 1000/this->get_parameter("period").get_value<int>());
+			imu_filter = new filter(tilt, this->get_parameter("filterFactor").get_value<float>(), 1000/this->get_parameter("period").get_value<int>());
 
 			read_imu_data_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&ImuReader::read_imu_data, this));
 		}
 
 		~ImuReader(){
-			SensorOne.close_i2c();
+			SensorOne->close_i2c();
+			delete SensorOne;
 		}
 
 	private:
 		float accelerationX = 0, accelerationY = 0, accelerationZ = 0, gyroX = 0, gyroY = 0, gyroZ = 0, tilt = 0;
 		float gyroOffsetX, gyroOffsetY, gyroOffsetZ;
 
-		LSM6DS3 SensorOne = LSM6DS3( I2C_MODE, 0x6B);
-		filter imu_filter = filter(0, 0, 0);
+		LSM6DS3 *SensorOne;// = LSM6DS3( I2C_MODE, 0x6B);
+		filter *imu_filter;// = filter(0, 0, 0);
 		imu_data *dataStructure = NULL; 
+		FrequencyCounter counter;
 
 		rclcpp::TimerBase::SharedPtr read_imu_data_timer;
 		void read_imu_data() {
-			accelerationX = SensorOne.readFloatAccelX();
-			accelerationY = SensorOne.readFloatAccelY();
-			accelerationZ = SensorOne.readFloatAccelZ();
-			gyroX = (SensorOne.readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
-			gyroY = (SensorOne.readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
-			gyroZ = (SensorOne.readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
+			counter.count();
+			accelerationX = SensorOne->readFloatAccelX();
+			accelerationY = SensorOne->readFloatAccelY();
+			accelerationZ = SensorOne->readFloatAccelZ();
+			gyroX = (SensorOne->readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
+			gyroY = (SensorOne->readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
+			gyroZ = (SensorOne->readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
 			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ));
 
 			dataStructure->imu_data_access.lock();
-			dataStructure->tilt = imu_filter.getAngle(tilt, gyroY);
-			dataStructure->gyro = imu_filter.getGyro();
+			dataStructure->tilt = imu_filter->getAngle(tilt, gyroY);
+			dataStructure->gyro = imu_filter->getGyro();
 			dataStructure->imu_data_access.unlock();
+			// RCLCPP_INFO(this->get_logger(), "Debug");
 		}
 };
 
@@ -274,7 +285,7 @@ class TOFReader : public rclcpp::Node{
 			dataStructure = &structure;
 
 			bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
+			// bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
 			bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
 			bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
 			bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
@@ -285,7 +296,7 @@ class TOFReader : public rclcpp::Node{
 
 			//disable all sensors first
 			bcm2835_gpio_clr(GPIO_TOF_1); // górny
-			bcm2835_gpio_clr(GPIO_TOF_2); // górny
+			// bcm2835_gpio_clr(GPIO_TOF_2); // górny
 			bcm2835_gpio_clr(GPIO_TOF_3);
 			bcm2835_gpio_clr(GPIO_TOF_4);
 			bcm2835_gpio_clr(GPIO_TOF_5);
@@ -295,7 +306,7 @@ class TOFReader : public rclcpp::Node{
 			bcm2835_gpio_clr(GPIO_TOF_9);
 
 			bcm2835_i2c_begin(); //begin I2C
-			bcm2835_i2c_set_baudrate(40000);
+			// bcm2835_i2c_set_baudrate(40000);
 
 			//enable sensor one and change address
 			bcm2835_gpio_set(GPIO_TOF_1);
@@ -303,7 +314,8 @@ class TOFReader : public rclcpp::Node{
 			tofSensors[0]->setAddress(0x30);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor one started at: 0x30");
 
-			bcm2835_gpio_set(GPIO_TOF_2);
+			// bcm2835_gpio_set(GPIO_TOF_2);
+			bcm2835_gpio_set(GPIO_TOF_9);
 			tofSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
 			tofSensors[1]->setAddress(0x31);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor two started at: 0x31");
@@ -338,10 +350,10 @@ class TOFReader : public rclcpp::Node{
 			tofSensors[7]->setAddress(0x37);
 			RCLCPP_INFO(this->get_logger(), "TOF sensor eight started at: 0x37");
 
-			bcm2835_gpio_set(GPIO_TOF_9);
-			tofSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
-			tofSensors[8]->setAddress(0x38);
-			RCLCPP_INFO(this->get_logger(), "TOF sensor nine started at: 0x38");
+			// bcm2835_gpio_set(GPIO_TOF_9);
+			// tofSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
+			// tofSensors[8]->setAddress(0x38);
+			// RCLCPP_INFO(this->get_logger(), "TOF sensor nine started at: 0x38");
 
 			this->declare_parameter("period", rclcpp::ParameterValue(100));
 			for(int i = 0; i < NUM_OF_TOF; i++){
@@ -354,14 +366,17 @@ class TOFReader : public rclcpp::Node{
 		~TOFReader() {
 			for(int i = 0; i < NUM_OF_TOF; i++){
 				tofSensors[i]->disable();
+				delete tofSensors[i];
 			}
 		}
 	private:
 		VL53L1X *tofSensors[NUM_OF_TOF];
 		tof_data *dataStructure = NULL;
+		FrequencyCounter counter;
 
 		rclcpp::TimerBase::SharedPtr read_tof_data_timer;
 		void read_tof_data() {
+			counter.count();
 			// RCLCPP_INFO(this->get_logger(), "Debug text");
 			dataStructure->tof_data_access.lock();
 			for(int i = 0; i < NUM_OF_TOF; i++){
@@ -371,7 +386,66 @@ class TOFReader : public rclcpp::Node{
 		}
 };
 
-// class MotorsRegulator : public rclcpp::Node{}
+class MotorsRegulator : public rclcpp::Node{
+	public:
+		MotorsRegulator(imu_data& imuStructure, joycon_data& joyconStructure): Node("motors_regulator"){
+			controller = new MotorsController();
+			controller->enableMotors();
+			imuDataStructure = &imuStructure;
+			joyconDataStructure = &joyconStructure;
+
+			balancing = false;
+			controller->setBalancing(balancing);
+
+			this->declare_parameter("microstep", rclcpp::ParameterValue(64));
+			controller->setMicrostep(this->get_parameter("microstep").get_value<int>());
+			this->declare_parameter("maxSpeed", rclcpp::ParameterValue(400.0));
+			controller->setMaxSpeed(this->get_parameter("maxSpeed").get_value<float>());
+			this->declare_parameter("maxAcceleration", rclcpp::ParameterValue(100.0));
+			controller->setMaxAcceleration(this->get_parameter("maxAcceleration").get_value<float>());
+			this->declare_parameter("invertLeftMotor", rclcpp::ParameterValue(true));
+			this->declare_parameter("invertRightMotor", rclcpp::ParameterValue(true));
+			controller->setInvertSpeed(this->get_parameter("invertLeftMotor").get_value<bool>(), this->get_parameter("invertRightMotor").get_value<bool>());
+			this->declare_parameter("period", rclcpp::ParameterValue(10));
+			control_motors_timer = this->create_wall_timer(
+			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&MotorsRegulator::controlMotors, this));
+			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
+		}
+
+		~MotorsRegulator(){
+			controller->disableMotors();
+			delete controller;
+		}
+	private:
+		MotorsController *controller;
+		joycon_data *joyconDataStructure;
+		imu_data *imuDataStructure;
+		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
+		bool enableBalancing, balancing;
+		FrequencyCounter counter;
+
+		rclcpp::TimerBase::SharedPtr control_motors_timer;
+		void controlMotors() {
+			counter.count();
+			imuDataStructure->imu_data_access.lock();
+			tilt = imuDataStructure->tilt;
+			gyro = imuDataStructure->gyro;
+			imuDataStructure->imu_data_access.unlock();
+
+			joyconDataStructure->joycon_data_access.lock();
+			forwardSpeed = joyconDataStructure->forwardSpeed;
+			rotationSpeed = joyconDataStructure->rotationSpeed;
+			enableBalancing = joyconDataStructure->enableBalancing;
+			joyconDataStructure->joycon_data_access.unlock();
+
+			controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>());
+			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
+			leftSpeed = controller->getMotorSpeedLeft();
+			rightSpeed = controller->getMotorSpeedRight();
+			// RCLCPP_INFO(this->get_logger(), "%f/t%f/t%f/t%f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
+		}
+
+};
 // class Remote : public rclcpp::Node{}
 
 int main(int argc, char * argv[]) {
@@ -382,12 +456,12 @@ int main(int argc, char * argv[]) {
 		return -1;
 	}
 	rclcpp::init(argc, argv);
-	signal(SIGINT, sigintHandler);
+	// signal(SIGINT, sigintHandler);
 	rclcpp::executors::MultiThreadedExecutor executor;
 
 	joycon_data joycon_data_structure;
-	auto JoyconReceiverNode = std::make_shared<JoyconReceiver>(std::ref(joycon_data_structure));
-	executor.add_node(JoyconReceiverNode);
+	// auto JoyconReceiverNode = std::make_shared<JoyconReceiver>(std::ref(joycon_data_structure));
+	// executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
 	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
@@ -397,7 +471,11 @@ int main(int argc, char * argv[]) {
 	auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));
 	executor.add_node(TOFReaderNode);
 
-	while(!endProcess) executor.spin_some();
+	// auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure));
+	// executor.add_node(MotorsRegulatorNode);
+
+	// while(!endProcess) executor.spin_some();
+	executor.spin();
 	rclcpp::shutdown();
 	return 0;
 }

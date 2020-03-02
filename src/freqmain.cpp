@@ -46,7 +46,10 @@ int main(int argc, char * argv[]) {
 	auto timer = node->create_wall_timer(loopDuration, timer_callback);
 
 	setRTPriority();
-	rclcpp::spin(node);
+	// rclcpp::spin(node);
+	rclcpp::executors::MultiThreadedExecutor executor;
+	executor.add_node(node);
+	executor.spin();
 	rclcpp::shutdown();
 
 	return 0;

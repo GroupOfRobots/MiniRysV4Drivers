@@ -9,6 +9,9 @@ class FrequencyCounter {
 		int numOfRuns;
 		float frequency;
 
+		int id;
+		static unsigned int id_counter; 
+
 	public:
 		void count();
 		FrequencyCounter();

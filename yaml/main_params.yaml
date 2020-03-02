@@ -19,3 +19,11 @@ imu_reader:
 tof_reader:
   ros__parameters:
       period: 100 #in milliseconds
+motors_regulator:
+  ros__parameters:
+    microstep: 64
+    maxSpeed: 400.0
+    maxAcceleration: 100.0
+    invertLeftMotor: true
+    invertRightMotor: true
+    period: 10
