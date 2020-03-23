@@ -355,6 +355,8 @@ class TOFReader : public rclcpp::Node{
 			// tofSensors[8]->setAddress(0x38);
 			// RCLCPP_INFO(this->get_logger(), "TOF sensor nine started at: 0x38");
 
+			// c = 0;
+
 			this->declare_parameter("period", rclcpp::ParameterValue(100));
 			for(int i = 0; i < NUM_OF_TOF; i++){
 				tofSensors[i]->startContinuous(this->get_parameter("period").get_value<int>());
@@ -373,15 +375,18 @@ class TOFReader : public rclcpp::Node{
 		VL53L1X *tofSensors[NUM_OF_TOF];
 		tof_data *dataStructure = NULL;
 		FrequencyCounter counter;
+		// int c;
 
 		rclcpp::TimerBase::SharedPtr read_tof_data_timer;
 		void read_tof_data() {
 			counter.count();
-			// RCLCPP_INFO(this->get_logger(), "Debug text");
+			// c++;
+			// RCLCPP_INFO(this->get_logger(), "Init debug text %d", c);
 			dataStructure->tof_data_access.lock();
 			for(int i = 0; i < NUM_OF_TOF; i++){
 				dataStructure->measurement[i] = tofSensors[i]->readData(1);
 			}
+			// RCLCPP_INFO(this->get_logger(), "End debug text %d", c);
 			dataStructure->tof_data_access.unlock();
 		}
 };
@@ -464,8 +469,8 @@ int main(int argc, char * argv[]) {
 	// executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
-	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
-	executor.add_node(ImuReaderNode);
+	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
+	// executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
 	auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));

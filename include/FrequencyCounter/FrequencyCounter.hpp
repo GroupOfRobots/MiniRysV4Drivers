@@ -6,10 +6,10 @@ class FrequencyCounter {
 		std::chrono::time_point<std::chrono::high_resolution_clock> previous;
 		std::chrono::time_point<std::chrono::high_resolution_clock> timeNow;
 
-		int numOfRuns;
+		unsigned int numOfRuns;
 		float frequency;
 
-		int id;
+		unsigned int id;
 		static unsigned int id_counter; 
 
 	public:

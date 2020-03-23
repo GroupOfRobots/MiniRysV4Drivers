@@ -16,7 +16,7 @@
 #define GPIO_TOF_9 	RPI_V2_GPIO_P1_36
 #define GPIO_TOF_10 RPI_V2_GPIO_P1_37
 
-const int numOfSensors = 9;
+const int numOfSensors = 8;
 const int period_ms = 100;
 bool endProcess = false;
 
@@ -38,7 +38,7 @@ int main(void){
 	uint16_t measurement[numOfSensors];
 
 	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
+	// bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_3, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_4, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(GPIO_TOF_5, BCM2835_GPIO_FSEL_OUTP);
@@ -50,7 +50,7 @@ int main(void){
 
 	//disable all sensors first
 	bcm2835_gpio_clr(GPIO_TOF_1); // górny
-	bcm2835_gpio_clr(GPIO_TOF_2); // górny
+	// bcm2835_gpio_clr(GPIO_TOF_2); // górny
 	bcm2835_gpio_clr(GPIO_TOF_3);
 	bcm2835_gpio_clr(GPIO_TOF_4);
 	bcm2835_gpio_clr(GPIO_TOF_5);
@@ -72,7 +72,8 @@ int main(void){
 	delay(10);
 	puts("Sensor one started at: 0x30");
 
-	bcm2835_gpio_set(GPIO_TOF_2);
+	// bcm2835_gpio_set(GPIO_TOF_2);
+	bcm2835_gpio_set(GPIO_TOF_9);
 	delay(10);
 	globalSensors[1] = new VL53L1X(VL53L1X::Medium,0x29);
 	delay(10);
@@ -128,13 +129,13 @@ int main(void){
 	delay(10);
 	puts("Sensor eight started at: 0x37");
 
-	bcm2835_gpio_set(GPIO_TOF_9);
-	delay(10);
-	globalSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
-	delay(10);
-	globalSensors[8]->setAddress(0x38);
-	delay(10);
-	puts("Sensor nine started at: 0x38");
+	// bcm2835_gpio_set(GPIO_TOF_9);
+	// delay(10);
+	// globalSensors[8] = new VL53L1X(VL53L1X::Medium,0x29);
+	// delay(10);
+	// globalSensors[8]->setAddress(0x38);
+	// delay(10);
+	// puts("Sensor nine started at: 0x38");
 
 	// bcm2835_gpio_set(GPIO_TOF_10);
 	// delay(10);
