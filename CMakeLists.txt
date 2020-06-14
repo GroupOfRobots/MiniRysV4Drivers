@@ -49,6 +49,20 @@ set(SOURCE_FILES
   src/lsm6ds3/filter.cpp
   src/vl53l1x/VL53L1X.cpp
   src/MotorsController/MotorsController.cpp
+  src/vl53l1x_stm/vl53l1_api.c
+  src/vl53l1x_stm/vl53l1_api_strings.c
+  src/vl53l1x_stm/vl53l1_register_funcs.c
+  src/vl53l1x_stm/vl53l1_api_calibration.c
+  src/vl53l1x_stm/vl53l1_core.c
+  src/vl53l1x_stm/vl53l1_silicon_core.c
+  src/vl53l1x_stm/vl53l1_api_core.c
+  src/vl53l1x_stm/vl53l1_core_support.c
+  src/vl53l1x_stm/vl53l1_wait.c
+  src/vl53l1x_stm/vl53l1_api_debug.c
+  src/vl53l1x_stm/vl53l1_error_strings.c
+  src/vl53l1x_stm/vl53l1_api_preset_modes.c
+  src/vl53l1x_stm/vl53l1_platform.c
+
 )
 
 add_library(${PROJECT_NAME}_source ${SOURCE_FILES})

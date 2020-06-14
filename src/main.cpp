@@ -15,6 +15,8 @@
 #include "vl53l1x/VL53L1X.h"
 #include "MotorsController/MotorsController.hpp"
 #include "FrequencyCounter/FrequencyCounter.hpp"
+#include "vl53l1x_stm/vl53l1_api.h"
+#include "vl53l1x_stm/vl53l1_platform.h"
 
 
 #define JOY_DEV "/dev/input/js0"
@@ -49,7 +51,7 @@ struct imu_data {
 };
 
 struct tof_data {
-	float measurement[9];
+	float measurement[NUM_OF_TOF];
 	std::mutex tof_data_access;
 	tof_data() {
 		for(int i = 0; i < NUM_OF_TOF; i++) measurement[i] = 0.0;
@@ -453,6 +455,133 @@ class MotorsRegulator : public rclcpp::Node{
 };
 // class Remote : public rclcpp::Node{}
 
+class TOFSTM : public rclcpp::Node{
+
+	public:
+	
+		TOFSTM(tof_data &structure): Node("tof_reader_stm"){
+			dataStructure = &structure;
+
+			// setting GPIO direction
+			for (int i = 0; i < NUM_OF_TOF; i++) bcm2835_gpio_fsel(sensorsPins[i], BCM2835_GPIO_FSEL_OUTP);
+
+			//disable all sensors first
+			for (int i = 0; i < NUM_OF_TOF; i++) bcm2835_gpio_clr(sensorsPins[i]);	
+
+			this->declare_parameter("sensorsUsed", rclcpp::ParameterValue(6));
+			sensorsUsed = this->get_parameter("sensorsUsed").get_value<int>();
+
+			//sensors' and sata structures
+			for (int s = 0; s < sensorsUsed; ++s) {
+				sensor[s] = new VL53L1_Dev_t();
+				sensor[s]->I2cDevAddr = 0x29;
+				data[s] = new VL53L1_RangingMeasurementData_t();
+			}
+
+			RCLCPP_INFO(this->get_logger(), "Starting TOF sensors and setting i2c addresses.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				bcm2835_gpio_set(sensorsPins[s]);
+				bcm2835_delay(100);
+				VL53L1_SetDeviceAddress(sensor[s], sensorsAddress[s]*2);
+				sensor[s]->I2cDevAddr = sensorsAddress[s];
+				bcm2835_delay(100);
+			}
+
+			RCLCPP_INFO(this->get_logger(), "Device booted.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_WaitDeviceBooted(sensor[s]);
+			}
+			bcm2835_delay(100);
+
+			RCLCPP_INFO(this->get_logger(), "Data init.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_DataInit(sensor[s]);
+			}
+			bcm2835_delay(100);
+
+			// static initialization
+			RCLCPP_INFO(this->get_logger(), "Static init.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_StaticInit(sensor[s]);
+			}
+			bcm2835_delay(100);
+
+			// measurement timing budget initialization
+			this->declare_parameter("mtb", rclcpp::ParameterValue(40000));
+			mtb = this->get_parameter("mtb").get_value<int>();
+			RCLCPP_INFO(this->get_logger(), "Setting measurement timing budget.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_SetMeasurementTimingBudgetMicroSeconds(sensor[s], mtb);
+			}
+			bcm2835_delay(100);
+
+			// inter measurement period initialization
+			this->declare_parameter("imp", rclcpp::ParameterValue(90));
+			imp = this->get_parameter("imp").get_value<int>();
+			RCLCPP_INFO(this->get_logger(), "Setting inter measurement period.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_SetInterMeasurementPeriodMilliSeconds(sensor[s], imp);
+			}
+			bcm2835_delay(100);
+
+			// start sensors' measurements
+			RCLCPP_INFO(this->get_logger(), "Starting measurements.");
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_StartMeasurement(sensor[s]);
+			}
+			bcm2835_delay(100);
+
+			this->declare_parameter("period", rclcpp::ParameterValue(100));
+			read_tof_data_timer = this->create_wall_timer(
+			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&TOFSTM::read_tof_data, this));
+		}
+
+		~TOFSTM(){
+			// stop measurement process
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_StopMeasurement(sensor[s]);
+				delete sensor[s];
+				delete data[s];
+			}
+		}
+
+	private:
+		VL53L1_Dev_t *sensor[NUM_OF_TOF];
+		VL53L1_RangingMeasurementData_t *data[NUM_OF_TOF];
+		tof_data *dataStructure = NULL;
+		FrequencyCounter counter;
+		int sensorsUsed, mtb, imp;
+		const uint8_t sensorsPins[NUM_OF_TOF] = {GPIO_TOF_1, GPIO_TOF_3, GPIO_TOF_4, GPIO_TOF_5, GPIO_TOF_6, GPIO_TOF_7, GPIO_TOF_8, GPIO_TOF_9};
+		const uint8_t sensorsAddress[NUM_OF_TOF] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37};
+		rclcpp::TimerBase::SharedPtr read_tof_data_timer;
+
+		void read_tof_data(){
+			counter.count();
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				VL53L1_WaitMeasurementDataReady(sensor[s]);
+				VL53L1_GetRangingMeasurementData(sensor[s], data[s]);
+				VL53L1_ClearInterruptAndStartMeasurement(sensor[s]);
+			}
+			// RCLCPP_INFO(this->get_logger(), "%d, %d, %d, %d, %d, %d", data[0]->RangeMilliMeter, data[1]->RangeMilliMeter, data[2]->RangeMilliMeter, data[3]->RangeMilliMeter, data[4]->RangeMilliMeter, data[5]->RangeMilliMeter);
+			dataStructure->tof_data_access.lock();
+			for (int s = 0; s < sensorsUsed; ++s)
+			{
+				dataStructure->measurement[s] = (float)data[s]->RangeMilliMeter;
+			}
+			dataStructure->tof_data_access.unlock();
+		}
+	
+};
+
 int main(int argc, char * argv[]) {
 	setbuf(stdout, nullptr);
 	setRTPriority();
@@ -473,8 +602,10 @@ int main(int argc, char * argv[]) {
 	// executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
-	auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));
-	executor.add_node(TOFReaderNode);
+	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));
+	// executor.add_node(TOFReaderNode);
+	auto TOFReaderNodeSTM = std::make_shared<TOFSTM>(std::ref(tof_data_structure));
+	executor.add_node(TOFReaderNodeSTM);
 
 	// auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure));
 	// executor.add_node(MotorsRegulatorNode);
