@@ -51,7 +51,7 @@ public:
 	void resetPosition();
 	int getBatteryVoltage();
 	void setMicrostep(uint8_t);
-	void setMaxSpeedForBoth(uint8_t);
+	void setMaxSpeedForBoth(float);
 
 private:
 	uint8_t SPIXfer(uint8_t);

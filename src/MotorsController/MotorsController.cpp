@@ -100,6 +100,7 @@ void MotorsController::setMaxAcceleration(float acceleration){
 
 void MotorsController::setMaxSpeed(float speed){
 	this->maxSpeed = speed;
+	printf("%f\n", speed);
 	this->board->setMaxSpeedForBoth(speed);
 }
 

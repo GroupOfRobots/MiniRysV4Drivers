@@ -194,8 +194,8 @@ class JoyconReceiver : public rclcpp::Node{
 				dataStructure->rotationSpeed = -axis[rotationAxis]/rotationSpeedFactor;
 			}
 
-			if (standUpButton == 1) dataStructure->enableBalancing = true;
-			if (layDownButton == 1) dataStructure->enableBalancing = false;
+			if (button[standUpButton] == 1) dataStructure->enableBalancing = true;
+			if (button[layDownButton] == 1) dataStructure->enableBalancing = false;
 
 			dataStructure->joycon_data_access.unlock();
 		}
@@ -445,11 +445,13 @@ class MotorsRegulator : public rclcpp::Node{
 			enableBalancing = joyconDataStructure->enableBalancing;
 			joyconDataStructure->joycon_data_access.unlock();
 
-			controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>());
+			leftSpeed = 0;
+			rightSpeed = 0;
+			if (!enableBalancing) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>());
+			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
 			leftSpeed = controller->getMotorSpeedLeft();
 			rightSpeed = controller->getMotorSpeedRight();
-			// RCLCPP_INFO(this->get_logger(), "%f/t%f/t%f/t%f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 		}
 
 };
@@ -594,8 +596,8 @@ int main(int argc, char * argv[]) {
 	rclcpp::executors::MultiThreadedExecutor executor;
 
 	joycon_data joycon_data_structure;
-	// auto JoyconReceiverNode = std::make_shared<JoyconReceiver>(std::ref(joycon_data_structure));
-	// executor.add_node(JoyconReceiverNode);
+	auto JoyconReceiverNode = std::make_shared<JoyconReceiver>(std::ref(joycon_data_structure));
+	executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
 	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
@@ -604,11 +606,11 @@ int main(int argc, char * argv[]) {
 	tof_data tof_data_structure;
 	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));
 	// executor.add_node(TOFReaderNode);
-	auto TOFReaderNodeSTM = std::make_shared<TOFSTM>(std::ref(tof_data_structure));
-	executor.add_node(TOFReaderNodeSTM);
+	// auto TOFReaderNodeSTM = std::make_shared<TOFSTM>(std::ref(tof_data_structure));
+	// executor.add_node(TOFReaderNodeSTM);
 
-	// auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure));
-	// executor.add_node(MotorsRegulatorNode);
+	auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure));
+	executor.add_node(MotorsRegulatorNode);
 
 	// while(!endProcess) executor.spin_some();
 	executor.spin();

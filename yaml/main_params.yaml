@@ -26,4 +26,4 @@ motors_regulator:
     maxAcceleration: 100.0
     invertLeftMotor: true
     invertRightMotor: true
-    period: 10
+    period: 10 # in milliseconds
