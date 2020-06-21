@@ -20,6 +20,8 @@ class MotorsController {
 		Motors *board;
 
 		bool balancing;
+		bool standingUpPhase;
+		int standingUpDir;
 
 		bool pidSpeedRegulatorEnabled;
 		float pidSpeedKp;
@@ -49,7 +51,11 @@ class MotorsController {
 		~MotorsController();
 
 		void setInvertSpeed(const bool left, const bool right);
+
 		void setBalancing(bool value);
+		bool getBalancing();
+		void standUp(float angle, float &speedLeftNew, float &speedRightNew);
+
 		void setPIDSpeedRegulatorEnabled(bool enabled);
 		void setPIDParameters(float speedKp, float speedInvTi, float speedTd, float angleKp, float angleInvTi, float angleTd);
 		void zeroPIDRegulator();

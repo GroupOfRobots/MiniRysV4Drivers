@@ -8,6 +8,8 @@ MotorsController::MotorsController() {
 	this->board->setUp();
 	this->board->resetPosition();
 	this->balancing = false;
+	this->standingUpPhase = false;
+	this->standingUpDir = 0;
 
 	this->pidSpeedRegulatorEnabled = true;
 	this->pidSpeedKp = 0;
@@ -54,6 +56,28 @@ void MotorsController::setInvertSpeed(const bool left, const bool right) {
 
 void MotorsController::setBalancing(bool value) {
 	this->balancing = value;
+}
+
+bool MotorsController::getBalancing() {
+	return this->balancing;
+}
+
+void MotorsController::standUp(float angle, float &speedLeftNew, float &speedRightNew) {
+	if (this->standingUpDir == 0) this->standingUpDir = angle > 0 ? -1 : 1;
+
+	if (!this->standingUpPhase && this->getMotorSpeedLeft() == this->standingUpDir * this->maxSpeed && this->getMotorSpeedRight() == this->standingUpDir * this->maxSpeed) {
+		this->standingUpDir = -this->standingUpDir;
+		this->standingUpPhase = true;
+	}
+
+	if (this->standingUpPhase && angle * this->standingUpDir < 0){
+		this->standingUpDir = 0;
+		this->standingUpPhase = false;
+		this->balancing = true;
+	}
+
+	speedLeftNew = this->standingUpDir * this->maxSpeed;
+	speedRightNew = this->standingUpDir * this->maxSpeed;
 }
 
 void MotorsController::setPIDSpeedRegulatorEnabled(bool enabled) {

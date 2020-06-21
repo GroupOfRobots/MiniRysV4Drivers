@@ -400,9 +400,7 @@ class MotorsRegulator : public rclcpp::Node{
 			controller->enableMotors();
 			imuDataStructure = &imuStructure;
 			joyconDataStructure = &joyconStructure;
-
-			balancing = false;
-			controller->setBalancing(balancing);
+			controller->setBalancing(false);
 
 			this->declare_parameter("microstep", rclcpp::ParameterValue(64));
 			controller->setMicrostep(this->get_parameter("microstep").get_value<int>());
@@ -428,7 +426,7 @@ class MotorsRegulator : public rclcpp::Node{
 		joycon_data *joyconDataStructure;
 		imu_data *imuDataStructure;
 		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
-		bool enableBalancing, balancing;
+		bool enableBalancing;
 		FrequencyCounter counter;
 
 		rclcpp::TimerBase::SharedPtr control_motors_timer;
@@ -438,6 +436,7 @@ class MotorsRegulator : public rclcpp::Node{
 			tilt = imuDataStructure->tilt;
 			gyro = imuDataStructure->gyro;
 			imuDataStructure->imu_data_access.unlock();
+			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f", tilt, gyro);
 
 			joyconDataStructure->joycon_data_access.lock();
 			forwardSpeed = joyconDataStructure->forwardSpeed;
@@ -445,9 +444,14 @@ class MotorsRegulator : public rclcpp::Node{
 			enableBalancing = joyconDataStructure->enableBalancing;
 			joyconDataStructure->joycon_data_access.unlock();
 
+			if (!enableBalancing && controller->getBalancing()) {
+				controller->setBalancing(false);
+			}
+
 			leftSpeed = 0;
 			rightSpeed = 0;
-			if (!enableBalancing) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>());
+			if (enableBalancing && !controller->getBalancing()) controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
+			else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>());
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
 			leftSpeed = controller->getMotorSpeedLeft();
@@ -600,8 +604,8 @@ int main(int argc, char * argv[]) {
 	executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
-	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
-	// executor.add_node(ImuReaderNode);
+	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
+	executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
 	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));
