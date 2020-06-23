@@ -450,12 +450,17 @@ class MotorsRegulator : public rclcpp::Node{
 
 			leftSpeed = 0;
 			rightSpeed = 0;
-			if (enableBalancing && !controller->getBalancing()) controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
-			else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>());
-			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
+			if (enableBalancing && !controller->getBalancing()) {
+				controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
+				// if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>()/1000);
+			} else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>()/1000);
+			RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
+
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
 			leftSpeed = controller->getMotorSpeedLeft();
 			rightSpeed = controller->getMotorSpeedRight();
+			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
+			RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
 		}
 
 };

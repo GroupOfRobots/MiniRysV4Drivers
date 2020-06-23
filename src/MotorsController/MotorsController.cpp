@@ -10,6 +10,7 @@ MotorsController::MotorsController() {
 	this->balancing = false;
 	this->standingUpPhase = false;
 	this->standingUpDir = 0;
+	this->standingUpCounter = 0;
 
 	this->pidSpeedRegulatorEnabled = true;
 	this->pidSpeedKp = 0;
@@ -63,7 +64,11 @@ bool MotorsController::getBalancing() {
 }
 
 void MotorsController::standUp(float angle, float &speedLeftNew, float &speedRightNew) {
-	if (this->standingUpDir == 0) this->standingUpDir = angle > 0 ? -1 : 1;
+	if (this->standingUpDir == 0) {
+		this->standingUpDir = angle > 0 ? -1 : 1;
+		this->standingUpCounter = 0;
+		this->standingUpPhase = false;
+	}
 
 	if (!this->standingUpPhase && this->getMotorSpeedLeft() == this->standingUpDir * this->maxSpeed && this->getMotorSpeedRight() == this->standingUpDir * this->maxSpeed) {
 		this->standingUpDir = -this->standingUpDir;
@@ -72,10 +77,14 @@ void MotorsController::standUp(float angle, float &speedLeftNew, float &speedRig
 
 	if (this->standingUpPhase && angle * this->standingUpDir < 0){
 		this->standingUpDir = 0;
-		this->standingUpPhase = false;
 		this->balancing = true;
 	}
 
+	if (this->standingUpPhase && this->standingUpCounter > 20){
+		this->standingUpDir = 0;
+	}
+
+	this->standingUpCounter++;
 	speedLeftNew = this->standingUpDir * this->maxSpeed;
 	speedRightNew = this->standingUpDir * this->maxSpeed;
 }
@@ -167,6 +176,8 @@ void MotorsController::calculateSpeeds(float angle, float rotationX, float throt
 	clipValue(throttle, this->maxSpeed);
 	clipValue(rotation, this->maxSpeed);
 
+	if (this->balancing && std::abs(angle) > 1.0) this->balancing = false;
+
 	if (!this->balancing) {
 		speedLeftNew = throttle + rotation;
 		speedRightNew = throttle - rotation;
@@ -214,6 +225,7 @@ void MotorsController::calculateSpeedsPID(float angle, float rotationX, float th
 
 	this->pidAnglePreviousError2 = this->pidAnglePreviousError1;
 	this->pidAnglePreviousError1 = angleError;
+	printf("%f\t%f\n", speedLeftNew, speedRightNew);
 }
 
 void MotorsController::enableMotors() {

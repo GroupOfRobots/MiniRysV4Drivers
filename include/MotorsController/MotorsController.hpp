@@ -22,6 +22,7 @@ class MotorsController {
 		bool balancing;
 		bool standingUpPhase;
 		int standingUpDir;
+		int standingUpCounter;
 
 		bool pidSpeedRegulatorEnabled;
 		float pidSpeedKp;
