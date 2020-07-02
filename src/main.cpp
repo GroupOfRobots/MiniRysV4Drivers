@@ -401,6 +401,7 @@ class MotorsRegulator : public rclcpp::Node{
 			imuDataStructure = &imuStructure;
 			joyconDataStructure = &joyconStructure;
 			controller->setBalancing(false);
+			controller->setPIDSpeedRegulatorEnabled(false);
 
 			this->declare_parameter("microstep", rclcpp::ParameterValue(64));
 			controller->setMicrostep(this->get_parameter("microstep").get_value<int>());
@@ -450,17 +451,18 @@ class MotorsRegulator : public rclcpp::Node{
 
 			leftSpeed = 0;
 			rightSpeed = 0;
+			// RCLCPP_INFO(this->get_logger(), "Period:\t\t\t%d", this->get_parameter("period").get_value<int>());
 			if (enableBalancing && !controller->getBalancing()) {
 				controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
-				// if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>()/1000);
-			} else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), this->get_parameter("period").get_value<int>()/1000);
-			RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
+				if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
+			} else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
+			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
 			leftSpeed = controller->getMotorSpeedLeft();
 			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
-			RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
+			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
 		}
 
 };
@@ -522,7 +524,7 @@ class TOFSTM : public rclcpp::Node{
 			bcm2835_delay(100);
 
 			// measurement timing budget initialization
-			this->declare_parameter("mtb", rclcpp::ParameterValue(40000));
+			this->declare_parameter("mtb", rclcpp::ParameterValue(20000));
 			mtb = this->get_parameter("mtb").get_value<int>();
 			RCLCPP_INFO(this->get_logger(), "Setting measurement timing budget.");
 			for (int s = 0; s < sensorsUsed; ++s)
@@ -532,7 +534,7 @@ class TOFSTM : public rclcpp::Node{
 			bcm2835_delay(100);
 
 			// inter measurement period initialization
-			this->declare_parameter("imp", rclcpp::ParameterValue(90));
+			this->declare_parameter("imp", rclcpp::ParameterValue(24));
 			imp = this->get_parameter("imp").get_value<int>();
 			RCLCPP_INFO(this->get_logger(), "Setting inter measurement period.");
 			for (int s = 0; s < sensorsUsed; ++s)
@@ -567,6 +569,8 @@ class TOFSTM : public rclcpp::Node{
 	private:
 		VL53L1_Dev_t *sensor[NUM_OF_TOF];
 		VL53L1_RangingMeasurementData_t *data[NUM_OF_TOF];
+		uint8_t dataReady[NUM_OF_TOF];
+		uint8_t ready;
 		tof_data *dataStructure = NULL;
 		FrequencyCounter counter;
 		int sensorsUsed, mtb, imp;
@@ -576,6 +580,17 @@ class TOFSTM : public rclcpp::Node{
 
 		void read_tof_data(){
 			counter.count();
+
+			do {
+				ready = 0;
+				for (int s = 0; s < sensorsUsed; ++s) {
+					VL53L1_GetMeasurementDataReady(sensor[s], &dataReady[s]);
+					ready += dataReady[s];
+			// 		printf("%d ", dataReady[s]);
+				}
+			// 	printf("\n");
+			} while(ready != 6);
+
 			for (int s = 0; s < sensorsUsed; ++s)
 			{
 				VL53L1_WaitMeasurementDataReady(sensor[s]);

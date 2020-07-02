@@ -133,7 +133,6 @@ void MotorsController::setMaxAcceleration(float acceleration){
 
 void MotorsController::setMaxSpeed(float speed){
 	this->maxSpeed = speed;
-	printf("%f\n", speed);
 	this->board->setMaxSpeedForBoth(speed);
 }
 
@@ -190,9 +189,11 @@ void MotorsController::calculateSpeeds(float angle, float rotationX, float throt
 }
 
 void MotorsController::calculateSpeedsPID(float angle, float rotationX, float throttle, float rotation, float &speedLeftNew, float &speedRightNew, float loopTime) {
+	printf("Angle:%f\tLooptime:%f\n", angle, loopTime);
 	float targetAngle = 0.0f;
 	float speedError = 0.0f;
 	float speed = (this->getMotorSpeedLeft() + this->getMotorSpeedRight())/2;
+	// printf("Current speed: %f\n", speed);
 
 	if (this->pidSpeedRegulatorEnabled) {
 		speedError = speed - rotationX*RAD_TO_DEG - throttle;
@@ -208,14 +209,20 @@ void MotorsController::calculateSpeedsPID(float angle, float rotationX, float th
 	this->pidSpeedPreviousError1 = speedError;
 	this->pidPreviousTargetAngle = targetAngle;
 
+	// printf("Target angle: %f\n", targetAngle);
+
 	float angleError = targetAngle - angle;
+	// printf("Angle error: %f\n", angleError);
 
 	float angleFactor0 = this->pidAngleKp * (1 + this->pidAngleInvTi * loopTime / 2 + this->pidAngleTd / loopTime);
 	float angleFactor1 = this->pidAngleKp * (this->pidAngleInvTi * loopTime / 2 - 2 * this->pidAngleTd / loopTime - 1);
 	float angleFactor2 = this->pidAngleKp * this->pidAngleTd / loopTime;
+	// printf("Angle factors:%f\t%f\t%f\n", angleFactor0, angleFactor1, angleFactor2);
 
 	float output = angleFactor0 * angleError + angleFactor1 * this->pidAnglePreviousError1 + angleFactor2 * this->pidAnglePreviousError2 + speed;
+	// printf("Output before clip:%f\n", output);
 	clipValue(output, this->maxSpeed);
+	// printf("Output after clip:%f\n", output);
 	clipValue(rotation, this->maxSpeed);
 
 	speedLeftNew = output + rotation;
@@ -225,7 +232,7 @@ void MotorsController::calculateSpeedsPID(float angle, float rotationX, float th
 
 	this->pidAnglePreviousError2 = this->pidAnglePreviousError1;
 	this->pidAnglePreviousError1 = angleError;
-	printf("%f\t%f\n", speedLeftNew, speedRightNew);
+	// printf("New speed: %f\t%f\n", speedLeftNew, speedRightNew);
 }
 
 void MotorsController::enableMotors() {
