@@ -401,7 +401,21 @@ class MotorsRegulator : public rclcpp::Node{
 			imuDataStructure = &imuStructure;
 			joyconDataStructure = &joyconStructure;
 			controller->setBalancing(false);
+
 			controller->setPIDSpeedRegulatorEnabled(false);
+		    this->declare_parameter("pidSpeedKp", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidSpeedInvTi", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidSpeedInvTd", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidAngleKp", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidAngleInvTi", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidAngleInvTd", rclcpp::ParameterValue(0.0));
+		    controller->setPIDParameters(
+			    this->get_parameter("pidSpeedKp").get_value<float>(),
+			    this->get_parameter("pidSpeedInvTi").get_value<float>(),
+			    this->get_parameter("pidSpeedInvTd").get_value<float>(),
+			    this->get_parameter("pidAngleKp").get_value<float>(),
+			    this->get_parameter("pidAngleInvTi").get_value<float>(),
+			    this->get_parameter("pidAngleInvTd").get_value<float>());
 
 			this->declare_parameter("microstep", rclcpp::ParameterValue(64));
 			controller->setMicrostep(this->get_parameter("microstep").get_value<int>());
@@ -624,8 +638,8 @@ int main(int argc, char * argv[]) {
 	executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
-	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
-	executor.add_node(ImuReaderNode);
+	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
+	// executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
 	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));

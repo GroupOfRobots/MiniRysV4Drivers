@@ -189,7 +189,7 @@ void MotorsController::calculateSpeeds(float angle, float rotationX, float throt
 }
 
 void MotorsController::calculateSpeedsPID(float angle, float rotationX, float throttle, float rotation, float &speedLeftNew, float &speedRightNew, float loopTime) {
-	printf("Angle:%f\tLooptime:%f\n", angle, loopTime);
+	// printf("Angle:%f\tLooptime:%f\n", angle, loopTime);
 	float targetAngle = 0.0f;
 	float speedError = 0.0f;
 	float speed = (this->getMotorSpeedLeft() + this->getMotorSpeedRight())/2;
@@ -211,7 +211,7 @@ void MotorsController::calculateSpeedsPID(float angle, float rotationX, float th
 
 	// printf("Target angle: %f\n", targetAngle);
 
-	float angleError = targetAngle - angle;
+	float angleError = -(targetAngle - angle);
 	// printf("Angle error: %f\n", angleError);
 
 	float angleFactor0 = this->pidAngleKp * (1 + this->pidAngleInvTi * loopTime / 2 + this->pidAngleTd / loopTime);

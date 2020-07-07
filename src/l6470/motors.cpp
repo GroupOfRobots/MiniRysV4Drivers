@@ -29,6 +29,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
+#include <chrono>         // std::chrono::system_clock
+#include <ctime>          // std::time_t, std::tm, std::localtime, std::mktime
+#include <iostream>
 
 #include "bcm/bcm2835.h"
 
@@ -144,12 +147,16 @@ void Motors::setMaxSpeedForBoth(float speed){
 }
 
 void Motors::setSpeed(float speedLeft, float speedRight){
+	// auto start = std::chrono::system_clock::now();
 	m_nPosition=0;
 	while (this->busyCheck())
 		;
 	m_nPosition=1;
 	while (this->busyCheck())
 		;
+	// auto end = std::chrono::system_clock::now();
+	// std::chrono::duration<double> elapsed_seconds = end-start;
+    // std::cout << "busyCheck duration: " << elapsed_seconds.count() << "s\n";
 	m_nPosition=0;
 	if (speedLeft>=0)this->run(L6470_DIR_FWD,speedLeft);
 	else this->run(L6470_DIR_REV,-1*speedLeft);

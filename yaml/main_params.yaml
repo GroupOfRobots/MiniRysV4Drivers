@@ -26,4 +26,10 @@ motors_regulator:
     maxAcceleration: 100.0
     invertLeftMotor: true
     invertRightMotor: true
+    pidSpeedKp: 0.0
+    pidSpeedInvTi: 0.0
+    pidSpeedInvTd: 0.0
+    pidAngleKp: 1000.0
+    pidAngleInvTi: 0.0
+    pidAngleInvTd: 0.0
     period: 10 # in milliseconds
