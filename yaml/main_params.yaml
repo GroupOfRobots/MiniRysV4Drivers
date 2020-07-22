@@ -14,6 +14,7 @@ imu_reader:
     gyroOffsetX: 3.755909 #in deg
     gyroOffsetY: -5.435584 #in deg
     gyroOffsetZ: -3.461446 #in deg
+    angleCorrection: 0.063 #in deg
     filterFactor: 0.05
     period: 10 #in milliseconds
 tof_reader:
@@ -28,8 +29,8 @@ motors_regulator:
     invertRightMotor: true
     pidSpeedKp: 0.0
     pidSpeedInvTi: 0.0
-    pidSpeedInvTd: 0.0
-    pidAngleKp: 1000.0
-    pidAngleInvTi: 0.0
-    pidAngleInvTd: 0.0
+    pidSpeedTd: 0.0
+    pidAngleKp: 4000.0
+    pidAngleInvTi: 5.0
+    pidAngleTd: 0.0
     period: 10 # in milliseconds

@@ -139,6 +139,7 @@ class JoyconReceiver : public rclcpp::Node{
 			this->declare_parameter("period", rclcpp::ParameterValue(10));
 			get_joycon_state_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&JoyconReceiver::get_joycon_state, this));
+			RCLCPP_INFO(this->get_logger(), "Joycon receiver initialized.");
 		}
 
 		~JoyconReceiver(){
@@ -238,13 +239,16 @@ class ImuReader : public rclcpp::Node{
 			gyroY = (SensorOne->readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
 			gyroZ = (SensorOne->readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
 
-			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ));
+			this->declare_parameter("angleCorrection", rclcpp::ParameterValue(0.0));
+			angleCorrection = this->get_parameter("angleCorrection").get_value<float>();
+			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ)) - angleCorrection;
 			this->declare_parameter("filterFactor", rclcpp::ParameterValue(0.05));
 			this->declare_parameter("period", rclcpp::ParameterValue(10));
 			imu_filter = new filter(tilt, this->get_parameter("filterFactor").get_value<float>(), 1000/this->get_parameter("period").get_value<int>());
 
 			read_imu_data_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&ImuReader::read_imu_data, this));
+			RCLCPP_INFO(this->get_logger(), "IMU reader initialized.");
 		}
 
 		~ImuReader(){
@@ -254,7 +258,7 @@ class ImuReader : public rclcpp::Node{
 
 	private:
 		float accelerationX = 0, accelerationY = 0, accelerationZ = 0, gyroX = 0, gyroY = 0, gyroZ = 0, tilt = 0;
-		float gyroOffsetX, gyroOffsetY, gyroOffsetZ;
+		float gyroOffsetX, gyroOffsetY, gyroOffsetZ, angleCorrection;
 
 		LSM6DS3 *SensorOne;// = LSM6DS3( I2C_MODE, 0x6B);
 		filter *imu_filter;// = filter(0, 0, 0);
@@ -270,7 +274,7 @@ class ImuReader : public rclcpp::Node{
 			gyroX = (SensorOne->readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
 			gyroY = (SensorOne->readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
 			gyroZ = (SensorOne->readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
-			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ));
+			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ)) - angleCorrection;
 
 			dataStructure->imu_data_access.lock();
 			dataStructure->tilt = imu_filter->getAngle(tilt, gyroY);
@@ -405,17 +409,17 @@ class MotorsRegulator : public rclcpp::Node{
 			controller->setPIDSpeedRegulatorEnabled(false);
 		    this->declare_parameter("pidSpeedKp", rclcpp::ParameterValue(0.0));
 		    this->declare_parameter("pidSpeedInvTi", rclcpp::ParameterValue(0.0));
-		    this->declare_parameter("pidSpeedInvTd", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidSpeedTd", rclcpp::ParameterValue(0.0));
 		    this->declare_parameter("pidAngleKp", rclcpp::ParameterValue(0.0));
 		    this->declare_parameter("pidAngleInvTi", rclcpp::ParameterValue(0.0));
-		    this->declare_parameter("pidAngleInvTd", rclcpp::ParameterValue(0.0));
+		    this->declare_parameter("pidAngleTd", rclcpp::ParameterValue(0.0));
 		    controller->setPIDParameters(
 			    this->get_parameter("pidSpeedKp").get_value<float>(),
 			    this->get_parameter("pidSpeedInvTi").get_value<float>(),
-			    this->get_parameter("pidSpeedInvTd").get_value<float>(),
+			    this->get_parameter("pidSpeedTd").get_value<float>(),
 			    this->get_parameter("pidAngleKp").get_value<float>(),
 			    this->get_parameter("pidAngleInvTi").get_value<float>(),
-			    this->get_parameter("pidAngleInvTd").get_value<float>());
+			    this->get_parameter("pidAngleTd").get_value<float>());
 
 			this->declare_parameter("microstep", rclcpp::ParameterValue(64));
 			controller->setMicrostep(this->get_parameter("microstep").get_value<int>());
@@ -638,8 +642,8 @@ int main(int argc, char * argv[]) {
 	executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
-	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
-	// executor.add_node(ImuReaderNode);
+	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
+	executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
 	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));

@@ -96,7 +96,7 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(350);              // accelerate at 350 steps/s/s
+	this->setAcc(400);              // accelerate at 350 steps/s/s
 	this->setDec(1000);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
@@ -120,7 +120,7 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(350);             // accelerate at 350 steps/s/s
+	this->setAcc(400);             // accelerate at 350 steps/s/s
 	this->setDec(1000);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
@@ -147,16 +147,16 @@ void Motors::setMaxSpeedForBoth(float speed){
 }
 
 void Motors::setSpeed(float speedLeft, float speedRight){
-	// auto start = std::chrono::system_clock::now();
-	m_nPosition=0;
-	while (this->busyCheck())
-		;
-	m_nPosition=1;
-	while (this->busyCheck())
-		;
-	// auto end = std::chrono::system_clock::now();
-	// std::chrono::duration<double> elapsed_seconds = end-start;
-    // std::cout << "busyCheck duration: " << elapsed_seconds.count() << "s\n";
+	// // auto start = std::chrono::system_clock::now();
+	// m_nPosition=0;
+	// while (this->busyCheck())
+	// 	;
+	// m_nPosition=1;
+	// while (this->busyCheck())
+	// 	;
+	// // auto end = std::chrono::system_clock::now();
+	// // std::chrono::duration<double> elapsed_seconds = end-start;
+ //    // std::cout << "busyCheck duration: " << elapsed_seconds.count() << "s\n";
 	m_nPosition=0;
 	if (speedLeft>=0)this->run(L6470_DIR_FWD,speedLeft);
 	else this->run(L6470_DIR_REV,-1*speedLeft);
