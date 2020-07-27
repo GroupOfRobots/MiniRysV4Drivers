@@ -232,12 +232,15 @@ class ImuReader : public rclcpp::Node{
 			accelerationY = SensorOne->readFloatAccelY();
 			accelerationZ = SensorOne->readFloatAccelZ();
 
-			this->declare_parameter("gyroOffsetX", rclcpp::ParameterValue(3.755909));
-			this->declare_parameter("gyroOffsetY", rclcpp::ParameterValue(-5.435584));
-			this->declare_parameter("gyroOffsetZ", rclcpp::ParameterValue(-3.461446));
-			gyroX = (SensorOne->readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
-			gyroY = (SensorOne->readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
-			gyroZ = (SensorOne->readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
+			this->declare_parameter("gyroOffsetX", rclcpp::ParameterValue(0.0));
+			this->declare_parameter("gyroOffsetY", rclcpp::ParameterValue(0.0));
+			this->declare_parameter("gyroOffsetZ", rclcpp::ParameterValue(0.0));
+			gyroOffsetX = this->get_parameter("gyroOffsetX").get_value<float>();
+			gyroOffsetY = this->get_parameter("gyroOffsetY").get_value<float>();
+			gyroOffsetZ = this->get_parameter("gyroOffsetZ").get_value<float>();
+			gyroX = (SensorOne->readFloatGyroX() - gyroOffsetX)*M_PI/180;
+			gyroY = (SensorOne->readFloatGyroX() - gyroOffsetY)*M_PI/180;
+			gyroZ = (SensorOne->readFloatGyroX() - gyroOffsetZ)*M_PI/180;
 
 			this->declare_parameter("angleCorrection", rclcpp::ParameterValue(0.0));
 			angleCorrection = this->get_parameter("angleCorrection").get_value<float>();
@@ -271,13 +274,14 @@ class ImuReader : public rclcpp::Node{
 			accelerationX = SensorOne->readFloatAccelX();
 			accelerationY = SensorOne->readFloatAccelY();
 			accelerationZ = SensorOne->readFloatAccelZ();
-			gyroX = (SensorOne->readFloatGyroX() - this->get_parameter("gyroOffsetX").get_value<float>())*M_PI/180;
-			gyroY = (SensorOne->readFloatGyroY() - this->get_parameter("gyroOffsetY").get_value<float>())*M_PI/180;
-			gyroZ = (SensorOne->readFloatGyroZ() - this->get_parameter("gyroOffsetZ").get_value<float>())*M_PI/180;
+			gyroX = (SensorOne->readFloatGyroX() - gyroOffsetX)*M_PI/180;
+			gyroY = (SensorOne->readFloatGyroY() - gyroOffsetY)*M_PI/180;
+			gyroZ = (SensorOne->readFloatGyroZ() - gyroOffsetZ)*M_PI/180;
 			tilt = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ)) - angleCorrection;
 
 			dataStructure->imu_data_access.lock();
 			dataStructure->tilt = imu_filter->getAngle(tilt, gyroY);
+			// RCLCPP_INFO(this->get_logger(), "%f\t%f\n", tilt, dataStructure->tilt);
 			dataStructure->gyro = imu_filter->getGyro();
 			dataStructure->imu_data_access.unlock();
 			// RCLCPP_INFO(this->get_logger(), "Debug");
@@ -406,7 +410,8 @@ class MotorsRegulator : public rclcpp::Node{
 			joyconDataStructure = &joyconStructure;
 			controller->setBalancing(false);
 
-			controller->setPIDSpeedRegulatorEnabled(false);
+			this->declare_parameter("enableSpeedPID", rclcpp::ParameterValue(false));
+			controller->setPIDSpeedRegulatorEnabled(this->get_parameter("enableSpeedPID").get_value<bool>());
 		    this->declare_parameter("pidSpeedKp", rclcpp::ParameterValue(0.0));
 		    this->declare_parameter("pidSpeedInvTi", rclcpp::ParameterValue(0.0));
 		    this->declare_parameter("pidSpeedTd", rclcpp::ParameterValue(0.0));
@@ -469,7 +474,14 @@ class MotorsRegulator : public rclcpp::Node{
 
 			leftSpeed = 0;
 			rightSpeed = 0;
-			// RCLCPP_INFO(this->get_logger(), "Period:\t\t\t%d", this->get_parameter("period").get_value<int>());
+			controller->setPIDSpeedRegulatorEnabled(this->get_parameter("enableSpeedPID").get_value<bool>());
+		    controller->setPIDParameters(
+			    this->get_parameter("pidSpeedKp").get_value<float>(),
+			    this->get_parameter("pidSpeedInvTi").get_value<float>(),
+			    this->get_parameter("pidSpeedTd").get_value<float>(),
+			    this->get_parameter("pidAngleKp").get_value<float>(),
+			    this->get_parameter("pidAngleInvTi").get_value<float>(),
+			    this->get_parameter("pidAngleTd").get_value<float>());
 			if (enableBalancing && !controller->getBalancing()) {
 				controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
 				if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
