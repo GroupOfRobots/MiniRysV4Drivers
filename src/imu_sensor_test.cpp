@@ -84,7 +84,7 @@ int main(void)
 		rgy = (SensorOne.readFloatGyroY() - offY)*M_PI/180 - offYRad;
 		rgz = (SensorOne.readFloatGyroZ() - offZ)*M_PI/180 - offZRad;
 		printf(" X = %f\n",rgx);
-		printf(" Y = %f",rgy);
+		printf(" Y = %f\n",rgy);
 		printf(" Z = %f\n",rgz);
 
 		printf("\nTilt:\n");

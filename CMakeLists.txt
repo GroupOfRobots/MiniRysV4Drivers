@@ -154,6 +154,15 @@ target_include_directories(joycon_control_only
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
+add_executable(get_imu_calibration_values src/get_imu_calibration_values.cpp)
+target_link_libraries(get_imu_calibration_values ${PROJECT_NAME}_source)
+ament_target_dependencies(get_imu_calibration_values ${AMENT_DEPENDENCIES})
+
+target_include_directories(get_imu_calibration_values
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
 
 install(TARGETS
   main
@@ -164,6 +173,7 @@ install(TARGETS
   motors_test
   joycon_response_test
   joycon_control_only
+  get_imu_calibration_values
 	DESTINATION lib/${PROJECT_NAME}
 )
 
