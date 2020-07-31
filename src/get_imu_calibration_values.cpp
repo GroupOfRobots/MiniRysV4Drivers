@@ -37,35 +37,61 @@ int main(void)
 
 	// Frequency
 	float frequency = 100;
-	int readings = 1000;
+	int readings = 10000;
 
 	printf("Place robot on the support. Press any key when ready...");
 	getchar();
 
 	for (int i = 0; i < readings; i++){
-		ax += SensorOne.readFloatAccelX()/readings/2;
-		ay += SensorOne.readFloatAccelY()/readings/2;
-		az += SensorOne.readFloatAccelZ()/readings/2;
-		rgx += SensorOne.readFloatGyroX()/readings/2;
-		rgy += SensorOne.readFloatGyroY()/readings/2;
-		rgz += SensorOne.readFloatGyroZ()/readings/2;
+		ax += SensorOne.readFloatAccelX()/readings/4;
+		ay += SensorOne.readFloatAccelY()/readings/4;
+		az += SensorOne.readFloatAccelZ()/readings/4;
+		rgx += SensorOne.readFloatGyroX()/readings/4;
+		rgy += SensorOne.readFloatGyroY()/readings/4;
+		rgz += SensorOne.readFloatGyroZ()/readings/4;
 		delay(1000/frequency);
 	}
 
-	printf("\nRotate the robot 180 degrees. Press any key when ready...");
+	printf("\nRotate the robot 90 degrees right. Press any key when ready...");
 	getchar();
 
 	for (int i = 0; i < readings; i++){
-		ax += SensorOne.readFloatAccelX()/readings/2;
-		ay += SensorOne.readFloatAccelY()/readings/2;
-		az += SensorOne.readFloatAccelZ()/readings/2;
-		rgx += SensorOne.readFloatGyroX()/readings/2;
-		rgy += SensorOne.readFloatGyroY()/readings/2;
-		rgz += SensorOne.readFloatGyroZ()/readings/2;
+		ax += SensorOne.readFloatAccelX()/readings/4;
+		ay += SensorOne.readFloatAccelY()/readings/4;
+		az += SensorOne.readFloatAccelZ()/readings/4;
+		rgx += SensorOne.readFloatGyroX()/readings/4;
+		rgy += SensorOne.readFloatGyroY()/readings/4;
+		rgz += SensorOne.readFloatGyroZ()/readings/4;
 		delay(1000/frequency);
 	}
 
-	printf("\nReadings complete.\nMean accelerometer values(x,y,z) are: \t%f\t%f\t%f\nMean gyro values(x,y,z) are: \t\t%f\t%f\t%f\n", ax, ay, az, rgx, rgy, rgz);
+	printf("\nRotate the robot 90 degrees right. Press any key when ready...");
+	getchar();
+
+	for (int i = 0; i < readings; i++){
+		ax += SensorOne.readFloatAccelX()/readings/4;
+		ay += SensorOne.readFloatAccelY()/readings/4;
+		az += SensorOne.readFloatAccelZ()/readings/4;
+		rgx += SensorOne.readFloatGyroX()/readings/4;
+		rgy += SensorOne.readFloatGyroY()/readings/4;
+		rgz += SensorOne.readFloatGyroZ()/readings/4;
+		delay(1000/frequency);
+	}
+
+	printf("\nRotate the robot 90 degrees right. Press any key when ready...");
+	getchar();
+
+	for (int i = 0; i < readings; i++){
+		ax += SensorOne.readFloatAccelX()/readings/4;
+		ay += SensorOne.readFloatAccelY()/readings/4;
+		az += SensorOne.readFloatAccelZ()/readings/4;
+		rgx += SensorOne.readFloatGyroX()/readings/4;
+		rgy += SensorOne.readFloatGyroY()/readings/4;
+		rgz += SensorOne.readFloatGyroZ()/readings/4;
+		delay(1000/frequency);
+	}
+
+	printf("\nReadings complete.\nMean accelerometer values(x,y,z) are: \t%f\t%f\t%f\nGravity: %f\nTilt: %f\nMean gyro values(x,y,z) are: \t\t%f\t%f\t%f\n", ax, ay, az, sqrt(ax*ax+ay*ay+az*az), atan2(ax, sqrt(ay*ay + az*az)), rgx, rgy, rgz);
 
 	SensorOne.close_i2c();
 

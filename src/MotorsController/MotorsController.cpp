@@ -80,13 +80,17 @@ void MotorsController::standUp(float angle, float &speedLeftNew, float &speedRig
 		this->balancing = true;
 	}
 
-	if (this->standingUpPhase && this->standingUpCounter > 200){
+	if (this->standingUpPhase && this->standingUpCounter > 100){
 		this->standingUpDir = 0;
 	}
 
 	this->standingUpCounter++;
 	speedLeftNew = this->standingUpDir * this->maxSpeed;
 	speedRightNew = this->standingUpDir * this->maxSpeed;
+}
+
+void MotorsController::resetStandUp() {
+	this->standingUpDir = 0;
 }
 
 void MotorsController::setPIDSpeedRegulatorEnabled(bool enabled) {
@@ -196,7 +200,7 @@ void MotorsController::calculateSpeedsPID(float angle, float rotationX, float th
 	// printf("Current speed: %f\n", speed);
 
 	if (this->pidSpeedRegulatorEnabled) {
-		speedError = speed - rotationX*RAD_TO_DEG - throttle;
+		speedError = -(speed - throttle); // - rotationX*RAD_TO_DEG
 
 		float speedFactor0 = this->pidSpeedKp * (1 + this->pidSpeedInvTi * loopTime / 2 + this->pidSpeedTd / loopTime);
 		float speedFactor1 = this->pidSpeedKp * (this->pidSpeedInvTi * loopTime / 2 - 2 * this->pidSpeedTd / loopTime - 1);

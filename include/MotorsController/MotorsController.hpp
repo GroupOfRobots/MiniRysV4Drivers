@@ -56,6 +56,7 @@ class MotorsController {
 		void setBalancing(bool value);
 		bool getBalancing();
 		void standUp(float angle, float &speedLeftNew, float &speedRightNew);
+		void resetStandUp();
 
 		void setPIDSpeedRegulatorEnabled(bool enabled);
 		void setPIDParameters(float speedKp, float speedInvTi, float speedTd, float angleKp, float angleInvTi, float angleTd);

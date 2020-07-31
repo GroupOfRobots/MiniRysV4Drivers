@@ -11,10 +11,10 @@ joycon_receiver:
     period: 10 #in milliseconds
 imu_reader:
   ros__parameters:
-    gyroOffsetX: 3.755909 #in deg
-    gyroOffsetY: -5.435584 #in deg
-    gyroOffsetZ: -3.461446 #in deg
-    # angleCorrection: 0.063 #in rad
+    gyroOffsetX: 3.734345 #in deg
+    gyroOffsetY: -5.448233 #in deg
+    gyroOffsetZ: -2.776097 #in deg
+    angleCorrection: 0.089545 #in rad
     filterFactor: 0.05
     period: 10 #in milliseconds
 tof_reader:

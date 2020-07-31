@@ -450,7 +450,7 @@ class MotorsRegulator : public rclcpp::Node{
 		joycon_data *joyconDataStructure;
 		imu_data *imuDataStructure;
 		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
-		bool enableBalancing;
+		bool enableBalancing, previousEnableBalancing;
 		FrequencyCounter counter;
 
 		rclcpp::TimerBase::SharedPtr control_motors_timer;
@@ -462,15 +462,12 @@ class MotorsRegulator : public rclcpp::Node{
 			imuDataStructure->imu_data_access.unlock();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f", tilt, gyro);
 
+			previousEnableBalancing = enableBalancing;
 			joyconDataStructure->joycon_data_access.lock();
 			forwardSpeed = joyconDataStructure->forwardSpeed;
 			rotationSpeed = joyconDataStructure->rotationSpeed;
 			enableBalancing = joyconDataStructure->enableBalancing;
 			joyconDataStructure->joycon_data_access.unlock();
-
-			if (!enableBalancing && controller->getBalancing()) {
-				controller->setBalancing(false);
-			}
 
 			leftSpeed = 0;
 			rightSpeed = 0;
@@ -482,15 +479,21 @@ class MotorsRegulator : public rclcpp::Node{
 			    this->get_parameter("pidAngleKp").get_value<float>(),
 			    this->get_parameter("pidAngleInvTi").get_value<float>(),
 			    this->get_parameter("pidAngleTd").get_value<float>());
-			if (enableBalancing && !controller->getBalancing()) {
+
+			if (enableBalancing == true && previousEnableBalancing == false) controller->resetStandUp();
+
+			if (!enableBalancing && controller->getBalancing()) {
+				controller->setBalancing(false);
+				controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
+			}else if (enableBalancing && !controller->getBalancing()) {
 				controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
 				if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
 			} else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
-			leftSpeed = controller->getMotorSpeedLeft();
-			rightSpeed = controller->getMotorSpeedRight();
+			// leftSpeed = controller->getMotorSpeedLeft();
+			// rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
 		}
