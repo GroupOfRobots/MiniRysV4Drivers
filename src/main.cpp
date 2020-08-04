@@ -439,6 +439,7 @@ class MotorsRegulator : public rclcpp::Node{
 			control_motors_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&MotorsRegulator::controlMotors, this));
 			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
+			RCLCPP_INFO(this->get_logger(), "Status: %x", this->controller->board->getParam(L6470_PARAM_STATUS));
 		}
 
 		~MotorsRegulator(){
@@ -480,7 +481,11 @@ class MotorsRegulator : public rclcpp::Node{
 			    this->get_parameter("pidAngleInvTi").get_value<float>(),
 			    this->get_parameter("pidAngleTd").get_value<float>());
 
-			if (enableBalancing == true && previousEnableBalancing == false) controller->resetStandUp();
+			// RCLCPP_INFO(this->get_logger(), "\t%s\t%s", enableBalancing ? "true" : "false", previousEnableBalancing ? "true" : "false");
+			if (enableBalancing && !previousEnableBalancing) {
+				controller->resetStandUp();
+				controller->zeroPIDRegulator();
+			}
 
 			if (!enableBalancing && controller->getBalancing()) {
 				controller->setBalancing(false);
@@ -492,10 +497,11 @@ class MotorsRegulator : public rclcpp::Node{
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
-			// leftSpeed = controller->getMotorSpeedLeft();
-			// rightSpeed = controller->getMotorSpeedRight();
+			leftSpeed = controller->getMotorSpeedLeft();
+			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
+			RCLCPP_INFO(this->get_logger(), "Status: %x", this->controller->board->getParam(L6470_PARAM_STATUS));
 		}
 
 };

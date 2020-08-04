@@ -68,6 +68,7 @@ void MotorsController::standUp(float angle, float &speedLeftNew, float &speedRig
 		this->standingUpDir = angle > 0 ? -1 : 1;
 		this->standingUpCounter = 0;
 		this->standingUpPhase = false;
+		this->zeroPIDRegulator();
 	}
 
 	if (!this->standingUpPhase && this->getMotorSpeedLeft() == this->standingUpDir * this->maxSpeed && this->getMotorSpeedRight() == this->standingUpDir * this->maxSpeed && this->standingUpCounter > 50) {
@@ -80,7 +81,7 @@ void MotorsController::standUp(float angle, float &speedLeftNew, float &speedRig
 		this->balancing = true;
 	}
 
-	if (this->standingUpPhase && this->standingUpCounter > 100){
+	if (this->standingUpPhase && this->standingUpCounter > 150){
 		this->standingUpDir = 0;
 	}
 

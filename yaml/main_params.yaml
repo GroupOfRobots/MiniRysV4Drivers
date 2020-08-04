@@ -28,7 +28,7 @@ motors_regulator:
     invertLeftMotor: true
     invertRightMotor: true
     enableSpeedPID: false
-    pidSpeedKp: 0.0
+    pidSpeedKp: 0.0002
     pidSpeedInvTi: 0.0
     pidSpeedTd: 0.0
     pidAngleKp: 4000.0
