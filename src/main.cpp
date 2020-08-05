@@ -405,6 +405,8 @@ class MotorsRegulator : public rclcpp::Node{
 	public:
 		MotorsRegulator(imu_data& imuStructure, joycon_data& joyconStructure): Node("motors_regulator"){
 			controller = new MotorsController();
+			// RCLCPP_INFO(this->get_logger(), "Motors class object initialized.");
+			// printMotorStatus();
 			controller->enableMotors();
 			imuDataStructure = &imuStructure;
 			joyconDataStructure = &joyconStructure;
@@ -428,8 +430,12 @@ class MotorsRegulator : public rclcpp::Node{
 
 			this->declare_parameter("microstep", rclcpp::ParameterValue(64));
 			controller->setMicrostep(this->get_parameter("microstep").get_value<int>());
+			// RCLCPP_INFO(this->get_logger(), "Microstep set.");
+			// printMotorStatus();
 			this->declare_parameter("maxSpeed", rclcpp::ParameterValue(400.0));
 			controller->setMaxSpeed(this->get_parameter("maxSpeed").get_value<float>());
+			// RCLCPP_INFO(this->get_logger(), "Max speed set.");
+			// printMotorStatus();
 			this->declare_parameter("maxAcceleration", rclcpp::ParameterValue(100.0));
 			controller->setMaxAcceleration(this->get_parameter("maxAcceleration").get_value<float>());
 			this->declare_parameter("invertLeftMotor", rclcpp::ParameterValue(true));
@@ -439,7 +445,9 @@ class MotorsRegulator : public rclcpp::Node{
 			control_motors_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&MotorsRegulator::controlMotors, this));
 			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
-			RCLCPP_INFO(this->get_logger(), "Status: %x", this->controller->board->getParam(L6470_PARAM_STATUS));
+
+			statusCounter = 0;
+			printMotorStatus();
 		}
 
 		~MotorsRegulator(){
@@ -452,6 +460,7 @@ class MotorsRegulator : public rclcpp::Node{
 		imu_data *imuDataStructure;
 		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
 		bool enableBalancing, previousEnableBalancing;
+		int statusCounter;
 		FrequencyCounter counter;
 
 		rclcpp::TimerBase::SharedPtr control_motors_timer;
@@ -501,7 +510,19 @@ class MotorsRegulator : public rclcpp::Node{
 			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
-			RCLCPP_INFO(this->get_logger(), "Status: %x", this->controller->board->getParam(L6470_PARAM_STATUS));
+			printMotorStatus();
+		}
+
+		void printMotorStatus(){
+			long result;
+			RCLCPP_INFO(this->get_logger(), "Status number\t%d", statusCounter);
+			this->controller->board->m_nPosition = 0;
+			result = this->controller->board->getParam(L6470_PARAM_STATUS);
+			RCLCPP_INFO(this->get_logger(), "MOTOR: 0 - 0x%x", result);
+			this->controller->board->m_nPosition = 1;
+			result = this->controller->board->getParam(L6470_PARAM_STATUS);
+			RCLCPP_INFO(this->get_logger(), "MOTOR: 1 - 0x%x\n", result);
+			statusCounter++;
 		}
 
 };
@@ -663,8 +684,8 @@ int main(int argc, char * argv[]) {
 	executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
-	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
-	executor.add_node(ImuReaderNode);
+	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
+	// executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
 	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));

@@ -1,0 +1,229 @@
+										[TEST 0] initialization, move forward, backwards, left and right
+
+After initialization the value of status register becomes 0x7c92. It seems to be the default value every time the motors aren't moving. What is more 9 MSBs and Bit 3 don't change at any time. If the values are ok this is relatively good news, as they are latches and it indicates that motors state doesn't really change while running.
+
+------- Bit 15		SCK_MOD			high when device is in step-clock mode, constantly low as expected.
+------- Bit 14		STEP_LOSS_B		low when stall is detected on the bridge A, constantly high as expected.
+------- Bit 13		STEP_LOSS_A		low when stall is detected on the bridge A, constantly high as expected.
+------- Bit 12		OCD				low when overcurrent detected, constantly high as expected.
+
+------- Bit 11		TH_SD			low when thermal shutdown occurs, constantly high as expected.
+------- Bit 10		TH_WRN			low when thermal warning occurs, constantly high as expected.
+------- Bit 9		UVLO			low when undervoltage lockout or reset event occur, constantly low probably because power-up counts as reset event.
+------- Bit 8		WRONG_CMD		high when non-existent command is sent to l6470, constantly low as expected.
+
+------- Bit 7		NOTPERF_CMD		high when sent command couldn't be performed, constantly high so probably some of the commands sent during initialization couldn't be performed.
+------- Bit 6 & 5	MOT_STATUS		changes values depending on the fact if the motor is stopped, accelerating, decelerating or moving with constant speed, low/low means stopped, low/high is acceleration, high/low is deceleration, high/high is constant speed.
+------- Bit 4		DIR				indicates the current motor direction, high is forward, low is backward, seems to be constantly high when motors are stopped.
+
+------- Bit 3		SW_EVN			high if switch turn-on event happens, constantly low.
+------- Bit 2		SW_F			reports SW input status, constantly low.
+------- Bit 1		BUSY			reflects busy pin status, low when constant speed, positioning or motion command is executed, high after command completion.
+------- Bit 0		HiZ				high when any bridge is in high impedance, constantly low as expected.
+
+Move forward:		Acceleration to full speed from 1451 to 1501-02.	(50-51 cycles)
+					Deceleration to full stop from 1514 to 1534.		(20 cycles)
+
+Move backwards:		Acceleration to full speed from 1606 to 1656-58.	(50-52 cycles)
+					Deceleration to full stop from 1677 to 1697. 		(20 cycles)
+
+Turn left:			Acceleration to full speed from 1823 to 1845.		(22 cycles)
+					Deceleration to full stop from 1927 to 1932-33.		(5-6 cycles)
+
+Turn right:			Acceleration to full speed from 2032 to 2053.		(21 cycles)
+					Deceleration to full stop from 2139 to 2147-48.		(8-9 cycles)
+
+Cycles were run at 100 Hz. Controllers were set to acceleration 400 step/s2 (4 step/cycle2) and deceleration 1000 step/s2 (10 step/cycle2) according to the setup() function. For forward and backward motion final speed was 400. It was achieved in ~50 cycles, 2 times faster than expected. Deceleration took ~20 cycles, also 2 times faster than expected. For turning motion the final speed was 163. THe robot accelerated in 21-22 cycles and decelerated in 6-9 cycles. The time needed for both actions was also close to two times lower than expected from setup.
+
+TODO:
+1. [SOLVED: TEST 1] Check NOTPERF_CMD flag before initialization. As it is high after initialization we know that something went wrong during setup.
+2. Check why the motors seem to accelerate and decelerate twice as fast as it is expected.
+
+																	[TEST 0]
+
+...Initialization
+
+[INFO] [motors_regulator]: Motor controller initialized.
+[INFO] [motors_regulator]: Status after loop	0
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+...Driving forward - acceleration
+
+[INFO] [motors_regulator]: Status after loop	1450
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Status after loop	1451
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ca0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ca0
+
+...Driving forward - full speed
+
+[INFO] [motors_regulator]: Status after loop	1500
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ca0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ca0
+
+[INFO] [motors_regulator]: Status after loop	1501
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ca0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ce2
+
+[INFO] [motors_regulator]: Status after loop	1502
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ce2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ce2
+
+...Driving forward - deceleration
+
+[INFO] [motors_regulator]: Status after loop	1513
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ce2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ce2
+
+[INFO] [motors_regulator]: Status after loop	1514
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cc0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cc0
+
+...Driving forward - completed
+
+[INFO] [motors_regulator]: Status after loop	1533
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cc0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cc0
+
+[INFO] [motors_regulator]: Status after loop	1534
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+...Driving backwards - acceleration
+
+[INFO] [motors_regulator]: Status after loop	1605
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Status after loop	1606
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cb0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cb0
+
+...Driving backwards - full speed
+
+[INFO] [motors_regulator]: Status after loop	1655
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cb0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cb0
+
+[INFO] [motors_regulator]: Status after loop	1656
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cb0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cf2
+
+[INFO] [motors_regulator]: Status after loop	1657
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cb0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cf2
+
+[INFO] [motors_regulator]: Status after loop	1658
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cf2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cf2
+
+...Driving backwards - deceleration
+
+[INFO] [motors_regulator]: Status after loop	1676
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cf2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cf2
+
+[INFO] [motors_regulator]: Status after loop	1677
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cd0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cd0
+
+...Driving backwards - completed
+
+[INFO] [motors_regulator]: Status after loop	1696
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cd0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cd0
+
+[INFO] [motors_regulator]: Status after loop	1697
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+...Driving left - acceleration
+
+[INFO] [motors_regulator]: Status after loop	1822
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Status after loop	1823
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cb0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ca0
+
+...Driving left - full speed
+
+[INFO] [motors_regulator]: Status after loop	1844
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cb0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ca0
+
+[INFO] [motors_regulator]: Status after loop	1845
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cf2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ce2
+
+...Driving left - deceleration
+
+[INFO] [motors_regulator]: Status after loop	1926
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cf2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7ce2
+
+[INFO] [motors_regulator]: Status after loop	1927
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cd0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cc0
+
+...Driving left - completed
+
+[INFO] [motors_regulator]: Status after loop	1931
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cd0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cc0
+
+[INFO] [motors_regulator]: Status after loop	1932
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cd0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Status after loop	1933
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+...Driving right - acceleration
+
+[INFO] [motors_regulator]: Status after loop	2031
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Status after loop	2032
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ca0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cb0
+
+...Driving right - full speed
+
+[INFO] [motors_regulator]: Status after loop	2052
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ca0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cb0
+
+[INFO] [motors_regulator]: Status after loop	2053
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ce2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cf2
+
+...Driving right - deceleration
+
+[INFO] [motors_regulator]: Status after loop	2138
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7ce2
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cf2
+
+[INFO] [motors_regulator]: Status after loop	2139
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cc0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cd0
+
+...Driving right - completed
+
+[INFO] [motors_regulator]: Status after loop	2146
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cc0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7cd0
+
+[INFO] [motors_regulator]: Status after loop	2147
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7cc0
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Status after loop	2148
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92

@@ -1,0 +1,50 @@
+										[TEST 1.0-1.1] Debugging raised NOTPERF_CMD flag after initialization
+We are looking at the NOTPERF_CMD flag in status register. It is reflected by bit 7 in status register. The bit signals that one of the commands sent to the controler could not be performed. The bit is low after initialization, so we can assume the initialization worked as intended. It becomes high after we try to change the microstep used. The value sent seems to be correct after checking. The flag situation was resolved after going through the documentation. For changing the microstep the HiZ flag must be up, which means no move command was run on the motor from the time of reset. Previously command setting the motors speed to 0 was run during initialization of MotorsController class that initialized Motors class. As the command wasn't needed there it was removed and the NOTPERF_CMD is no longer set during running. Value of status register stays at 0x7c03 during and after initialization (HiZ bit high as no command was run and DIR bit low indicating backwards direction). As soon as the first command setting speed to 0 is ran the value changes to 0x7c12, which is the same as the value identified in [TEST 0] but with NOTPERF_CMD bit down indicating there was no commands that wasn't processed properly.
+
+																	[TEST 1.0] - original results
+
+[INFO] [motors_regulator]: Motors class object initialized.
+[INFO] [motors_regulator]: Status number	0
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c12
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c12
+
+[INFO] [motors_regulator]: Microstep set.
+[INFO] [motors_regulator]: Status number	1
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Max speed set.
+[INFO] [motors_regulator]: Status number	2
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+[INFO] [motors_regulator]: Motor controller initialized.
+[INFO] [motors_regulator]: Status number	0
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c92
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c92
+
+																	[TEST 1.1] - after removing setting speed during class initialization
+
+[INFO] [motors_regulator]: Motors class object initialized.
+[INFO] [motors_regulator]: Status number	0
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c03
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c03
+
+[INFO] [motors_regulator]: Microstep set.
+[INFO] [motors_regulator]: Status number	1
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c03
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c03
+
+[INFO] [motors_regulator]: Max speed set.
+[INFO] [motors_regulator]: Status number	2
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c03
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c03
+
+[INFO] [motors_regulator]: Motor controller initialized.
+[INFO] [motors_regulator]: Status number	0
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c03
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c03
+
+[INFO] [motors_regulator]: Status number	1
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c12
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c12

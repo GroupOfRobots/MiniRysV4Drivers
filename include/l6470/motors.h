@@ -61,13 +61,13 @@ private:
 	 */
 public:
 	bool IsConnected(int);
+	uint8_t m_nPosition; //0-left 1-right
 
 
 private:
 	uint8_t m_nSpiChipSelect;
 	uint8_t m_nResetPin;
 	uint8_t m_nBusyPin;
-	uint8_t m_nPosition; //0-left 1-right
 	bool l_bIsBusy;
 	bool r_bIsBusy;
 	bool l_bIsConnected;

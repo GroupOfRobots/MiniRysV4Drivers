@@ -33,7 +33,7 @@ MotorsController::MotorsController() {
 	this->maxAcceleration = 400.0;
 	this->maxSpeed = 400.0;
 
-	this->disableMotors();
+	// this->disableMotors();
 }
 
 MotorsController::~MotorsController() {
@@ -142,7 +142,7 @@ void MotorsController::setMaxSpeed(float speed){
 }
 
 void MotorsController::setMicrostep(int step){
-	if (step != 1 && (step == 0 || step % 2 || step > 128)) {
+	if (step != 1 && (step == 0 || ceil(log2(step)) != floor(log2(step)) || step > 128)) {
 		throw(std::domain_error("Bad microstep value! Allowed ones are powers of 2 from 1 to 128"));
 	}
 	this-> microstep = step;
