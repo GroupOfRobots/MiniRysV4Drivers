@@ -52,6 +52,8 @@ public:
 	int getBatteryVoltage();
 	void setMicrostep(uint8_t);
 	void setMaxSpeedForBoth(float);
+	long getStatusLeft();
+	long getStatusRight();
 
 private:
 	uint8_t SPIXfer(uint8_t);
@@ -61,10 +63,10 @@ private:
 	 */
 public:
 	bool IsConnected(int);
-	uint8_t m_nPosition; //0-left 1-right
 
 
 private:
+	uint8_t m_nPosition; //0-left 1-right
 	uint8_t m_nSpiChipSelect;
 	uint8_t m_nResetPin;
 	uint8_t m_nBusyPin;

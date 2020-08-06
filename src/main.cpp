@@ -447,8 +447,8 @@ class MotorsRegulator : public rclcpp::Node{
 			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
 
 			statusCounter = 0;
-			printMotorConfigurationFromRegisters();
-			printMotorStatusFromRegisters();
+			printMotorsSpeedConfiguration();
+			printMotorsStatusFromRegisters();
 		}
 
 		~MotorsRegulator(){
@@ -461,8 +461,11 @@ class MotorsRegulator : public rclcpp::Node{
 		imu_data *imuDataStructure;
 		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
 		bool enableBalancing, previousEnableBalancing;
-		int statusCounter;
 		FrequencyCounter counter;
+
+		int statusCounter;
+		long motorStatus0, motorStatus1;
+		float speedConfiguration[4];
 
 		rclcpp::TimerBase::SharedPtr control_motors_timer;
 		void controlMotors() {
@@ -511,27 +514,17 @@ class MotorsRegulator : public rclcpp::Node{
 			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
-			printMotorStatusFromRegisters();
+			printMotorsStatusFromRegisters();
 		}
 
-		void printMotorConfigurationFromRegisters(){
-			RCLCPP_INFO(this->get_logger(), "Motors configuration:");
-			RCLCPP_INFO(this->get_logger(), "Max speed:\t\t%f", this->controller->board->getMaxSpeed());
-			RCLCPP_INFO(this->get_logger(), "Min speed:\t\t%f", this->controller->board->getMinSpeed());
-			RCLCPP_INFO(this->get_logger(), "Acceleration:\t%f", this->controller->board->getAcc());
-			RCLCPP_INFO(this->get_logger(), "Deceleration:\t%f", this->controller->board->getDec());
-			// RCLCPP_INFO(this->get_logger(), "Full speed:\t\t%f\n", this->controller->board->getFullSpeed());
+		void printMotorsSpeedConfiguration(){
+			this->controller->getMotorsSpeedConfiguration(std::ref(speedConfiguration[0]), std::ref(speedConfiguration[1]), std::ref(speedConfiguration[2]), std::ref(speedConfiguration[3]));
+			RCLCPP_INFO(this->get_logger(), "Motors configuration:\nMax speed:\t\t%f\nMin speed:\t\t%f\nAcceleration:\t%f\nDeceleration:\t%f\n", speedConfiguration[0], speedConfiguration[1], speedConfiguration[2], speedConfiguration[3]);
 		}
 
-		void printMotorStatusFromRegisters(){
-			long result;
-			RCLCPP_INFO(this->get_logger(), "Status number\t%d", statusCounter);
-			this->controller->board->m_nPosition = 0;
-			result = this->controller->board->getParam(L6470_PARAM_STATUS);
-			RCLCPP_INFO(this->get_logger(), "MOTOR: 0 - 0x%x", result);
-			this->controller->board->m_nPosition = 1;
-			result = this->controller->board->getParam(L6470_PARAM_STATUS);
-			RCLCPP_INFO(this->get_logger(), "MOTOR: 1 - 0x%x\n", result);
+		void printMotorsStatusFromRegisters(){
+			this->controller->getMotorsStatusRegisters(std::ref(motorStatus0), std::ref(motorStatus1));
+			RCLCPP_INFO(this->get_logger(), "Status number\t%d\nMOTOR: 0 - 0x%x\nMOTOR: 1 - 0x%x\n", statusCounter, motorStatus0, motorStatus1);
 			statusCounter++;
 		}
 

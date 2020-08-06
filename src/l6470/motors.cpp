@@ -249,7 +249,6 @@ long Motors::getPositionLeft(){
 long Motors::getPositionRight(){
 		m_nPosition=1;
 		return this->getPos();
-		this->resetPos();
 }
 
 void Motors::resetPosition(){
@@ -258,9 +257,6 @@ void Motors::resetPosition(){
 		m_nPosition=1;
 		this->resetPos();
 }
-
-
-
 
 int Motors::getBatteryVoltage(){
 	int voltage;
@@ -271,3 +267,14 @@ int Motors::getBatteryVoltage(){
 
 	return (voltage/16)*3.3*3.1;
 }
+
+long Motors::getStatusLeft(){
+	m_nPosition = 0;
+	return this->getStatus();
+}
+
+long Motors::getStatusRight(){
+	m_nPosition = 1;
+	return this->getStatus();
+}
+

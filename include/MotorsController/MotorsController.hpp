@@ -17,6 +17,7 @@ void clipValue(float & value, float max);
 
 class MotorsController {
 	private:
+		Motors *board;
 
 		bool balancing;
 		bool standingUpPhase;
@@ -47,7 +48,6 @@ class MotorsController {
 
 		void calculateSpeedsPID(float angle, float rotationX, float throttle, float rotation, float &speedLeftNew, float &speedRightNew, float loopTime);
 	public:
-		Motors *board;
 		MotorsController();
 		~MotorsController();
 
@@ -76,6 +76,9 @@ class MotorsController {
 		void setMotorSpeeds(float speedLeft, float speedRight, bool ignoreAcceleration = false);
 		float getMotorSpeedLeft() const;
 		float getMotorSpeedRight() const;
+
+		void getMotorsStatusRegisters(long &motor0, long &motor1);
+		void getMotorsSpeedConfiguration(float &max, float &min, float &acc, float &dec);
 };
 
 #endif

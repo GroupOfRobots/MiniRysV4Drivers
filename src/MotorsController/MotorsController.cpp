@@ -297,3 +297,15 @@ float MotorsController::getMotorSpeedRight() const {
 	float inversionMultiplier = this->invertRightSpeed ? -1 : 1;
 	return this->motorSpeedRight * inversionMultiplier;
 }
+
+void MotorsController::getMotorsStatusRegisters(long &motor0, long &motor1) {
+	motor0 = board->getStatusLeft();
+	motor1 = board->getStatusRight();
+}
+
+void MotorsController::getMotorsSpeedConfiguration(float &max, float &min, float &acc, float &dec){
+	max = this->board->getMaxSpeed();
+	min = this->board->getMinSpeed();
+	acc = this->board->getAcc();
+	dec = this->board->getDec();
+}
