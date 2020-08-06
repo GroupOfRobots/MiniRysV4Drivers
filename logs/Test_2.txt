@@ -1,0 +1,87 @@
+										[TEST 2.0-2.1] Strange differences between expected and actual acceleration
+Whe values of maximum and minimum speed, acceleration, deceleration and full speed were downloaded from the controller after initialization. No big discrepancies were detected. The code of the functions responsible for setting this data was inspected and the cause was detected. The multiplier responsible for recalculating the acceleration and deceleration speed from steps/s^2 to steps/tick^2 was wrong. The multiplier was corrected. Other important multipliers were checked for inaccuracy in multipliers and corrected if needed. After this corrections the test with acceleration was repeated. As it can be seen after this corrections it took approximately 100 cycles for the motors to reach the maximum speed. At acceleration at 400 step/s^2, max speed at 400 step/s and cycles running at 100 Hz the value is the same as expected.
+The same comes for deceleration, which is set to 1000 step/s^2 and took approximately 40 cycles.
+
+Another interesting thing was discovered about full speed parameter. It was previously thought that it causes full steps to be used instead of microsteps if motors were moving with speed lower than that set in FS_SPD register. It was discovered to be false. In fact the full step activates when actual speed exceeds the value in the register - which is 602.7 by default.
+
+																	[TEST 2.0] - configuration before fixes
+[INFO] [motors_regulator]: Motors configuration:
+[INFO] [motors_regulator]: Max speed:		411.987305
+[INFO] [motors_regulator]: Min speed:		0.000000
+[INFO] [motors_regulator]: Acceleration:	392.904449
+[INFO] [motors_regulator]: Deceleration:	996.813110
+[INFO] [motors_regulator]: Full speed:		602.722168
+
+																	[TEST 2.1] - configuration after fixes and acceleration test
+
+[INFO] [motors_regulator]: Motor controller initialized.
+[INFO] [motors_regulator]: Motors configuration:
+[INFO] [motors_regulator]: Max speed:		411.987305
+[INFO] [motors_regulator]: Min speed:		0.000000
+[INFO] [motors_regulator]: Acceleration:	392.904449
+[INFO] [motors_regulator]: Deceleration:	989.537109
+[INFO] [motors_regulator]: Full speed:		602.722168
+
+[INFO] [motors_regulator]: Status number	0
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c03
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c03
+
+[INFO] [motors_regulator]: Status number	1
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c12
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c12
+
+... Acceleration
+
+[INFO] [motors_regulator]: Status number	159
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c12
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c12
+
+[INFO] [motors_regulator]: Status number	160
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c20
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c20
+
+... Constant speed
+
+[INFO] [motors_regulator]: Status number	258
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c20
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c20
+
+[INFO] [motors_regulator]: Status number	259
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c20
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c62
+
+[INFO] [motors_regulator]: Status number	260
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c20
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c62
+
+[INFO] [motors_regulator]: Status number	261
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c20
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c62
+
+[INFO] [motors_regulator]: Status number	262
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c62
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c62
+
+... Deceleration
+
+[INFO] [motors_regulator]: Status number	331
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c62
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c62
+
+[INFO] [motors_regulator]: Status number	332
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c40
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c40
+
+... Stop
+
+[INFO] [motors_regulator]: Status number	371
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c40
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c40
+
+[INFO] [motors_regulator]: Status number	372
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c40
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c12
+
+[INFO] [motors_regulator]: Status number	373
+[INFO] [motors_regulator]: MOTOR: 0 - 0x7c12
+[INFO] [motors_regulator]: MOTOR: 1 - 0x7c12

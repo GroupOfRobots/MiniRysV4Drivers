@@ -50,8 +50,12 @@ static unsigned long ceil(float f) {
 //  250ns (datasheet value)- 0x08A on boot.
 // Multiply desired steps/s/s by .137438 to get an appropriate value for this register.
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
+
+// WARNING: The above was false in the matter of the multiplier.
+// (tick^2)/(2^-40) = 0.068719
+// The code was updated in the funcions below to correct it.
 unsigned long L6470::accCalc(float stepsPerSecPerSec) {
-	float temp = stepsPerSecPerSec * 0.137438;
+	float temp = stepsPerSecPerSec * 0.068719;
 	if ((unsigned long) long(temp) > 0x00000FFF)
 		return 0x00000FFF;
 	else
@@ -59,13 +63,13 @@ unsigned long L6470::accCalc(float stepsPerSecPerSec) {
 }
 
 float L6470::accParse(unsigned long stepsPerSecPerSec) {
-	return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438;
+	return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.068719;
 }
 
 // The calculation for DEC is the same as for ACC. Value is 0x08A on boot.
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
 unsigned long L6470::decCalc(float stepsPerSecPerSec) {
-	float temp = stepsPerSecPerSec * 0.137438;
+	float temp = stepsPerSecPerSec * 0.068719;
 	if ((unsigned long) long(temp) > 0x00000FFF)
 		return 0x00000FFF;
 	else
@@ -73,7 +77,7 @@ unsigned long L6470::decCalc(float stepsPerSecPerSec) {
 }
 
 float L6470::decParse(unsigned long stepsPerSecPerSec) {
-	return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438;
+	return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.068719;
 }
 
 // The value in the MAX_SPD register is [(steps/s)*(tick)]/(2^-18) where tick is 
@@ -96,8 +100,12 @@ float L6470::maxSpdParse(unsigned long stepsPerSec) {
 //  250ns (datasheet value)- 0x000 on boot.
 // Multiply desired steps/s by 4.1943 to get an appropriate value for this register
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
+
+// WARNING: The above was inaccurate in the matter of the multiplier.
+// tick/(2^-24) = 4.194304
+// The code was updated in the funcions below to correct it.
 unsigned long L6470::minSpdCalc(float stepsPerSec) {
-	float temp = stepsPerSec / 0.238;
+	float temp = stepsPerSec * 4.194304;
 	if ((unsigned long) long(temp) > 0x00000FFF)
 		return 0x00000FFF;
 	else
@@ -105,7 +113,7 @@ unsigned long L6470::minSpdCalc(float stepsPerSec) {
 }
 
 float L6470::minSpdParse(unsigned long stepsPerSec) {
-	return (float) ((stepsPerSec & 0x00000FFF) * 0.238);
+	return (float) ((stepsPerSec & 0x00000FFF) / 4.194304);
 }
 
 // The value in the FS_SPD register is ([(steps/s)*(tick)]/(2^-18))-0.5 where tick is 
@@ -144,8 +152,12 @@ float L6470::intSpdParse(unsigned long stepsPerSec) {
 //  250ns (datasheet value).
 // Multiply desired steps/s by 67.106 to get an appropriate value for this register
 // This is a 20-bit value, so we need to make sure the value is at or below 0xFFFFF.
+
+// WARNING: The above was inaccurate in the matter of the multiplier.
+// tick/(2^-28) = 67.108864
+// The code was updated in the funcions below to correct it.
 unsigned long L6470::spdCalc(float stepsPerSec) {
-	unsigned long temp = stepsPerSec * 67.106;
+	unsigned long temp = stepsPerSec * 67.108864;
 	if (temp > 0x000FFFFF)
 		return 0x000FFFFF;
 	else
@@ -153,7 +165,7 @@ unsigned long L6470::spdCalc(float stepsPerSec) {
 }
 
 float L6470::spdParse(unsigned long stepsPerSec) {
-	return (float) (stepsPerSec & 0x000FFFFF) / 67.106;
+	return (float) (stepsPerSec & 0x000FFFFF) / 67.108864;
 }
 
 // Much of the functionality between "get parameter" and "set parameter" is

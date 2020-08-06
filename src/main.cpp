@@ -447,7 +447,8 @@ class MotorsRegulator : public rclcpp::Node{
 			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
 
 			statusCounter = 0;
-			printMotorStatus();
+			printMotorConfigurationFromRegisters();
+			printMotorStatusFromRegisters();
 		}
 
 		~MotorsRegulator(){
@@ -510,10 +511,19 @@ class MotorsRegulator : public rclcpp::Node{
 			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
-			printMotorStatus();
+			printMotorStatusFromRegisters();
 		}
 
-		void printMotorStatus(){
+		void printMotorConfigurationFromRegisters(){
+			RCLCPP_INFO(this->get_logger(), "Motors configuration:");
+			RCLCPP_INFO(this->get_logger(), "Max speed:\t\t%f", this->controller->board->getMaxSpeed());
+			RCLCPP_INFO(this->get_logger(), "Min speed:\t\t%f", this->controller->board->getMinSpeed());
+			RCLCPP_INFO(this->get_logger(), "Acceleration:\t%f", this->controller->board->getAcc());
+			RCLCPP_INFO(this->get_logger(), "Deceleration:\t%f", this->controller->board->getDec());
+			// RCLCPP_INFO(this->get_logger(), "Full speed:\t\t%f\n", this->controller->board->getFullSpeed());
+		}
+
+		void printMotorStatusFromRegisters(){
 			long result;
 			RCLCPP_INFO(this->get_logger(), "Status number\t%d", statusCounter);
 			this->controller->board->m_nPosition = 0;

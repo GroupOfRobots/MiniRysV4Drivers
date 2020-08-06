@@ -112,7 +112,7 @@ void Motors::setUp(){
 	this->setDecKVAL(0x64);
 	this->setRunKVAL(0x64);
 	this->setHoldKVAL(0x00);           // This controls the holding current; keep it low.
-	//this->setFullSpeed(120);       // microstep below 120 steps/s
+	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 
 	m_nPosition = 1;
 
@@ -136,7 +136,7 @@ void Motors::setUp(){
 	this->setDecKVAL(0x64);
 	this->setRunKVAL(0x64);
 	this->setHoldKVAL(0x00);         // This controls the holding current; keep it low.
-	//this->setFullSpeed(120);       // microstep below 120 steps/s
+	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 }
 
 void Motors::setMaxSpeedForBoth(float speed){

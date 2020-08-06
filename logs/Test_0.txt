@@ -37,7 +37,7 @@ Cycles were run at 100 Hz. Controllers were set to acceleration 400 step/s2 (4 s
 
 TODO:
 1. [SOLVED: TEST 1] Check NOTPERF_CMD flag before initialization. As it is high after initialization we know that something went wrong during setup.
-2. Check why the motors seem to accelerate and decelerate twice as fast as it is expected.
+2. [SOLVED: TEST 2] Check why the motors seem to accelerate and decelerate twice as fast as it is expected.
 
 																	[TEST 0]
 
