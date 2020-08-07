@@ -96,8 +96,8 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(400);              // accelerate at 350 steps/s/s
-	this->setDec(1000);//1000
+	this->setAcc(59590);              // accelerate at 350 steps/s/s
+	this->setDec(59590);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -108,9 +108,9 @@ void Motors::setUp(){
 	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
 	this->setParam(L6470_PARAM_ALARM_EN,0x00);
-	this->setAccKVAL(0x6F);           // We'll tinker with these later, if needed.
-	this->setDecKVAL(0x64);
-	this->setRunKVAL(0x64);
+	this->setAccKVAL(0x96);           // We'll tinker with these later, if needed.
+	this->setDecKVAL(0x96);
+	this->setRunKVAL(0x96);
 	this->setHoldKVAL(0x00);           // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 
@@ -120,8 +120,8 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(400);             // accelerate at 350 steps/s/s
-	this->setDec(1000);//1000
+	this->setAcc(59590);             // accelerate at 350 steps/s/s
+	this->setDec(59590);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -132,9 +132,9 @@ void Motors::setUp(){
 	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
 	this->setParam(L6470_PARAM_ALARM_EN,0x00);
-	this->setAccKVAL(0x6F);           // We'll tinker with these later, if needed.
-	this->setDecKVAL(0x64);
-	this->setRunKVAL(0x64);
+	this->setAccKVAL(0x96);           // We'll tinker with these later, if needed.
+	this->setDecKVAL(0x96);
+	this->setRunKVAL(0x96);
 	this->setHoldKVAL(0x00);         // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 }

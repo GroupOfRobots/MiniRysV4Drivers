@@ -514,7 +514,7 @@ class MotorsRegulator : public rclcpp::Node{
 			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
-			printMotorsStatusFromRegisters();
+			// printMotorsStatusFromRegisters();
 		}
 
 		void printMotorsSpeedConfiguration(){
@@ -687,8 +687,8 @@ int main(int argc, char * argv[]) {
 	executor.add_node(JoyconReceiverNode);
 
 	imu_data imu_data_structure;
-	// auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
-	// executor.add_node(ImuReaderNode);
+	auto ImuReaderNode = std::make_shared<ImuReader>(std::ref(imu_data_structure));
+	executor.add_node(ImuReaderNode);
 
 	tof_data tof_data_structure;
 	// auto TOFReaderNode = std::make_shared<TOFReader>(std::ref(tof_data_structure));
