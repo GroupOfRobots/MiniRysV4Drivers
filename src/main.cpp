@@ -39,8 +39,9 @@ struct joycon_data {
 	float forwardSpeed;
 	float rotationSpeed;
 	bool enableBalancing;
+	bool printStatus;
 	std::mutex joycon_data_access;
-	joycon_data(): forwardSpeed(0), rotationSpeed(0), enableBalancing(false) {};
+	joycon_data(): forwardSpeed(0), rotationSpeed(0), enableBalancing(false), printStatus(false) {};
 };
 
 struct imu_data {
@@ -131,10 +132,12 @@ class JoyconReceiver : public rclcpp::Node{
 			rotationAxisInverted = this->get_parameter("rotationAxisInverted").get_value<bool>();
 
 			// Get button parameters
-			this->declare_parameter("standUpButton", rclcpp::ParameterValue(1)); 
+			this->declare_parameter("standUpButton", rclcpp::ParameterValue(1));
 			standUpButton = this->get_parameter("standUpButton").get_value<int>();
-			this->declare_parameter("layDownButton", rclcpp::ParameterValue(3)); 
+			this->declare_parameter("layDownButton", rclcpp::ParameterValue(3));
 			layDownButton = this->get_parameter("layDownButton").get_value<int>();
+			this->declare_parameter("printStatusButton", rclcpp::ParameterValue(2));
+			printStatusButton = this->get_parameter("printStatusButton").get_value<int>();
 
 			this->declare_parameter("period", rclcpp::ParameterValue(10));
 			get_joycon_state_timer = this->create_wall_timer(
@@ -155,7 +158,7 @@ class JoyconReceiver : public rclcpp::Node{
 		int forwardAxis, rotationAxis, forwardSpeedFactor, rotationSpeedFactor;
 		bool forwardAxisInverted, rotationAxisInverted;
 
-		int standUpButton, layDownButton;
+		int standUpButton, layDownButton, printStatusButton;
 
 		joycon_data *dataStructure = NULL; 
 		FrequencyCounter counter;
@@ -197,6 +200,7 @@ class JoyconReceiver : public rclcpp::Node{
 
 			if (button[standUpButton] == 1) dataStructure->enableBalancing = true;
 			if (button[layDownButton] == 1) dataStructure->enableBalancing = false;
+			dataStructure->printStatus = button[printStatusButton] == 1 ? true : false;
 
 			dataStructure->joycon_data_access.unlock();
 		}
@@ -460,9 +464,10 @@ class MotorsRegulator : public rclcpp::Node{
 		joycon_data *joyconDataStructure;
 		imu_data *imuDataStructure;
 		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
-		bool enableBalancing, previousEnableBalancing;
+		bool enableBalancing, previousEnableBalancing, ignoreAcceleration;
 		FrequencyCounter counter;
 
+		bool printStatus;
 		int statusCounter;
 		long motorStatus0, motorStatus1;
 		float speedConfiguration[4];
@@ -481,10 +486,12 @@ class MotorsRegulator : public rclcpp::Node{
 			forwardSpeed = joyconDataStructure->forwardSpeed;
 			rotationSpeed = joyconDataStructure->rotationSpeed;
 			enableBalancing = joyconDataStructure->enableBalancing;
+			printStatus = joyconDataStructure->printStatus;
 			joyconDataStructure->joycon_data_access.unlock();
 
 			leftSpeed = 0;
 			rightSpeed = 0;
+			ignoreAcceleration = false;
 			controller->setPIDSpeedRegulatorEnabled(this->get_parameter("enableSpeedPID").get_value<bool>());
 		    controller->setPIDParameters(
 			    this->get_parameter("pidSpeedKp").get_value<float>(),
@@ -505,26 +512,48 @@ class MotorsRegulator : public rclcpp::Node{
 				controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
 			}else if (enableBalancing && !controller->getBalancing()) {
 				controller->standUp(tilt, std::ref(leftSpeed), std::ref(rightSpeed));
-				if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
+				// if (controller->getBalancing()) controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
 			} else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 
-			controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
+			controller->setMotorSpeeds(leftSpeed, rightSpeed, ignoreAcceleration);
 			leftSpeed = controller->getMotorSpeedLeft();
 			rightSpeed = controller->getMotorSpeedRight();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
 			// printMotorsStatusFromRegisters();
+
+			if (printStatus) printMotorsStatusFromRegisters();
 		}
 
 		void printMotorsSpeedConfiguration(){
 			this->controller->getMotorsSpeedConfiguration(std::ref(speedConfiguration[0]), std::ref(speedConfiguration[1]), std::ref(speedConfiguration[2]), std::ref(speedConfiguration[3]));
-			RCLCPP_INFO(this->get_logger(), "Motors configuration:\nMax speed:\t\t%f\nMin speed:\t\t%f\nAcceleration:\t%f\nDeceleration:\t%f\n", speedConfiguration[0], speedConfiguration[1], speedConfiguration[2], speedConfiguration[3]);
+			RCLCPP_INFO(this->get_logger(), "Motors configuration:\nMax speed:\t%f\nMin speed:\t%f\nAcceleration:\t%f\nDeceleration:\t%f\n", speedConfiguration[0], speedConfiguration[1], speedConfiguration[2], speedConfiguration[3]);
 		}
 
 		void printMotorsStatusFromRegisters(){
 			this->controller->getMotorsStatusRegisters(std::ref(motorStatus0), std::ref(motorStatus1));
-			RCLCPP_INFO(this->get_logger(), "Status number\t%d\nMOTOR: 0 - 0x%x\nMOTOR: 1 - 0x%x\n", statusCounter, motorStatus0, motorStatus1);
+			RCLCPP_INFO(this->get_logger(), "Status number\t%d\n\tMOTOR: 0 - 0x%x\n\tMOTOR: 1 - 0x%x\n", statusCounter, motorStatus0, motorStatus1);
+			if ((motorStatus0 & 0x7F80) != 0x7e00) {
+				RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 0.");
+				if (~motorStatus0 & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
+				if (~motorStatus0 & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
+				if (~motorStatus0 & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
+				if (~motorStatus0 & 0x0800) RCLCPP_INFO(this->get_logger(), "\tThermal shutdown detected.");
+				if (~motorStatus0 & 0x0400) RCLCPP_INFO(this->get_logger(), "\tThermal warning detected.");
+				if (~motorStatus0 & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
+				if (motorStatus0 & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
+				if (motorStatus0 & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
+			}
+			if ((motorStatus1 & 0x7F80) != 0x7e00) RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 1.");
+				if (~motorStatus1 & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
+				if (~motorStatus1 & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
+				if (~motorStatus1 & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
+				if (~motorStatus1 & 0x0800) RCLCPP_INFO(this->get_logger(), "\tThermal shutdown detected.");
+				if (~motorStatus1 & 0x0400) RCLCPP_INFO(this->get_logger(), "\tThermal warning detected.");
+				if (~motorStatus1 & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
+				if (motorStatus1 & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
+				if (motorStatus1 & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
 			statusCounter++;
 		}
 

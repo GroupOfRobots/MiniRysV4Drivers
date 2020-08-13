@@ -97,7 +97,7 @@ void L6470::move(TL6470Direction dir, unsigned long numSteps) {
 		numSteps = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &numSteps;
-	for (uint8_t i = 2; i >= 0; i--) {
+	for (int i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -108,7 +108,7 @@ void L6470::goTo(long pos) {
 		pos = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &pos;
-	for (uint8_t i = 2; i >= 0; i--) {
+	for (int i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -119,7 +119,7 @@ void L6470::goToDir(TL6470Direction dir, long pos) {
 		pos = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &pos;
-	for (uint8_t i = 2; i >= 0; i--) {
+	for (int i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }
@@ -131,7 +131,7 @@ void L6470::goUntil(TL6470Action action, TL6470Direction dir, float stepsPerSec)
 		integerSpeed = 0x3FFFFF;
 
 	uint8_t* bytePointer = (uint8_t*) &integerSpeed;
-	for (uint8_t i = 2; i >= 0; i--) {
+	for (int i = 2; i >= 0; i--) {
 		SPIXfer(bytePointer[i]);
 	}
 }

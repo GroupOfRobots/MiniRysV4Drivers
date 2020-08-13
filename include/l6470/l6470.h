@@ -189,7 +189,7 @@ public:
 	/**
 	 * Just for administration purposes
 	 */
-	inline const int GetMotorNumber(void) {
+	inline int GetMotorNumber(void) {
 		return m_nMotorNumber;
 	}
 

@@ -1,0 +1,24 @@
+																[TEST 3.0-3.2] Highest possible KVAL
+KVAL parameters set the voltage that reach the coils of the motor. As the higher KVAL leads to higher torque, the motor was tested to see the highest allowed value of KVAL. The value was increased by 10 starting at the initial value of 100. At 140, after a while of balancing, both of the controllers reported thermal warning in the status register. The same happened at KVAL equal 130, although after a much longer time and only one of the controllers returned the flag.
+
+																	[TEST 3.0] - KVAL 140
+
+[INFO] [motors_regulator]: Status number	4032
+	MOTOR: 0 - 0x7a30
+	MOTOR: 1 - 0x7a30
+
+[INFO] [motors_regulator]: Something may be not right with motor 0.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+[INFO] [motors_regulator]: Something may be not right with motor 1.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+
+																	[TEST 3.1] - KVAL 130
+
+[INFO] [motors_regulator]: Status number	7539
+	MOTOR: 0 - 0x7e50
+	MOTOR: 1 - 0x7a50
+
+[INFO] [motors_regulator]: Something may be not right with motor 1.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+
+																	[TEST 3.2] - KVAL 120

@@ -3,7 +3,7 @@
 After initialization the value of status register becomes 0x7c92. It seems to be the default value every time the motors aren't moving. What is more 9 MSBs and Bit 3 don't change at any time. If the values are ok this is relatively good news, as they are latches and it indicates that motors state doesn't really change while running.
 
 ------- Bit 15		SCK_MOD			high when device is in step-clock mode, constantly low as expected.
-------- Bit 14		STEP_LOSS_B		low when stall is detected on the bridge A, constantly high as expected.
+------- Bit 14		STEP_LOSS_B		low when stall is detected on the bridge B, constantly high as expected.
 ------- Bit 13		STEP_LOSS_A		low when stall is detected on the bridge A, constantly high as expected.
 ------- Bit 12		OCD				low when overcurrent detected, constantly high as expected.
 

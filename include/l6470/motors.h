@@ -71,8 +71,8 @@ private:
 	uint8_t m_nResetPin;
 	uint8_t m_nBusyPin;
 	bool l_bIsBusy;
-	bool r_bIsBusy;
 	bool l_bIsConnected;
+	bool r_bIsBusy;
 	bool r_bIsConnected;
 };
 
