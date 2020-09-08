@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
 #include <math.h>
+#include <cstring>
 #include "rclcpp/rclcpp.hpp"
 #include "bcm/bcm2835.h"
 #include "lsm6ds3/LSM6DS3.h"
@@ -72,12 +73,12 @@ void setRTPriority() {
 	schedulerParams.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
 	std::cout << "[MAIN] Setting RT scheduling, priority " << schedulerParams.sched_priority << std::endl;
 	if (sched_setscheduler(0, SCHED_FIFO, &schedulerParams) == -1) {
-		std::cout << "[MAIN] WARNING: Setting RT scheduling failed: " << std::strerror(errno) << std::endl;
+		std::cout << "[MAIN] WARNING: Setting RT scheduling failed: " << strerror(errno) << std::endl;
 		return;
 	}
 
 	if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1) {
-		std::cout << "[MAIN] WARNING: Failed to lock memory: " << std::strerror(errno) << std::endl;
+		std::cout << "[MAIN] WARNING: Failed to lock memory: " << strerror(errno) << std::endl;
 	}
 }
 
