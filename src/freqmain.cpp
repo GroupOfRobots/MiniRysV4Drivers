@@ -33,15 +33,17 @@ int main(int argc, char * argv[]) {
 		if (!strcmp(argv[i-1], "-f")){
 			float period_s = 1/atof(argv[i]);
 			unsigned long period_us = std::round(1000000*period_s);
-			std::cout << period_s << " " << period_us << std::endl;
+			// std::cout << period_s << " " << period_us << std::endl;
 			loopDuration = std::chrono::microseconds(period_us);
 		}
 	}
 
 	auto counter = std::make_shared<FrequencyCounter>();
+	auto counter2 = std::make_shared<FrequencyCounter>();
 	auto timer_callback = 
-		[&counter](){
+		[&counter, &counter2](){
 			counter->count();
+			counter2->count2();
 		};
 	auto node = rclcpp::Node::make_shared(nodeName);//, robotName, true);
 	auto timer = node->create_wall_timer(loopDuration, timer_callback);
