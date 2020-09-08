@@ -59,13 +59,13 @@ struct tof_data {
 	};
 };
 
-bool endProcess = false;
+// bool endProcess = false;
 
-void sigintHandler(int signum) {
-	if (signum == SIGINT) {
-		endProcess = true;
-	}
-}
+// void sigintHandler(int signum) {
+// 	if (signum == SIGINT) {
+// 		endProcess = true;
+// 	}
+// }
 
 void setRTPriority() {
 	struct sched_param schedulerParams;
@@ -89,7 +89,7 @@ class JoyconReceiver : public rclcpp::Node{
 			if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
 			{
 				RCLCPP_ERROR(this->get_logger(), "Couldn't open joystick" );
-				endProcess = true;
+				// endProcess = true;
 				return;
 			}
 
@@ -221,11 +221,11 @@ class ImuReader : public rclcpp::Node{
 
 			if (i == 10) {
 				RCLCPP_ERROR(this->get_logger(), "Unable to start imu sensor...");
-				endProcess = true;
+				// endProcess = true;
 			} else RCLCPP_INFO(this->get_logger(), "IMU sensor started, awaiting calibration.");
 
 			for (i = 10; i>0; i--){
-				if (endProcess) break;
+				// if (endProcess) break;
 				RCLCPP_INFO(this->get_logger(), "%d seconds to calibration...",i);
 				delay(1000);
 			}

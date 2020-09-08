@@ -25,7 +25,7 @@ motors_regulator:
   ros__parameters:
     microstep: 64
     maxSpeed: 400.0
-    maxAcceleration: 100.0
+    maxAcceleration: 15.0
     invertLeftMotor: true
     invertRightMotor: true
     enableSpeedPID: false

@@ -1,7 +1,7 @@
 																[TEST 3.0-3.2] Highest possible KVAL
-KVAL parameters set the voltage that reach the coils of the motor. As the higher KVAL leads to higher torque, the motor was tested to see the highest allowed value of KVAL. The value was increased by 10 starting at the initial value of 100. At 140, after a while of balancing, both of the controllers reported thermal warning in the status register. The same happened at KVAL equal 130, although after a much longer time and only one of the controllers returned the flag.
+KVAL parameters set the voltage that reach the coils of the motor. As the higher KVAL leads to higher torque, the motor was tested to see the highest allowed value of KVAL. The value was increased by 10 starting at the initial value of 100. At 140, after a while of balancing, both of the controllers reported thermal warning in the status register. The same happened at KVAL equal 130, although after a much longer time and only one of the controllers returned the flag. At KVAL 120 no emergency was detected. Note that only KVAL parameters for acceleration, deceleration and constant speed were challenged. KVAL for stop was kept 100 as the robot doesn't need more power to keep wheels immobile. Increasing KVAL value for stop command caused a thermal warning. As the latter tests occured it seems that 100 was too much for stop and from time to time also lead to overheating. KVAL for stop was temporarily set to 50 for further testing.
 
-																	[TEST 3.0] - KVAL 140
+																	[TEST 3.0] - KVAL 140 for acceleration, deceleration and const speed
 
 [INFO] [motors_regulator]: Status number	4032
 	MOTOR: 0 - 0x7a30
@@ -12,7 +12,7 @@ KVAL parameters set the voltage that reach the coils of the motor. As the higher
 [INFO] [motors_regulator]: Something may be not right with motor 1.
 [INFO] [motors_regulator]: 	Thermal warning detected.
 
-																	[TEST 3.1] - KVAL 130
+																	[TEST 3.1] - KVAL 130 for acceleration, deceleration and const speed
 
 [INFO] [motors_regulator]: Status number	7539
 	MOTOR: 0 - 0x7e50
@@ -21,4 +21,25 @@ KVAL parameters set the voltage that reach the coils of the motor. As the higher
 [INFO] [motors_regulator]: Something may be not right with motor 1.
 [INFO] [motors_regulator]: 	Thermal warning detected.
 
-																	[TEST 3.2] - KVAL 120
+																	[TEST 3.2] - KVAL 120 for all (including stop)
+
+[INFO] [motors_regulator]: Status number	572
+	MOTOR: 0 - 0x7a12
+	MOTOR: 1 - 0x7a12
+
+[INFO] [motors_regulator]: Something may be not right with motor 0.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+[INFO] [motors_regulator]: Something may be not right with motor 1.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+
+[INFO] [motors_regulator]: Status number	492
+	MOTOR: 0 - 0x7a12
+	MOTOR: 1 - 0x7a12
+
+																	[TEST 3.2] - KVAL 120 for most, but 100 for stop
+
+[INFO] [motors_regulator]: Something may be not right with motor 0.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+[INFO] [motors_regulator]: Something may be not right with motor 1.
+[INFO] [motors_regulator]: 	Thermal warning detected.
+

@@ -96,8 +96,8 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(59590);              // accelerate at 350 steps/s/s
-	this->setDec(59590);//1000
+	this->setAcc(1500);              // accelerate at 350 steps/s/s
+	this->setDec(1500);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -111,7 +111,7 @@ void Motors::setUp(){
 	this->setAccKVAL(0x78);           // We'll tinker with these later, if needed.
 	this->setDecKVAL(0x78);
 	this->setRunKVAL(0x78);
-	this->setHoldKVAL(0x00);           // This controls the holding current; keep it low.
+	this->setHoldKVAL(0x32);           // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 
 	m_nPosition = 1;
@@ -120,8 +120,8 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(59590);             // accelerate at 350 steps/s/s
-	this->setDec(59590);//1000
+	this->setAcc(1500);             // accelerate at 350 steps/s/s
+	this->setDec(1500);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA
@@ -135,7 +135,7 @@ void Motors::setUp(){
 	this->setAccKVAL(0x78);           // We'll tinker with these later, if needed.
 	this->setDecKVAL(0x78);
 	this->setRunKVAL(0x78);
-	this->setHoldKVAL(0x00);         // This controls the holding current; keep it low.
+	this->setHoldKVAL(0x32);         // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 }
 

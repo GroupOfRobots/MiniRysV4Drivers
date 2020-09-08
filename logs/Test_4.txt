@@ -1,0 +1,12 @@
+																[TEST 4.0] Acceleration and microstep
+Unfortunately at the current safe KVAL value (120) the controller is unable to control motors with maximum acceleration. Therefore the limits must have been determined. For 64 microsteps the acceleration of 20 step/cycle^2 was proven to be already too high, but 15 step/cycle^2 was determined perfectly fine. The tests for other microstep values were performed to determine if lowering the microstep leads to increase in possible acceleration.
+
+Microstep	|Behaviour at 20 step/cycle^2
+______________________________________________________
+64__________|Acceleration too high, robot motors choke
+32__________|Acceleration too high, robot motors choke
+16__________|Acceleration too high, robot motors choke
+8___________|Acceleration too high, robot motors choke
+4___________|Acceleration too high, robot motors choke
+2___________|Acceleration too high, robot motors choke
+1___________|Acceleration too high, robot motors choke
