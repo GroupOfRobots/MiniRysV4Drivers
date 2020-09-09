@@ -1,0 +1,14 @@
+Initializing ROS...
+[Frequency Counter 0] Ready
+[Frequency Counter 1] Ready
+[MAIN] Setting RT scheduling, priority 98
+[Frequency Counter 0] Frequency 46.374626 Hz after 1000 messages
+[Frequency Counter 1] Frequency 46.374641 Hz after 1000 messages
+[Frequency Counter 0] Frequency 45.935394 Hz after 1000 messages
+[Frequency Counter 1] Frequency 45.935394 Hz after 1000 messages
+[Frequency Counter 0] Frequency 48.123852 Hz after 1000 messages
+[Frequency Counter 1] Frequency 48.123852 Hz after 1000 messages
+[Frequency Counter 0] Frequency 36.153782 Hz after 1000 messages
+[Frequency Counter 1] Frequency 36.153782 Hz after 1000 messages
+[Frequency Counter 0] Frequency 34.638504 Hz after 1000 messages
+[Frequency Counter 1] Frequency 34.638504 Hz after 1000 messages

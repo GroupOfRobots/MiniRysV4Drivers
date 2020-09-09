@@ -20,4 +20,5 @@ class FrequencyCounter {
 		void count();
 		void count2();
 		FrequencyCounter();
+		~FrequencyCounter();
 };

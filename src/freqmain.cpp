@@ -5,14 +5,19 @@
 #include <sched.h>
 #include <sys/mman.h>
 #include <cstring>
+#include <unistd.h>
 
 using namespace std::chrono_literals;
+#define MAX_SAFE_STACK (8*1024)
 
 void setRTPriority() {
+	// nice(-20);
+	int policy = SCHED_RR;
 	struct sched_param schedulerParams;
-	schedulerParams.sched_priority = sched_get_priority_max(SCHED_RR)-1;
+	schedulerParams.sched_priority = sched_get_priority_max(policy)-1;
+	// schedulerParams.sched_priority = sched_get_priority_max(policy);
 	std::cout << "[MAIN] Setting RT scheduling, priority " << schedulerParams.sched_priority << std::endl;
-	if (sched_setscheduler(0, SCHED_RR, &schedulerParams) == -1) {
+	if (sched_setscheduler(0, policy, &schedulerParams) == -1) {
 		std::cout << "[MAIN] WARNING: Setting RT scheduling failed: " << strerror(errno) << std::endl;
 		return;
 	}
@@ -20,9 +25,12 @@ void setRTPriority() {
 	if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1) {
 		std::cout << "[MAIN] WARNING: Failed to lock memory: " << strerror(errno) << std::endl;
 	}
+	unsigned char dummy[MAX_SAFE_STACK];
+	memset(dummy, 0, MAX_SAFE_STACK);
 }
 
 int main(int argc, char * argv[]) {
+	setRTPriority();
 	std::cout << "Initializing ROS...\n";
 	rclcpp::init(argc, argv);
 
@@ -33,7 +41,6 @@ int main(int argc, char * argv[]) {
 		if (!strcmp(argv[i-1], "-f")){
 			float period_s = 1/atof(argv[i]);
 			unsigned long period_us = std::round(1000000*period_s);
-			// std::cout << period_s << " " << period_us << std::endl;
 			loopDuration = std::chrono::microseconds(period_us);
 		}
 	}
@@ -48,8 +55,6 @@ int main(int argc, char * argv[]) {
 	auto node = rclcpp::Node::make_shared(nodeName);//, robotName, true);
 	auto timer = node->create_wall_timer(loopDuration, timer_callback);
 
-	setRTPriority();
-	// rclcpp::spin(node);
 	rclcpp::executors::MultiThreadedExecutor executor;
 	executor.add_node(node);
 	executor.spin();
