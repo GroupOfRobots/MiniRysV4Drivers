@@ -4,8 +4,8 @@
 
 class FrequencyCounter {
 	private:
-		std::chrono::time_point<std::chrono::high_resolution_clock> previous;
-		std::chrono::time_point<std::chrono::high_resolution_clock> timeNow;
+		std::chrono::time_point<std::chrono::steady_clock> previous;
+		std::chrono::time_point<std::chrono::steady_clock> timeNow;
 
 		unsigned int numOfRuns;
 		float frequency;
