@@ -46,16 +46,18 @@ int main(int argc, char * argv[]) {
 	}
 
 	auto counter = std::make_shared<FrequencyCounter>();
-	auto counter2 = std::make_shared<FrequencyCounter>();
+	// auto counter2 = std::make_shared<FrequencyCounter>();
 	auto timer_callback = 
-		[&counter, &counter2](){
+		[&counter](){
+		// [&counter, &counter2](){
 			counter->count();
-			counter2->count2();
+			// counter2->count2();
 		};
 	auto node = rclcpp::Node::make_shared(nodeName);//, robotName, true);
 	auto timer = node->create_wall_timer(loopDuration, timer_callback);
 
-	rclcpp::executors::MultiThreadedExecutor executor;
+	// rclcpp::executors::MultiThreadedExecutor executor;
+	rclcpp::executors::SingleThreadedExecutor executor;
 	executor.add_node(node);
 	executor.spin();
 	rclcpp::shutdown();

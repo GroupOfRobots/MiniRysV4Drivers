@@ -69,10 +69,13 @@ struct tof_data {
 // }
 
 void setRTPriority() {
+	// nice(-20);
+	int policy = SCHED_RR;
 	struct sched_param schedulerParams;
-	schedulerParams.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
+	schedulerParams.sched_priority = sched_get_priority_max(policy)-1;
+	// schedulerParams.sched_priority = sched_get_priority_max(policy);
 	std::cout << "[MAIN] Setting RT scheduling, priority " << schedulerParams.sched_priority << std::endl;
-	if (sched_setscheduler(0, SCHED_FIFO, &schedulerParams) == -1) {
+	if (sched_setscheduler(0, policy, &schedulerParams) == -1) {
 		std::cout << "[MAIN] WARNING: Setting RT scheduling failed: " << strerror(errno) << std::endl;
 		return;
 	}
@@ -710,7 +713,8 @@ int main(int argc, char * argv[]) {
 	}
 	rclcpp::init(argc, argv);
 	// signal(SIGINT, sigintHandler);
-	rclcpp::executors::MultiThreadedExecutor executor;
+	rclcpp::executors::SingleThreadedExecutor executor;
+	// rclcpp::executors::MultiThreadedExecutor executor;
 
 	joycon_data joycon_data_structure;
 	auto JoyconReceiverNode = std::make_shared<JoyconReceiver>(std::ref(joycon_data_structure));
