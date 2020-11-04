@@ -60,6 +60,15 @@ struct tof_data {
 	};
 };
 
+struct motor_data {
+	float leftSpeed;
+	float rightSpeed;
+	float controller_acceleration;
+	int microstep;
+	std::mutex motor_data_access;
+	motor_data() : leftSpeed(0), rightSpeed(0), controller_acceleration(0), microstep(0) {};
+};
+
 // bool endProcess = false;
 
 // void sigintHandler(int signum) {
@@ -411,13 +420,14 @@ class TOFReader : public rclcpp::Node{
 
 class MotorsRegulator : public rclcpp::Node{
 	public:
-		MotorsRegulator(imu_data& imuStructure, joycon_data& joyconStructure): Node("motors_regulator"){
+		MotorsRegulator(imu_data& imuStructure, joycon_data& joyconStructure, motor_data& motorStructure): Node("motors_regulator"){
 			controller = new MotorsController();
 			// RCLCPP_INFO(this->get_logger(), "Motors class object initialized.");
 			// printMotorStatus();
 			controller->enableMotors();
 			imuDataStructure = &imuStructure;
 			joyconDataStructure = &joyconStructure;
+			motorDataStructure = &motorStructure;
 			controller->setBalancing(false);
 
 			this->declare_parameter("enableSpeedPID", rclcpp::ParameterValue(false));
@@ -467,6 +477,7 @@ class MotorsRegulator : public rclcpp::Node{
 		MotorsController *controller;
 		joycon_data *joyconDataStructure;
 		imu_data *imuDataStructure;
+		motor_data *motorDataStructure;
 		float tilt, gyro, forwardSpeed, rotationSpeed, leftSpeed, rightSpeed;
 		bool enableBalancing, previousEnableBalancing, ignoreAcceleration;
 		FrequencyCounter counter;
@@ -523,6 +534,12 @@ class MotorsRegulator : public rclcpp::Node{
 			controller->setMotorSpeeds(leftSpeed, rightSpeed, ignoreAcceleration);
 			leftSpeed = controller->getMotorSpeedLeft();
 			rightSpeed = controller->getMotorSpeedRight();
+			motorDataStructure->motor_data_access.lock();
+			motorDataStructure->leftSpeed = leftSpeed;
+			motorDataStructure->rightSpeed = rightSpeed;
+			motorDataStructure->controller_acceleration = this->get_parameter("maxAcceleration").get_value<float>();
+			motorDataStructure->microstep = this->get_parameter("microstep").get_value<int>();
+			motorDataStructure->motor_data_access.unlock();
 			// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 			// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
 			// printMotorsStatusFromRegisters();
@@ -562,7 +579,38 @@ class MotorsRegulator : public rclcpp::Node{
 		}
 
 };
-// class Remote : public rclcpp::Node{}
+
+class OdometryCalculator : public rclcpp::Node{
+	public:
+		OdometryCalculator(motor_data& motorStructure): Node("odometry_calculator") {
+			motorDataStructure = &motorStructure;
+			for(int i = 0; i < 3; i++) {
+				position[i] = 0;
+				velocity[i] = 0;
+			}
+			this->declare_parameter("wheel_distance", rclcpp::ParameterValue(12.7));
+			wheel_distance = this->get_parameter("wheel_distance").get_value<float>();
+			this->declare_parameter("wheel_radius", rclcpp::ParameterValue(12.7));
+			wheel_radius = this->get_parameter("wheel_radius").get_value<float>();
+			this->declare_parameter("period", rclcpp::ParameterValue(10));
+			odometry_calculation_timer = this->create_wall_timer(
+			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&OdometryCalculator::calculatePosition, this));
+			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
+		}
+	private:
+		motor_data *motorDataStructure;
+		float position[3];
+		float velocity[3];
+		float wheel_distance, wheel_radius;
+		FrequencyCounter counter;
+		rclcpp::TimerBase::SharedPtr odometry_calculation_timer;
+
+		void calculatePosition() {
+			counter.count();
+			motorDataStructure->motor_data_access.lock();
+			motorDataStructure->motor_data_access.unlock();
+		}
+};
 
 class TOFSTM : public rclcpp::Node{
 
@@ -730,8 +778,12 @@ int main(int argc, char * argv[]) {
 	// auto TOFReaderNodeSTM = std::make_shared<TOFSTM>(std::ref(tof_data_structure));
 	// executor.add_node(TOFReaderNodeSTM);
 
-	auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure));
+	motor_data motor_data_structure;
+	auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure), std::ref(motor_data_structure));
 	executor.add_node(MotorsRegulatorNode);
+
+	auto OdometryCalculatorNode = std::make_shared<OdometryCalculator>(std::ref(motor_data_structure));
+	executor.add_node(OdometryCalculatorNode);
 
 	// while(!endProcess) executor.spin_some();
 	executor.spin();

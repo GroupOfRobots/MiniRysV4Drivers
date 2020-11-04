@@ -36,3 +36,8 @@ motors_regulator:
     pidAngleInvTi: 5.0
     pidAngleTd: 0.01
     period: 10 # in milliseconds
+odometry_calculator:
+  ros__parameters:
+    wheel_distance: 12.7
+    wheel_radius: 11.0
+    period: 10 # in milliseconds
