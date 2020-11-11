@@ -9,6 +9,7 @@ joycon_receiver:
     standUpButton: 1
     layDownButton: 3
     printStatusButton: 2
+    printLocationButton: 0
     period: 10 #in milliseconds
 imu_reader:
   ros__parameters:
@@ -25,7 +26,7 @@ motors_regulator:
   ros__parameters:
     microstep: 64
     maxSpeed: 400.0
-    maxAcceleration: 15.0
+    maxAcceleration: 15.0 #steps per period squared
     invertLeftMotor: true
     invertRightMotor: true
     enableSpeedPID: false
@@ -38,6 +39,6 @@ motors_regulator:
     period: 10 # in milliseconds
 odometry_calculator:
   ros__parameters:
-    wheel_distance: 12.7
-    wheel_radius: 11.0
+    wheel_distance: 12.7 # cm
+    wheel_radius: 5.5 # cm
     period: 10 # in milliseconds

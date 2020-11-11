@@ -41,8 +41,9 @@ struct joycon_data {
 	float rotationSpeed;
 	bool enableBalancing;
 	bool printStatus;
+	bool printLocation;
 	std::mutex joycon_data_access;
-	joycon_data(): forwardSpeed(0), rotationSpeed(0), enableBalancing(false), printStatus(false) {};
+	joycon_data(): forwardSpeed(0), rotationSpeed(0), enableBalancing(false), printStatus(false), printLocation(false) {};
 };
 
 struct imu_data {
@@ -151,6 +152,8 @@ class JoyconReceiver : public rclcpp::Node{
 			layDownButton = this->get_parameter("layDownButton").get_value<int>();
 			this->declare_parameter("printStatusButton", rclcpp::ParameterValue(2));
 			printStatusButton = this->get_parameter("printStatusButton").get_value<int>();
+			this->declare_parameter("printLocationButton", rclcpp::ParameterValue(0));
+			printLocationButton = this->get_parameter("printLocationButton").get_value<int>();
 
 			this->declare_parameter("period", rclcpp::ParameterValue(10));
 			get_joycon_state_timer = this->create_wall_timer(
@@ -171,7 +174,7 @@ class JoyconReceiver : public rclcpp::Node{
 		int forwardAxis, rotationAxis, forwardSpeedFactor, rotationSpeedFactor;
 		bool forwardAxisInverted, rotationAxisInverted;
 
-		int standUpButton, layDownButton, printStatusButton;
+		int standUpButton, layDownButton, printStatusButton, printLocationButton;
 
 		joycon_data *dataStructure = NULL; 
 		FrequencyCounter counter;
@@ -214,6 +217,7 @@ class JoyconReceiver : public rclcpp::Node{
 			if (button[standUpButton] == 1) dataStructure->enableBalancing = true;
 			if (button[layDownButton] == 1) dataStructure->enableBalancing = false;
 			dataStructure->printStatus = button[printStatusButton] == 1 ? true : false;
+			dataStructure->printLocation = button[printLocationButton] == 1 ? true : false;
 
 			dataStructure->joycon_data_access.unlock();
 		}
@@ -582,33 +586,75 @@ class MotorsRegulator : public rclcpp::Node{
 
 class OdometryCalculator : public rclcpp::Node{
 	public:
-		OdometryCalculator(motor_data& motorStructure): Node("odometry_calculator") {
+		OdometryCalculator(motor_data& motorStructure, joycon_data& joyconStructure): Node("odometry_calculator") {
 			motorDataStructure = &motorStructure;
+			joyconDataStructure = &joyconStructure;
+
 			for(int i = 0; i < 3; i++) {
-				position[i] = 0;
-				velocity[i] = 0;
+				position[i] = 0.0;
+				velocity[i] = 0.0;
 			}
+			leftSpeed = 0;
+			previousLeftSpeed = 0;
+			rightSpeed = 0;
+			previousRightSpeed = 0;
+			acceleration = 0;
+			printLocation = false;
+
 			this->declare_parameter("wheel_distance", rclcpp::ParameterValue(12.7));
-			wheel_distance = this->get_parameter("wheel_distance").get_value<float>();
-			this->declare_parameter("wheel_radius", rclcpp::ParameterValue(12.7));
-			wheel_radius = this->get_parameter("wheel_radius").get_value<float>();
+			wheelDistance = this->get_parameter("wheel_distance").get_value<float>()/100; // m
+			this->declare_parameter("wheel_radius", rclcpp::ParameterValue(5.5));
+			wheelRadius = this->get_parameter("wheel_radius").get_value<float>()/100; // m
+
 			this->declare_parameter("period", rclcpp::ParameterValue(10));
+			period = (float)this->get_parameter("period").get_value<int>()/1000; // s
 			odometry_calculation_timer = this->create_wall_timer(
 			std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&OdometryCalculator::calculatePosition, this));
-			RCLCPP_INFO(this->get_logger(), "Motor controller initialized.");
+			RCLCPP_INFO(this->get_logger(), "Odometry calculator initialized.");
 		}
 	private:
 		motor_data *motorDataStructure;
+		joycon_data *joyconDataStructure;
+		float period;
 		float position[3];
 		float velocity[3];
-		float wheel_distance, wheel_radius;
+		float wheelDistance, wheelRadius;
+		float leftSpeed, previousLeftSpeed;
+		float rightSpeed, previousRightSpeed;
+		float acceleration;
+		bool printLocation;
 		FrequencyCounter counter;
 		rclcpp::TimerBase::SharedPtr odometry_calculation_timer;
 
 		void calculatePosition() {
 			counter.count();
+			previousLeftSpeed = leftSpeed;
+			previousRightSpeed = rightSpeed;
 			motorDataStructure->motor_data_access.lock();
+			leftSpeed = motorDataStructure->leftSpeed; // step/s
+			rightSpeed = motorDataStructure->rightSpeed; // step/s
+			acceleration = motorDataStructure->controller_acceleration*100; // step/s2: step/s/period = step/s/10ms = step/0.01s2 = 100*step/s2
 			motorDataStructure->motor_data_access.unlock();
+
+			float accTime_l = (leftSpeed - previousLeftSpeed)/acceleration; // s
+			float accTime_r = (rightSpeed - previousRightSpeed)/acceleration; // s
+			float D_l = ((leftSpeed + previousLeftSpeed)/2*accTime_l + leftSpeed*(period - accTime_l))/200*2*M_PI*wheelRadius; // m: step/(step/circumference)*(m/circumference)
+			float D_r = ((rightSpeed + previousRightSpeed)/2*accTime_r + rightSpeed*(period - accTime_r))/200*2*M_PI*wheelRadius; // m: step/(step/circumference)*(m/circumference)
+			float D = (D_l + D_r)/2; // m
+			float theta = (D_r - D_l)/wheelDistance;
+			position[2] += theta;
+			position[0] = position[0] + D*cos(position[2]);
+			position[1] = position[1] + D*sin(position[2]);
+
+			joyconDataStructure->joycon_data_access.lock();
+			printLocation = joyconDataStructure->printLocation;
+			joyconDataStructure->joycon_data_access.unlock();
+
+			if (printLocation) printRobotLocation();
+		}
+
+		void printRobotLocation() {
+			RCLCPP_INFO(this->get_logger(), "Robot location:\n\tx: %.4f\n\ty: %.4f\n\tO: %.4f", position[0], position[1], position[2]);
 		}
 };
 
@@ -782,7 +828,7 @@ int main(int argc, char * argv[]) {
 	auto MotorsRegulatorNode = std::make_shared<MotorsRegulator>(std::ref(imu_data_structure), std::ref(joycon_data_structure), std::ref(motor_data_structure));
 	executor.add_node(MotorsRegulatorNode);
 
-	auto OdometryCalculatorNode = std::make_shared<OdometryCalculator>(std::ref(motor_data_structure));
+	auto OdometryCalculatorNode = std::make_shared<OdometryCalculator>(std::ref(motor_data_structure), std::ref(joycon_data_structure));
 	executor.add_node(OdometryCalculatorNode);
 
 	// while(!endProcess) executor.spin_some();
