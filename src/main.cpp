@@ -636,8 +636,8 @@ class OdometryCalculator : public rclcpp::Node{
 			acceleration = motorDataStructure->controller_acceleration*100; // step/s2: step/s/period = step/s/10ms = step/0.01s2 = 100*step/s2
 			motorDataStructure->motor_data_access.unlock();
 
-			float accTime_l = (leftSpeed - previousLeftSpeed)/acceleration; // s
-			float accTime_r = (rightSpeed - previousRightSpeed)/acceleration; // s
+			float accTime_l = abs(leftSpeed - previousLeftSpeed)/acceleration; // s
+			float accTime_r = abs(rightSpeed - previousRightSpeed)/acceleration; // s
 			float D_l = ((leftSpeed + previousLeftSpeed)/2*accTime_l + leftSpeed*(period - accTime_l))/200*2*M_PI*wheelRadius; // m: step/(step/circumference)*(m/circumference)
 			float D_r = ((rightSpeed + previousRightSpeed)/2*accTime_r + rightSpeed*(period - accTime_r))/200*2*M_PI*wheelRadius; // m: step/(step/circumference)*(m/circumference)
 			float D = (D_l + D_r)/2; // m
