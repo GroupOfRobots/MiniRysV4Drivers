@@ -12,7 +12,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -pthread)
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 # find dependencies
@@ -22,12 +22,20 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 # including headers
 install(
         DIRECTORY include/
         DESTINATION include
 )
+
+# generate services
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/GetMinirysGlobalLocalization.srv"
+)
+
+ament_export_dependencies(rosidl_default_runtime)
 
 # setting ament dependencies
 set(AMENT_DEPENDENCIES
