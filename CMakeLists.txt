@@ -70,7 +70,12 @@ set(SOURCE_FILES
   src/vl53l1x_stm/vl53l1_error_strings.c
   src/vl53l1x_stm/vl53l1_api_preset_modes.c
   src/vl53l1x_stm/vl53l1_platform.c
-
+  src/nodes/OdometryCalculatorNode.cpp
+  src/nodes/ImuReaderNode.cpp
+  src/nodes/JoyconReceiverNode.cpp
+  src/nodes/TOFReaderNode.cpp
+  src/nodes/TOFReaderSTMNode.cpp
+  src/nodes/MotorsControllerNode.cpp
 )
 
 add_library(${PROJECT_NAME}_source ${SOURCE_FILES})

@@ -2,6 +2,9 @@
 #include <string>
 #include <time.h>
 
+#ifndef FREQUENCYCOUNTER_H
+#define FREQUENCYCOUNTER_H
+
 class FrequencyCounter {
 	private:
 		std::chrono::time_point<std::chrono::steady_clock> previous;
@@ -22,3 +25,5 @@ class FrequencyCounter {
 		FrequencyCounter();
 		~FrequencyCounter();
 };
+
+#endif
