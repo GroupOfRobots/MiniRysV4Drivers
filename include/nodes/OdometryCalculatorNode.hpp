@@ -4,14 +4,14 @@
 
 class OdometryCalculatorNode : public rclcpp::Node{
 	public:
-		OdometryCalculatorNode(motor_data& motorStructure, robot_control_data& robotControlStructure);
+		OdometryCalculatorNode(motor_data&, robot_control_data&, odometry_data&);
 	private:
 		motor_data *motorDataStructure;
 		robot_control_data *robotControlDataStructure;
+		odometry_data *odometryDataStructure;
 		float period;
 		float position[3];
-		float velocity[3];
-		float wheelDistance, wheelRadius;
+		float wheelDistance, wheelRadius_l, wheelRadius_r;
 		float leftSpeed, previousLeftSpeed;
 		float rightSpeed, previousRightSpeed;
 		float acceleration;
@@ -21,4 +21,6 @@ class OdometryCalculatorNode : public rclcpp::Node{
 
 		void calculatePosition();
 		void printLocation();
+		void cropAngle();
+		void setPosition(float, float, float);
 };

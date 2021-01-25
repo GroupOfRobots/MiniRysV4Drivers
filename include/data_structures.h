@@ -10,6 +10,10 @@ struct robot_control_data {
 	bool printMotorStatus;
 	bool printRobotLocation;
 	std::mutex robot_control_data_access;
+	bool setOdometryPosition;
+	float x;
+	float y;
+	float theta;	
 	robot_control_data(): forwardSpeed(0), rotationSpeed(0), enableBalancing(false), printMotorStatus(false), printRobotLocation(false) {};
 };
 
@@ -35,6 +39,14 @@ struct motor_data {
 	int microstep;
 	std::mutex motor_data_access;
 	motor_data() : leftSpeed(0), rightSpeed(0), controller_acceleration(0), microstep(0) {};
+};
+
+struct odometry_data {
+	float x;
+	float y;
+	float theta;
+	std::mutex odometry_data_access;
+	odometry_data() : x(0), y(0), theta(0) {};
 };
 
 #endif

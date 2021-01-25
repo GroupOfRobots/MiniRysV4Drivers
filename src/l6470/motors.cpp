@@ -96,8 +96,10 @@ void Motors::setUp(){
 	this->configStepMode(0x06);   // 64microsteps per step
 	this->setMaxSpeed(400);        // 350 steps/s max
 	this->setMinSpeed(0);        // 10 steps/s min
-	this->setAcc(1500);              // accelerate at 350 steps/s/s
-	this->setDec(1500);//1000
+	this->setAcc(1000);              // accelerate at 350 steps/s/s
+	// this->setAcc(1500);              // accelerate at 350 steps/s/s
+	this->setDec(1000);//1000
+	// this->setDec(1500);//1000
 	this->setPWMFreq((0x00)<<13, (0x07)<<10); // 62.5kHz PWM freq
 	this->setSlewRate(L6470_CONFIG_POW_SR_260V_us);   // Upping the edge speed increases torque.
 	this->setOCThreshold(0x09);  // OC threshold 3000mA

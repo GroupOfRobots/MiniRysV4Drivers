@@ -6,6 +6,7 @@
 #include "nodes/OdometryCalculatorNode.hpp"
 #include "nodes/JoyconReceiverNode.hpp"
 #include "nodes/MotorsControllerNode.hpp"
+#include "nodes/UMBmarkNode.hpp"
 // #include "nodes/TOFReaderNode.hpp"
 // #include "nodes/TOFReaderSTMNode.hpp"
 
@@ -49,17 +50,20 @@ int main(int argc, char * argv[]) {
 	robot_control_data robot_control_data_structure;
 	imu_data imu_data_structure;
 	motor_data motor_data_structure;
+	odometry_data odometry_data_structure;
 	// tof_data tof_data_structure;
 
-	auto JoyconReceiver = std::make_shared<JoyconReceiverNode>(std::ref(robot_control_data_structure));
-	auto ImuReader = std::make_shared<ImuReaderNode>(std::ref(imu_data_structure));
+	// auto JoyconReceiver = std::make_shared<JoyconReceiverNode>(std::ref(robot_control_data_structure));
+	// auto ImuReader = std::make_shared<ImuReaderNode>(std::ref(imu_data_structure));
+	auto UMBmark = std::make_shared<UMBmarkNode>(std::ref(robot_control_data_structure), std::ref(odometry_data_structure));
 	auto MotorsController = std::make_shared<MotorsControllerNode>(std::ref(imu_data_structure), std::ref(robot_control_data_structure), std::ref(motor_data_structure));
-	auto OdometryCalculator = std::make_shared<OdometryCalculatorNode>(std::ref(motor_data_structure), std::ref(robot_control_data_structure));
+	auto OdometryCalculator = std::make_shared<OdometryCalculatorNode>(std::ref(motor_data_structure), std::ref(robot_control_data_structure), std::ref(odometry_data_structure));
 	// auto TOFReader = std::make_shared<TOFReaderNode>(std::ref(tof_data_structure));
 	// auto TOFReaderSTM = std::make_shared<TOFReaderSTMNode>(std::ref(tof_data_structure));
 
-	executor.add_node(JoyconReceiver);
-	executor.add_node(ImuReader);
+	// executor.add_node(JoyconReceiver);
+	// executor.add_node(ImuReader);
+	executor.add_node(UMBmark);
 	executor.add_node(MotorsController);
 	executor.add_node(OdometryCalculator);
 	// executor.add_node(TOFReader);

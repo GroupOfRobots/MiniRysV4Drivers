@@ -76,10 +76,12 @@ set(SOURCE_FILES
   src/nodes/TOFReaderNode.cpp
   src/nodes/TOFReaderSTMNode.cpp
   src/nodes/MotorsControllerNode.cpp
+  src/nodes/UMBmarkNode.cpp
 )
 
 add_library(${PROJECT_NAME}_source ${SOURCE_FILES})
 ament_target_dependencies(${PROJECT_NAME}_source ${AMENT_DEPENDENCIES})
+rosidl_target_interfaces(${PROJECT_NAME}_source ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 target_include_directories(${PROJECT_NAME}_source
   PUBLIC
@@ -98,6 +100,7 @@ install(TARGETS
 add_executable(main src/main.cpp)
 target_link_libraries(main ${PROJECT_NAME}_source)
 ament_target_dependencies(main ${AMENT_DEPENDENCIES})
+rosidl_target_interfaces(main  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 target_include_directories(main
   PUBLIC
