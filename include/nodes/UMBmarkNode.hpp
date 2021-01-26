@@ -12,9 +12,18 @@ class UMBmarkNode : public rclcpp::Node{
 		robot_control_data *robotControlDataStructure;
 		odometry_data *odometryDataStructure;
 
-		float period;
+		float period, odometryPosition[3];
 		FrequencyCounter counter;
-		unsigned int cw_runs_completed, ccw_runs_completed, phase_of_movement, spins_to_next_phase, forward_speed, rotation_speed;
+		unsigned int cw_runs_completed, ccw_runs_completed, phase_of_movement;
+		int forward_speed, rotation_speed;
+
+		const float cw_positions[4][3] = {{0.2, 0, -M_PI/2}, {0.2, -0.2, -M_PI}, {0, -0.2, M_PI/2}, {0, 0, 0}};
+		const float ccw_positions[4][3] = {{0.2, 0, M_PI/2}, {0.2, 0.2, M_PI}, {0, 0.2, -M_PI/2}, {0, 0, 0}};
+
+		float position_error, prev_position_error, angle_error, prev_angle_error;
+		const float delta = 0.001;
+
+		bool compareReadings;
 
 		rclcpp::TimerBase::SharedPtr timer;
 		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedPtr client;

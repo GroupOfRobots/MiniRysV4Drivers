@@ -42,9 +42,9 @@ odometry_calculator:
     wheel_distance: 12.7 # cm
     wheel_radius: 5.5 # cm
     period: 10 # in milliseconds
-    initial_x: 0
-    initial_y: 0
-    initial_theta: 0
+    initial_x: 0.0
+    initial_y: 0.0
+    initial_theta: 0.0
 minirys_umbmark:
   ros__parameters:
     period: 10

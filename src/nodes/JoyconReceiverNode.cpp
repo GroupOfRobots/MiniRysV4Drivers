@@ -10,27 +10,32 @@ JoyconReceiverNode::JoyconReceiverNode(robot_control_data& structure): Node("joy
 		return;
 	}
 
+	num_of_axis = 0;
+	num_of_buttons = 0;
 	ioctl( joy_fd, JSIOCGAXES, &num_of_axis );
 	ioctl( joy_fd, JSIOCGBUTTONS, &num_of_buttons );
 	ioctl( joy_fd, JSIOCGNAME(80), &name_of_joystick );
-
-	axis = (int *) calloc( num_of_axis, sizeof( int ) );
-	axisPast = (int *) calloc( num_of_axis, sizeof( int ) );
-	for(int i = 0; i < num_of_axis; i++){
-		axis[i] = 0;
-		axisPast[i] = 0;
-	}
-	button = (bool *) calloc( num_of_buttons, sizeof( bool ) );
-	buttonPast = (bool *) calloc( num_of_buttons, sizeof( bool ) );
-	for(int i = 0; i < num_of_buttons; i++){
-		button[i] = false;
-		buttonPast[i] = false;
-	}
 
 	RCLCPP_INFO(this->get_logger(),"Joystick detected: %s\n\t%d axis\n\t%d buttons\n\n"
 	, name_of_joystick
 	, num_of_axis
 	, num_of_buttons );
+	if (num_of_buttons < 50 && num_of_axis < 50) {
+	
+		axis = (int *) calloc( num_of_axis, sizeof( int ) );
+		axisPast = (int *) calloc( num_of_axis, sizeof( int ) );
+		for(int i = 0; i < num_of_axis; i++){
+			axis[i] = 0;
+			axisPast[i] = 0;
+		}
+		// RCLCPP_INFO(this->get_logger(), "Debug");
+		button = (bool *) calloc( num_of_buttons, sizeof( bool ) );
+		buttonPast = (bool *) calloc( num_of_buttons, sizeof( bool ) );
+		for(int i = 0; i < num_of_buttons; i++){
+			button[i] = false;
+			buttonPast[i] = false;
+		}
+	}
 
 	fcntl( joy_fd, F_SETFL, O_NONBLOCK ); /* use non-blocking mode */
 

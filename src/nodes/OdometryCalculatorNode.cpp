@@ -6,9 +6,9 @@ OdometryCalculatorNode::OdometryCalculatorNode(motor_data& motorStructure, robot
 	odometryDataStructure = &odometryStructure;
 
 	// initialize robot position
-	this->declare_parameter("initial_x", rclcpp::ParameterValue(0));
-	this->declare_parameter("initial_y", rclcpp::ParameterValue(0));
-	this->declare_parameter("initial_theta", rclcpp::ParameterValue(0));
+	this->declare_parameter("initial_x", rclcpp::ParameterValue(0.0));
+	this->declare_parameter("initial_y", rclcpp::ParameterValue(0.0));
+	this->declare_parameter("initial_theta", rclcpp::ParameterValue(0.0));
 	position[0] = this->get_parameter("initial_x").get_value<float>();
 	position[1] = this->get_parameter("initial_y").get_value<float>();
 	position[2] = this->get_parameter("initial_theta").get_value<float>();
@@ -59,8 +59,8 @@ void OdometryCalculatorNode::calculatePosition() {
 	float changeofAngle = (D_r - D_l)/wheelDistance;
 	position[2] += changeofAngle;
 	cropAngle();
-	position[0] = position[0] - D*sin(position[2]);
-	position[1] = position[1] + D*cos(position[2]);
+	position[0] = position[0] + D*cos(position[2]);
+	position[1] = position[1] + D*sin(position[2]);
 
 	odometryDataStructure->odometry_data_access.lock();
 	odometryDataStructure->x = position[0];
@@ -70,6 +70,7 @@ void OdometryCalculatorNode::calculatePosition() {
 
 	robotControlDataStructure->robot_control_data_access.lock();
 	printRobotLocation = robotControlDataStructure->printRobotLocation;
+	robotControlDataStructure->printRobotLocation = false;
 	if (robotControlDataStructure->setOdometryPosition) setPosition(robotControlDataStructure->x, robotControlDataStructure->y, robotControlDataStructure->theta);
 	robotControlDataStructure->setOdometryPosition = false;
 	robotControlDataStructure->robot_control_data_access.unlock();
@@ -82,8 +83,8 @@ void OdometryCalculatorNode::printLocation() {
 }
 
 void OdometryCalculatorNode::cropAngle() {
-	while (position[2] > M_PI) position[2] -= M_PI;
-	while (position[2] < M_PI) position[2] += M_PI;
+	if (position[2] > M_PI) position[2] -= 2*M_PI;
+	if (position[2] < -M_PI) position[2] += 2*M_PI;
 }
 
 void OdometryCalculatorNode::setPosition(float ix, float iy, float itheta) {
