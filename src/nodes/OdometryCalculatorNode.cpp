@@ -43,6 +43,7 @@ OdometryCalculatorNode::OdometryCalculatorNode(motor_data& motorStructure, robot
 
 void OdometryCalculatorNode::calculatePosition() {
 	counter.count();
+
 	previousLeftSpeed = leftSpeed;
 	previousRightSpeed = rightSpeed;
 	motorDataStructure->motor_data_access.lock();
@@ -62,18 +63,18 @@ void OdometryCalculatorNode::calculatePosition() {
 	position[0] = position[0] + D*cos(position[2]);
 	position[1] = position[1] + D*sin(position[2]);
 
-	odometryDataStructure->odometry_data_access.lock();
-	odometryDataStructure->x = position[0];
-	odometryDataStructure->y = position[1];
-	odometryDataStructure->theta = position[2];
-	odometryDataStructure->odometry_data_access.unlock();
-
 	robotControlDataStructure->robot_control_data_access.lock();
 	printRobotLocation = robotControlDataStructure->printRobotLocation;
 	robotControlDataStructure->printRobotLocation = false;
 	if (robotControlDataStructure->setOdometryPosition) setPosition(robotControlDataStructure->x, robotControlDataStructure->y, robotControlDataStructure->theta);
 	robotControlDataStructure->setOdometryPosition = false;
 	robotControlDataStructure->robot_control_data_access.unlock();
+
+	odometryDataStructure->odometry_data_access.lock();
+	odometryDataStructure->x = position[0];
+	odometryDataStructure->y = position[1];
+	odometryDataStructure->theta = position[2];
+	odometryDataStructure->odometry_data_access.unlock();
 
 	if (printRobotLocation) printLocation();
 }

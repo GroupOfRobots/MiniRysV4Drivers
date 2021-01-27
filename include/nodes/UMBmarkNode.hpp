@@ -23,10 +23,13 @@ class UMBmarkNode : public rclcpp::Node{
 		float position_error, prev_position_error, angle_error, prev_angle_error;
 		const float delta = 0.001;
 
-		bool compareReadings;
+		bool compareReadings, waitForReadings;
 
 		rclcpp::TimerBase::SharedPtr timer;
 		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedPtr client;
+		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedRequest request;
+		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedResponse result;
+		// rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedFuture future;
 
 		void run();
 };

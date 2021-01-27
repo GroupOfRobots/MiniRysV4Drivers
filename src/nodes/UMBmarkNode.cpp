@@ -6,11 +6,17 @@ UMBmarkNode::UMBmarkNode(robot_control_data& robotControlStructure, odometry_dat
 	robotControlDataStructure = &robotControlStructure;
 	odometryDataStructure = &odometryStructure;
 
-	RCLCPP_INFO(this->get_logger(), "Debug0");
 	client = this->create_client<minirys_drivers::srv::GetMinirysGlobalLocalization>("get_minirys_global_localization");
-	auto request = std::make_shared<minirys_drivers::srv::GetMinirysGlobalLocalization::Request>();
+	request = std::make_shared<minirys_drivers::srv::GetMinirysGlobalLocalization::Request>();
 	request->reset = true;
-	auto result = client->async_send_request(request);
+	while (!client->wait_for_service(1s)) {
+	    if (!rclcpp::ok()) {
+			RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
+			return;
+	    }
+	    RCLCPP_INFO(this->get_logger(), "Service not available, waiting again...");
+	}
+	client->async_send_request(request);
 
 	robotControlDataStructure->robot_control_data_access.lock();
 	robotControlDataStructure->setOdometryPosition = true;
@@ -35,8 +41,8 @@ UMBmarkNode::UMBmarkNode(robot_control_data& robotControlStructure, odometry_dat
 	prev_angle_error = 999999;
 
 	compareReadings = false;
+	waitForReadings = false;
 
-	RCLCPP_INFO(this->get_logger(), "Debug2");
 	this->declare_parameter("period", rclcpp::ParameterValue(10));
 	period = (float)this->get_parameter("period").get_value<int>()/1000; // s
 	timer = this->create_wall_timer(
@@ -52,12 +58,14 @@ void UMBmarkNode::run() {
 	odometryDataStructure->odometry_data_access.unlock();
 
 	if (!compareReadings){
-		if (cw_runs_completed < 5) {
+		if (cw_runs_completed < 5 || ccw_runs_completed < 5) {
 			if (phase_of_movement % 2 == 1) { // drive to the next point
 				//calculate distance from desired point
-				position_error = sqrt(pow(cw_positions[(int)floor(phase_of_movement/2)][0] - odometryPosition[0], 2) +
+				if (cw_runs_completed < 5) position_error = sqrt(pow(cw_positions[(int)floor(phase_of_movement/2)][0] - odometryPosition[0], 2) +
 									pow(cw_positions[(int)floor(phase_of_movement/2)][1] - odometryPosition[1], 2));
-				RCLCPP_INFO(this->get_logger(), "Position error: %f, %f", position_error, prev_position_error);
+				else position_error = sqrt(pow(ccw_positions[(int)floor(phase_of_movement/2)][0] - odometryPosition[0], 2) +
+									pow(ccw_positions[(int)floor(phase_of_movement/2)][1] - odometryPosition[1], 2));
+				// RCLCPP_INFO(this->get_logger(), "Position error(Curr,Prev): %f, %f", position_error, prev_position_error);
 				if (position_error > delta && position_error <= prev_position_error){ // movement not complete
 					forward_speed = 10;
 					prev_position_error = position_error;
@@ -67,13 +75,14 @@ void UMBmarkNode::run() {
 					phase_of_movement++;
 				}
 				rotation_speed = 0;
-			} else { // rotatr to the next angle
+			} else { // rotate to the next angle
 				//calculate angle error from desired
-				angle_error = abs(cw_positions[phase_of_movement/2-1][2] - odometryPosition[2]);
+				if (cw_runs_completed < 5) angle_error = abs(cw_positions[phase_of_movement/2-1][2] - odometryPosition[2]);
+				else angle_error = abs(ccw_positions[phase_of_movement/2-1][2] - odometryPosition[2]);
 				angle_error = (angle_error <= M_PI ? angle_error : 2*M_PI - angle_error);
-				RCLCPP_INFO(this->get_logger(), "Angle error: %f, %f", angle_error, prev_angle_error);
+				// RCLCPP_INFO(this->get_logger(), "Angle error(Curr,Prev): %f, %f", angle_error, prev_angle_error);
 				if (angle_error > delta && angle_error <= prev_angle_error) { // turning not complete
-					rotation_speed = 5;
+					rotation_speed  = cw_runs_completed < 5 ? 5 : -5;
 					prev_angle_error = angle_error;
 				} else { // rotation complete, go to the next phase
 					rotation_speed = 0;
@@ -84,69 +93,17 @@ void UMBmarkNode::run() {
 			}
 
 			if (phase_of_movement == 9) { // cw_run complete, reset phase of movement
-				cw_runs_completed++;
-				phase_of_movement = 1;
-				compareReadings = true;
-			}
-		} else if (ccw_runs_completed < 5) {
-			if (phase_of_movement % 2 == 1) { // drive to the next point
-				//calculate distance from desired point
-				position_error = sqrt(pow(cw_positions[(int)floor(phase_of_movement/2)][0] - odometryPosition[0], 2) +
-									pow(cw_positions[(int)floor(phase_of_movement/2)][1] - odometryPosition[1], 2));
-				RCLCPP_INFO(this->get_logger(), "Position error: %f, %f", position_error, prev_position_error);
-				if (position_error > delta && position_error <= prev_position_error){ // movement not complete
-					forward_speed = 10;
-					prev_position_error = position_error;
-				} else { // movement complete, go to next phase
-					forward_speed = 0;
-					prev_position_error = 999999;
-					phase_of_movement++;
+				if (cw_runs_completed < 5) {
+					RCLCPP_INFO(this->get_logger(), "CW run %d completed", cw_runs_completed);
+					cw_runs_completed++;
+				} else {
+					RCLCPP_INFO(this->get_logger(), "CW run %d completed", ccw_runs_completed);
+					ccw_runs_completed++;
 				}
-				rotation_speed = 0;
-			} else { // rotatr to the next angle
-				//calculate angle error from desired
-				angle_error = abs(cw_positions[phase_of_movement/2-1][2] - odometryPosition[2]);
-				angle_error = (angle_error <= M_PI ? angle_error : 2*M_PI - angle_error);
-				RCLCPP_INFO(this->get_logger(), "Angle error: %f, %f", angle_error, prev_angle_error);
-				if (angle_error > delta && angle_error <= prev_angle_error) { // turning not complete
-					rotation_speed = -5;
-					prev_angle_error = angle_error;
-				} else { // rotation complete, go to the next phase
-					rotation_speed = 0;
-					prev_angle_error = 999999;
-					phase_of_movement++;
-				}
-				forward_speed = 0;
-			}
-
-			if (phase_of_movement == 9) { // cw_run complete, reset phase of movement
-				cw_runs_completed++;
 				phase_of_movement = 1;
 				compareReadings = true;
 			}
 		}
-	}
-
-	if (compareReadings) {
-		auto request = std::make_shared<minirys_drivers::srv::GetMinirysGlobalLocalization::Request>();
-		auto result = client->async_send_request(request);
-		// if (rclcpp::spin_until_future_complete(std::shared_ptr<rclcpp::Node>(this), result) == rclcpp::executor::FutureReturnCode::SUCCESS){
-			if (result.get()->x != 999999 && result.get()->y != 999999 && result.get()->theta != 999999){
-				RCLCPP_INFO(this->get_logger(), "Global: %f/t%f\nOdometry: %f/t%f", result.get()->x, result.get()->y, odometryPosition[0], odometryPosition[1]);
-				compareReadings = false;
-				request->reset = true;
-				result = client->async_send_request(request);
-				// if (rclcpp::spin_until_future_complete(std::shared_ptr<rclcpp::Node>(this), result) == rclcpp::executor::FutureReturnCode::SUCCESS){
-					robotControlDataStructure->robot_control_data_access.lock();
-					robotControlDataStructure->setOdometryPosition = true;
-					robotControlDataStructure->x = 0;
-					robotControlDataStructure->y = 0;
-					robotControlDataStructure->theta = 0;
-					robotControlDataStructure->printRobotLocation = true;
-					robotControlDataStructure->robot_control_data_access.unlock();
-				// }
-			}
-		// }
 	}
 
 	robotControlDataStructure->robot_control_data_access.lock();
@@ -154,4 +111,34 @@ void UMBmarkNode::run() {
 	robotControlDataStructure->rotationSpeed = rotation_speed;
 	robotControlDataStructure->robot_control_data_access.unlock();
 	counter.count();
+
+	if (compareReadings) {
+		if (!waitForReadings) {
+			auto callback = [&,this](rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedFuture inner_future)
+	        { 
+	            result = inner_future.get();
+	            RCLCPP_INFO(this->get_logger(), "Callback executed.");
+				if (result->x != 999999 && result->y != 999999 && result->theta != 999999){
+					RCLCPP_INFO(this->get_logger(), "Localization:\n\tGlobal: \n%f\t%f\t%f\n\tOdometry: \n%f\t%f\t%f", result->x, result->y, result->theta, odometryPosition[0], odometryPosition[1], odometryPosition[2]);
+					compareReadings = false;
+					request->reset = true;
+					client->async_send_request(request);
+
+					robotControlDataStructure->robot_control_data_access.lock();
+					robotControlDataStructure->setOdometryPosition = true;
+					robotControlDataStructure->x = 0;
+					robotControlDataStructure->y = 0;
+					robotControlDataStructure->theta = 0;
+					robotControlDataStructure->printRobotLocation = true;
+					robotControlDataStructure->robot_control_data_access.unlock();
+				}
+				waitForReadings = false;
+	        };
+			// request = std::make_shared<minirys_drivers::srv::GetMinirysGlobalLocalization::Request>();
+			request->reset = false;
+			client->async_send_request(request, callback);
+			waitForReadings = true;	
+            RCLCPP_INFO(this->get_logger(), "Requested service.");
+		}
+	}
 }
