@@ -36,7 +36,7 @@ void setRTPriority() {
 }
 
 int main(int argc, char * argv[]) {
-	setbuf(stdout, nullptr);
+	// setbuf(stdout, nullptr);
 	setRTPriority();
 	if (bcm2835_init() == 0) {
 		fprintf(stderr, "Not able to init the bmc2835 library\n");

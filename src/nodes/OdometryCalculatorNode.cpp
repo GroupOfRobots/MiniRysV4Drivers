@@ -29,10 +29,14 @@ OdometryCalculatorNode::OdometryCalculatorNode(motor_data& motorStructure, robot
 
 	// initialize variables for odometry calculation
 	this->declare_parameter("wheel_distance", rclcpp::ParameterValue(12.7));
-	wheelDistance = this->get_parameter("wheel_distance").get_value<float>()/100; // m
+	this->declare_parameter("e_b", rclcpp::ParameterValue(1.0));
+	wheelDistance = this->get_parameter("e_b").get_value<float>()*this->get_parameter("wheel_distance").get_value<float>(); // m
 	this->declare_parameter("wheel_radius", rclcpp::ParameterValue(5.5));
-	wheelRadius_l = this->get_parameter("wheel_radius").get_value<float>()/100; // m
-	wheelRadius_r = this->get_parameter("wheel_radius").get_value<float>()/100; // m
+	this->declare_parameter("e_d", rclcpp::ParameterValue(1.0));
+	wheelRadius_l = this->get_parameter("wheel_radius").get_value<float>()*2/(this->get_parameter("e_d").get_value<float>()+1); // m
+	wheelRadius_r = this->get_parameter("wheel_radius").get_value<float>()*2/(1/this->get_parameter("e_d").get_value<float>()+1); // m
+
+	RCLCPP_INFO(this->get_logger(), "%f\t%f\t%f", wheelDistance, wheelRadius_l, wheelRadius_r);
 
 	this->declare_parameter("period", rclcpp::ParameterValue(10));
 	period = (float)this->get_parameter("period").get_value<int>()/1000; // s

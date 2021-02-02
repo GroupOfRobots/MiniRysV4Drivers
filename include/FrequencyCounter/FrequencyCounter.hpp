@@ -14,6 +14,7 @@ class FrequencyCounter {
 		float frequency;
 
 		unsigned int id;
+		char name[25];
 		static unsigned int id_counter; 
 
 		timespec previous2;

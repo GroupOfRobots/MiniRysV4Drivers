@@ -108,9 +108,9 @@ void Motors::setUp(){
 	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
 	this->setParam(L6470_PARAM_ALARM_EN,0x00);
-	this->setAccKVAL(0x78);           // We'll tinker with these later, if needed.
-	this->setDecKVAL(0x78);
-	this->setRunKVAL(0x78);
+	this->setAccKVAL(0x64);           // We'll tinker with these later, if needed.
+	this->setDecKVAL(0x64);
+	this->setRunKVAL(0x64);
 	this->setHoldKVAL(0x32);           // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 
@@ -132,9 +132,9 @@ void Motors::setUp(){
 	this->setParam(L6470_PARAM_FN_SLP_ACC,0x00);
 	this->setParam(L6470_PARAM_FN_SLP_DEC,0x00);
 	this->setParam(L6470_PARAM_ALARM_EN,0x00);
-	this->setAccKVAL(0x78);           // We'll tinker with these later, if needed.
-	this->setDecKVAL(0x78);
-	this->setRunKVAL(0x78);
+	this->setAccKVAL(0x64);           // We'll tinker with these later, if needed.
+	this->setDecKVAL(0x64);
+	this->setRunKVAL(0x64);
 	this->setHoldKVAL(0x32);         // This controls the holding current; keep it low.
 	//this->setFullSpeed(120);       // microstep above 120 steps/s, default value 602.7
 }

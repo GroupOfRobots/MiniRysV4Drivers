@@ -39,8 +39,12 @@ motors_regulator:
     period: 10 # in milliseconds
 odometry_calculator:
   ros__parameters:
-    wheel_distance: 12.7 # cm
-    wheel_radius: 5.5 # cm
+    wheel_distance: 0.127 # m
+    # e_b: 1.0 # wheelbase error
+    e_b: 1.0057908709784669 # wheelbase error
+    wheel_radius: 0.055 # m
+    # e_d: 1.0 # wheel diameter ration
+    e_d: 1.0149760441813191 # wheel diameter ration
     period: 10 # in milliseconds
     initial_x: 0.0
     initial_y: 0.0
@@ -48,3 +52,4 @@ odometry_calculator:
 minirys_umbmark:
   ros__parameters:
     period: 10
+    filename: "UMBmark_output"
