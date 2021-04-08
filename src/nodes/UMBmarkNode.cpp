@@ -1,13 +1,12 @@
 #include "nodes/UMBmarkNode.hpp"
-// #include "minirys_drivers/srv/get_minirys_global_localization.hpp"
 using namespace std::chrono_literals;
 
 UMBmarkNode::UMBmarkNode(robot_control_data& robotControlStructure, odometry_data& odometryStructure): Node("minirys_umbmark") {	
 	robotControlDataStructure = &robotControlStructure;
 	odometryDataStructure = &odometryStructure;
 
-	client = this->create_client<minirys_drivers::srv::GetMinirysGlobalLocalization>("get_minirys_global_localization");
-	request = std::make_shared<minirys_drivers::srv::GetMinirysGlobalLocalization::Request>();
+	client = this->create_client<minirys_interfaces::srv::GetMinirysGlobalLocalization>("get_minirys_global_localization");
+	request = std::make_shared<minirys_interfaces::srv::GetMinirysGlobalLocalization::Request>();
 	request->reset = true;
 	while (!client->wait_for_service(1s)) {
 	    if (!rclcpp::ok()) {
@@ -109,7 +108,7 @@ void UMBmarkNode::run() {
 
 	if (compareReadings) {
 		if (!waitForReadings) {
-			auto callback = [&,this](rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedFuture inner_future)
+			auto callback = [&,this](rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedFuture inner_future)
 	        { 
 	            result = inner_future.get();
 	            RCLCPP_INFO(this->get_logger(), "Callback executed.");

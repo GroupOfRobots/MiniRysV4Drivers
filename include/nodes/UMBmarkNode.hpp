@@ -1,7 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "../data_structures.h"
 #include "../FrequencyCounter/FrequencyCounter.hpp"
-#include "minirys_drivers/srv/get_minirys_global_localization.hpp"
+#include "minirys_interfaces/srv/get_minirys_global_localization.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -32,9 +32,9 @@ class UMBmarkNode : public rclcpp::Node{
 		bool compareReadings, waitForReadings;
 
 		rclcpp::TimerBase::SharedPtr timer;
-		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedPtr client;
-		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedRequest request;
-		rclcpp::Client<minirys_drivers::srv::GetMinirysGlobalLocalization>::SharedResponse result;
+		rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedPtr client;
+		rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedRequest request;
+		rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedResponse result;
 
 		std::ofstream outputFile;
 

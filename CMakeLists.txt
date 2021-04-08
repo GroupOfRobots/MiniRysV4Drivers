@@ -22,7 +22,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(minirys_interfaces REQUIRED)
 
 # including headers
 install(
@@ -30,17 +30,11 @@ install(
         DESTINATION include
 )
 
-# generate services
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/GetMinirysGlobalLocalization.srv"
-)
-
-ament_export_dependencies(rosidl_default_runtime)
-
 # setting ament dependencies
 set(AMENT_DEPENDENCIES
 	rclcpp
   sensor_msgs
+  minirys_interfaces
 )
 
 # building and installing libraries
@@ -81,7 +75,6 @@ set(SOURCE_FILES
 
 add_library(${PROJECT_NAME}_source ${SOURCE_FILES})
 ament_target_dependencies(${PROJECT_NAME}_source ${AMENT_DEPENDENCIES})
-rosidl_target_interfaces(${PROJECT_NAME}_source ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 target_include_directories(${PROJECT_NAME}_source
   PUBLIC
@@ -100,7 +93,6 @@ install(TARGETS
 add_executable(main src/main.cpp)
 target_link_libraries(main ${PROJECT_NAME}_source)
 ament_target_dependencies(main ${AMENT_DEPENDENCIES})
-rosidl_target_interfaces(main  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 target_include_directories(main
   PUBLIC
