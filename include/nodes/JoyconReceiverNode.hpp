@@ -3,14 +3,14 @@
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
 #include "rclcpp/rclcpp.hpp"
-#include "../data_structures.h"
 #include "../FrequencyCounter/FrequencyCounter.hpp"
+#include "minirys_interfaces/msg/motors_control.hpp"
 
 #define JOY_DEV "/dev/input/js0"
 
 class JoyconReceiverNode : public rclcpp::Node{
 	public:
-		JoyconReceiverNode(robot_control_data& structure);
+		JoyconReceiverNode();
 		~JoyconReceiverNode();
 
 	private:
@@ -24,10 +24,11 @@ class JoyconReceiverNode : public rclcpp::Node{
 
 		int standUpButton, layDownButton, printStatusButton, printLocationButton;
 
-		robot_control_data *dataStructure; 
-		FrequencyCounter counter;
+		FrequencyCounter *counter;
 
 		rclcpp::TimerBase::SharedPtr get_joycon_state_timer;
+		rclcpp::Publisher<minirys_interfaces::msg::MotorsControl>::SharedPtr joycon_control_publisher;
+		minirys_interfaces::msg::MotorsControl msg;
 
 		void get_joycon_state();
 };

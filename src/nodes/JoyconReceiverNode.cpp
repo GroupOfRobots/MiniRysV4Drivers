@@ -1,7 +1,7 @@
 #include "nodes/JoyconReceiverNode.hpp"
 
-JoyconReceiverNode::JoyconReceiverNode(robot_control_data& structure): Node("joycon_receiver") {
-	dataStructure = &structure;
+JoyconReceiverNode::JoyconReceiverNode(): Node("joycon_receiver") {
+	counter = new FrequencyCounter("joycon");
 	//initialize joycon
 	if( ( joy_fd = open( JOY_DEV , O_RDONLY)) == -1 )
 	{
@@ -63,6 +63,9 @@ JoyconReceiverNode::JoyconReceiverNode(robot_control_data& structure): Node("joy
 	this->declare_parameter("printLocationButton", rclcpp::ParameterValue(0));
 	printLocationButton = this->get_parameter("printLocationButton").get_value<int>();
 
+	joycon_control_publisher = this->create_publisher<minirys_interfaces::msg::MotorsControl>("motors_control", 10);
+	msg = minirys_interfaces::msg::MotorsControl();
+
 	this->declare_parameter("period", rclcpp::ParameterValue(10));
 	get_joycon_state_timer = this->create_wall_timer(
 	std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&JoyconReceiverNode::get_joycon_state, this));
@@ -71,10 +74,11 @@ JoyconReceiverNode::JoyconReceiverNode(robot_control_data& structure): Node("joy
 
 JoyconReceiverNode::~JoyconReceiverNode(){
 	close( joy_fd );
+	delete counter;
 }
 
 void JoyconReceiverNode::get_joycon_state() {
-	counter.count();
+	counter->count();
 	/* read the joystick state */
 	/* see what to do with the event */
 	while(read(joy_fd, &js, sizeof(struct js_event)) == sizeof(struct js_event)){
@@ -93,24 +97,23 @@ void JoyconReceiverNode::get_joycon_state() {
 		}
 	}
 
-	dataStructure->robot_control_data_access.lock();
+	msg.header.stamp = this->get_clock()->now();
 
 	if(!forwardAxisInverted){
-		dataStructure->forwardSpeed = axis[forwardAxis]/forwardSpeedFactor;
+		msg.forward_speed = axis[forwardAxis]/forwardSpeedFactor;
 	} else {
-		dataStructure->forwardSpeed = -axis[forwardAxis]/forwardSpeedFactor;
+		msg.forward_speed = -axis[forwardAxis]/forwardSpeedFactor;
 	}
 
 	if(!rotationAxisInverted){
-		dataStructure->rotationSpeed = axis[rotationAxis]/rotationSpeedFactor;
+		msg.rotation_speed = axis[rotationAxis]/rotationSpeedFactor;
 	} else {
-		dataStructure->rotationSpeed = -axis[rotationAxis]/rotationSpeedFactor;
+		msg.rotation_speed = -axis[rotationAxis]/rotationSpeedFactor;
 	}
 
-	if (button[standUpButton] == 1) dataStructure->enableBalancing = true;
-	if (button[layDownButton] == 1) dataStructure->enableBalancing = false;
-	dataStructure->printMotorStatus = button[printStatusButton] == 1 ? true : false;
-	dataStructure->printRobotLocation = button[printLocationButton] == 1 ? true : false;
+	if (button[standUpButton] == 1) msg.enable_balancing = true;
+	if (button[layDownButton] == 1) msg.enable_balancing = false;
+	msg.print_status = button[printStatusButton] == 1 ? true : false;
 
-	dataStructure->robot_control_data_access.unlock();
+	joycon_control_publisher->publish(msg);
 }

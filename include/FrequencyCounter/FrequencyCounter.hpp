@@ -14,7 +14,7 @@ class FrequencyCounter {
 		float frequency;
 
 		unsigned int id;
-		char name[25];
+		char name[100];
 		static unsigned int id_counter; 
 
 		timespec previous2;
@@ -23,7 +23,7 @@ class FrequencyCounter {
 	public:
 		void count();
 		void count2();
-		FrequencyCounter();
+		FrequencyCounter(std::string customName = "");
 		~FrequencyCounter();
 };
 

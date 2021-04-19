@@ -7,7 +7,7 @@ using namespace std::chrono_literals;
 
 unsigned int FrequencyCounter::id_counter = 0;
 
-FrequencyCounter::FrequencyCounter() {
+FrequencyCounter::FrequencyCounter(std::string customName) {
 
 	this->previous = std::chrono::steady_clock::now();
 	this->timeNow = std::chrono::steady_clock::now();
@@ -16,7 +16,8 @@ FrequencyCounter::FrequencyCounter() {
 	this->frequency = 0.0;
 
 	this->id = FrequencyCounter::id_counter;
-	sprintf(name, "Frequency Counter %d", id);
+	if (customName.compare("") == 0) sprintf(name, "Frequency Counter %d", id);
+	else sprintf(name, "Frequency Counter %d: %s", id, customName.c_str());
 	FrequencyCounter::id_counter++;
 
 	RCLCPP_INFO(rclcpp::get_logger(name), "Ready.");

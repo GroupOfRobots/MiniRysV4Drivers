@@ -1,13 +1,9 @@
 #include "nodes/MotorsControllerNode.hpp"
 
-MotorsControllerNode::MotorsControllerNode(imu_data& imuStructure, robot_control_data& robotControlStructure, motor_data& motorStructure): Node("motors_regulator"){
+MotorsControllerNode::MotorsControllerNode(): Node("motors_regulator"){
+	counter = new FrequencyCounter("motors");
 	controller = new MotorsController();
-	// RCLCPP_INFO(this->get_logger(), "Motors class object initialized.");
-	// printMotorStatus();
 	controller->enableMotors();
-	imuDataStructure = &imuStructure;
-	robotControlDataStructure = &robotControlStructure;
-	motorDataStructure = &motorStructure;
 	controller->setBalancing(false);
 
 	this->declare_parameter("enableSpeedPID", rclcpp::ParameterValue(false));
@@ -39,6 +35,12 @@ MotorsControllerNode::MotorsControllerNode(imu_data& imuStructure, robot_control
 	this->declare_parameter("invertLeftMotor", rclcpp::ParameterValue(true));
 	this->declare_parameter("invertRightMotor", rclcpp::ParameterValue(true));
 	controller->setInvertSpeed(this->get_parameter("invertLeftMotor").get_value<bool>(), this->get_parameter("invertRightMotor").get_value<bool>());
+
+	motors_control_subscriber = this->create_subscription<minirys_interfaces::msg::MotorsControl>("motors_control", 10, std::bind(&MotorsControllerNode::motorsControlCallback, this, std::placeholders::_1));
+	imu_data_subscriber = this->create_subscription<minirys_interfaces::msg::ImuOutput>("imu_data", 10, std::bind(&MotorsControllerNode::imuDataCallback, this, std::placeholders::_1));
+	control_publisher = this->create_publisher<minirys_interfaces::msg::MotorsControllerOutput>("motors_controller_data", 10);
+	msg = minirys_interfaces::msg::MotorsControllerOutput();
+
 	this->declare_parameter("period", rclcpp::ParameterValue(10));
 	control_motors_timer = this->create_wall_timer(
 	std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&MotorsControllerNode::controlMotors, this));
@@ -52,23 +54,24 @@ MotorsControllerNode::MotorsControllerNode(imu_data& imuStructure, robot_control
 MotorsControllerNode::~MotorsControllerNode(){
 	controller->disableMotors();
 	delete controller;
+	delete counter;
+}
+
+void MotorsControllerNode::motorsControlCallback(const minirys_interfaces::msg::MotorsControl::SharedPtr msg) {
+	previousEnableBalancing = enableBalancing;
+	forwardSpeed = msg->forward_speed;
+	rotationSpeed = msg->rotation_speed;
+	enableBalancing = msg->enable_balancing;
+	printMotorStatus = msg->print_status;
+}
+
+void MotorsControllerNode::imuDataCallback(const minirys_interfaces::msg::ImuOutput::SharedPtr msg) {
+	tilt = msg->angle;
+	gyro = msg->angle;
 }
 
 void MotorsControllerNode::controlMotors() {
-	counter.count();
-	imuDataStructure->imu_data_access.lock();
-	tilt = imuDataStructure->tilt;
-	gyro = imuDataStructure->gyro;
-	imuDataStructure->imu_data_access.unlock();
-	// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f", tilt, gyro);
-
-	previousEnableBalancing = enableBalancing;
-	robotControlDataStructure->robot_control_data_access.lock();
-	forwardSpeed = robotControlDataStructure->forwardSpeed;
-	rotationSpeed = robotControlDataStructure->rotationSpeed;
-	enableBalancing = robotControlDataStructure->enableBalancing;
-	printMotorStatus = robotControlDataStructure->printMotorStatus;
-	robotControlDataStructure->robot_control_data_access.unlock();
+	counter->count();
 
 	leftSpeed = 0;
 	rightSpeed = 0;
@@ -100,16 +103,12 @@ void MotorsControllerNode::controlMotors() {
 	controller->setMotorSpeeds(leftSpeed, rightSpeed, ignoreAcceleration);
 	leftSpeed = controller->getMotorSpeedLeft();
 	rightSpeed = controller->getMotorSpeedRight();
-	// RCLCPP_INFO(this->get_logger(), "%f, %f", leftSpeed, rightSpeed);
-	motorDataStructure->motor_data_access.lock();
-	motorDataStructure->leftSpeed = leftSpeed;
-	motorDataStructure->rightSpeed = rightSpeed;
-	motorDataStructure->controller_acceleration = this->get_parameter("maxAcceleration").get_value<float>();
-	motorDataStructure->microstep = this->get_parameter("microstep").get_value<int>();
-	motorDataStructure->motor_data_access.unlock();
-	// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
-	// RCLCPP_INFO(this->get_logger(), "\t%1.4f\t%3.4f\t%3.4f", tilt, leftSpeed, rightSpeed);
-	// printMotorsStatusFromRegisters();
+
+	msg.header.stamp = this->get_clock()->now();
+	msg.left_wheel_speed = leftSpeed;
+	msg.right_wheel_speed = rightSpeed;
+	msg.acceleration = this->get_parameter("maxAcceleration").get_value<float>()*1000/this->get_parameter("period").get_value<int>();
+	control_publisher->publish(msg);
 
 	if (printMotorStatus) printMotorsStatusFromRegisters();
 }
