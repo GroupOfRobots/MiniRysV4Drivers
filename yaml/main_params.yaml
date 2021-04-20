@@ -45,10 +45,11 @@ odometry_calculator:
     wheel_radius: 0.055 # m
     # e_d: 1.0 # wheel diameter ration
     e_d: 1.0149760441813191 # wheel diameter ration
-    period: 10 # in milliseconds
+    period: 1 # in milliseconds
     initial_x: 0.0
     initial_y: 0.0
     initial_theta: 0.0
+    motors_acceleration: 1500.0 # steps/s2
 minirys_umbmark:
   ros__parameters:
     period: 10

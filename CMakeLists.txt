@@ -22,6 +22,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(minirys_interfaces REQUIRED)
 
 # including headers
@@ -34,6 +35,7 @@ install(
 set(AMENT_DEPENDENCIES
 	rclcpp
   sensor_msgs
+  nav_msgs
   minirys_interfaces
 )
 
