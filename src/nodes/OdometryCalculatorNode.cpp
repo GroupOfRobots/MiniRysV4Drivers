@@ -60,40 +60,43 @@ void OdometryCalculatorNode::updatePosition() {
 	currentTime = this->get_clock()->now().nanoseconds();
 	distance_l = 0;
 	distance_r = 0;
-	accelerationTime_l = 0;
-	accelerationTime_r = 0;
 
-	phaseDuration = period - (currentTime - lastMessageTime)/1000000000; //time from previous run to new message, if negative there was no new message since last run
+	phaseDuration = period - (double)(currentTime - lastMessageTime)/1000000000; //time from previous run to new message, if negative there was no new message since last run
+	std::cout << "\t" << period << "\t" << currentTime << "\t" << lastMessageTime << "\t" << (double)(currentTime - lastMessageTime)/1000000000 << "\t" << phaseDuration << std::endl;
 	if (phaseDuration > 0) { //new message from controller was obtained, calculate position at that time
+		accelerationTime_l = 0;
+		accelerationTime_r = 0;
 		if (previousSetSpeed_l != speed_l) { //acceleration left
 			accelerationTime_l = std::min(abs(previousSetSpeed_l - speed_l)/acceleration, phaseDuration);
-			distance_l = (speed_l*accelerationTime_l + (previousSetSpeed_l > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_l, 2)/2)*STEPS_TO_REVS*wheelRadius_l;
-			speed_l = speed_l + accelerationTime_l*acceleration*(previousSetSpeed_l > speed_l ? 1 : -1);
+			distance_l += (speed_l*accelerationTime_l + (previousSetSpeed_l > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_l, 2)/2)*STEPS_TO_RAD*wheelRadius_l;
+			speed_l += accelerationTime_l*acceleration*(previousSetSpeed_l > speed_l ? 1 : -1);
 		}
 		if (previousSetSpeed_r != speed_r) { // acceleration right
 			accelerationTime_r = std::min(abs(previousSetSpeed_r - speed_r)/acceleration, phaseDuration);
-			distance_r = (speed_r*accelerationTime_r + (previousSetSpeed_r > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_REVS*wheelRadius_r;
-			speed_r = speed_r + accelerationTime_r*acceleration*(previousSetSpeed_r > speed_l ? 1 : -1);
+			distance_r += (speed_r*accelerationTime_r + (previousSetSpeed_r > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_RAD*wheelRadius_r;
+			speed_r += accelerationTime_r*acceleration*(previousSetSpeed_r > speed_l ? 1 : -1);
 		}
 		// driving straight forward
-		distance_l += speed_l*(phaseDuration - accelerationTime_l)*STEPS_TO_REVS*wheelRadius_l;
-		distance_r += speed_r*(phaseDuration - accelerationTime_r)*STEPS_TO_REVS*wheelRadius_r;
+		distance_l += speed_l*(phaseDuration - accelerationTime_l)*STEPS_TO_RAD*wheelRadius_l;
+		distance_r += speed_r*(phaseDuration - accelerationTime_r)*STEPS_TO_RAD*wheelRadius_r;
 	}
 
 	phaseDuration = period - (phaseDuration > 0 ? phaseDuration : 0); // time from last message to now or this functions period, whichevers lower
+	accelerationTime_l = 0;
+	accelerationTime_r = 0;
 	if (setSpeed_l != speed_l) { //acceleration left
 		accelerationTime_l = std::min(abs(setSpeed_l - speed_l)/acceleration, phaseDuration);
-		distance_l = (speed_l*accelerationTime_l + (setSpeed_l > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_l, 2)/2)*STEPS_TO_REVS*wheelRadius_l;
-		speed_l = speed_l + accelerationTime_l*acceleration*(setSpeed_l > speed_l ? 1 : -1);
+		distance_l += (speed_l*accelerationTime_l + (setSpeed_l > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_l, 2)/2)*STEPS_TO_RAD*wheelRadius_l;
+		speed_l += accelerationTime_l*acceleration*(setSpeed_l > speed_l ? 1 : -1);
 	}
 	if (setSpeed_r != speed_r) { // acceleration right
 		accelerationTime_r = std::min(abs(setSpeed_r - speed_r)/acceleration, phaseDuration);
-		distance_r = (speed_r*accelerationTime_r + (setSpeed_r > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_REVS*wheelRadius_r;
-		speed_r = speed_r + accelerationTime_r*acceleration*(setSpeed_r > speed_l ? 1 : -1);
+		distance_r += (speed_r*accelerationTime_r + (setSpeed_r > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_RAD*wheelRadius_r;
+		speed_r += accelerationTime_r*acceleration*(setSpeed_r > speed_l ? 1 : -1);
 	}
 	// driving straight forward
-	distance_l += speed_l*(phaseDuration - accelerationTime_l)*STEPS_TO_REVS*wheelRadius_l;
-	distance_r += speed_r*(phaseDuration - accelerationTime_r)*STEPS_TO_REVS*wheelRadius_r;
+	distance_l += speed_l*(phaseDuration - accelerationTime_l)*STEPS_TO_RAD*wheelRadius_l;
+	distance_r += speed_r*(phaseDuration - accelerationTime_r)*STEPS_TO_RAD*wheelRadius_r;
 
 	angle += (distance_r - distance_l)/wheelDistance;
 	cropAngle();
@@ -109,20 +112,20 @@ void OdometryCalculatorNode::updatePosition() {
 	msg.pose.pose.orientation.z = sin(angle/2);
 	odometry_publisher->publish(msg);
 
-	printLocation();
+	// printLocation();
 }
 
 void OdometryCalculatorNode::receiveCurrentSetSpeeds(const minirys_interfaces::msg::MotorsControllerOutput::SharedPtr msg) {
 	previousSetSpeed_l = setSpeed_l;
 	previousSetSpeed_r = setSpeed_r;
-	lastMessageTime = msg->header.stamp.sec*1000000000 + msg->header.stamp.nanosec;
+	lastMessageTime = (int64_t)msg->header.stamp.sec*1000000000 + msg->header.stamp.nanosec;
 	if (setSpeed_l != msg->left_wheel_speed){
 		setSpeed_l = msg->left_wheel_speed;
 	}
 	if (setSpeed_r != msg->right_wheel_speed){
 		setSpeed_r = msg->right_wheel_speed;
 	}
-	RCLCPP_INFO(this->get_logger(), "%f\t%f", speed_l, speed_r);
+	// RCLCPP_INFO(this->get_logger(), "%f\t%f", speed_l, speed_r);
 }
 
 void OdometryCalculatorNode::printLocation() {

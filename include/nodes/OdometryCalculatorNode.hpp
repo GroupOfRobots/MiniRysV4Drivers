@@ -4,7 +4,7 @@
 #include "minirys_interfaces/msg/motors_controller_output.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
-#define STEPS_TO_REVS 2*M_PI/200 // muliply by wheel radius to receive distance
+#define STEPS_TO_RAD 2*M_PI/200 // muliply by wheel radius to receive distance
 
 class OdometryCalculatorNode : public rclcpp::Node{
 	public:

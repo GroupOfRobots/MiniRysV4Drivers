@@ -107,7 +107,6 @@ void MotorsControllerNode::controlMotors() {
 	msg.header.stamp = this->get_clock()->now();
 	msg.left_wheel_speed = leftSpeed;
 	msg.right_wheel_speed = rightSpeed;
-	msg.acceleration = this->get_parameter("maxAcceleration").get_value<float>()*1000/this->get_parameter("period").get_value<int>();
 	control_publisher->publish(msg);
 
 	if (printMotorStatus) printMotorsStatusFromRegisters();
