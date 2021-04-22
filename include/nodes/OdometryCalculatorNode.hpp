@@ -11,14 +11,14 @@ class OdometryCalculatorNode : public rclcpp::Node{
 		OdometryCalculatorNode();
 		~OdometryCalculatorNode();
 	private:
-		float period;
-		float x, y, angle;
-		float wheelDistance, wheelRadius_l, wheelRadius_r;
-		float speed_l, setSpeed_l, previousSetSpeed_l, speed_r, setSpeed_r, previousSetSpeed_r;
-		float acceleration;
-		int64_t currentTime, lastMessageTime;
-		float phaseDuration;
-		float accelerationTime_l, accelerationTime_r, distance_l, distance_r;
+		double period;
+		double x, y, angle;
+		double wheelDistance, wheelRadius_l, wheelRadius_r;
+		double speed_l, setSpeed_l, previousSetSpeed_l, speed_r, setSpeed_r, previousSetSpeed_r;
+		double acceleration;
+		double currentTime, lastMessageTime;
+		double phaseDuration;
+		double accelerationTime_l, accelerationTime_r, distance_l, distance_r;
 
 		FrequencyCounter *counter;
 		rclcpp::TimerBase::SharedPtr odometry_calculation_timer;
@@ -30,5 +30,5 @@ class OdometryCalculatorNode : public rclcpp::Node{
 		void updatePosition();
 		void printLocation();
 		void cropAngle();
-		void setPosition(float, float, float);
+		void setPosition(double, double, double);
 };

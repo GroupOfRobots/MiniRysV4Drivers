@@ -31,7 +31,7 @@ OdometryCalculatorNode::OdometryCalculatorNode(): Node("odometry_calculator") {
 	this->declare_parameter("e_d", rclcpp::ParameterValue(1.0));
 	wheelRadius_l = this->get_parameter("wheel_radius").get_value<float>()*2/(this->get_parameter("e_d").get_value<float>()+1); // m
 	wheelRadius_r = this->get_parameter("wheel_radius").get_value<float>()*2/(1/this->get_parameter("e_d").get_value<float>()+1); // m
-	currentTime = this->get_clock()->now().nanoseconds();
+	currentTime = (double)this->get_clock()->now().nanoseconds()/1000000000;
 	lastMessageTime = currentTime;
 	accelerationTime_l = 0;
 	accelerationTime_r = 0;
@@ -42,7 +42,7 @@ OdometryCalculatorNode::OdometryCalculatorNode(): Node("odometry_calculator") {
 	// RCLCPP_INFO(this->get_logger(), "%f\t%f\t%f", wheelDistance, wheelRadius_l, wheelRadius_r);
 
 	this->declare_parameter("period", rclcpp::ParameterValue(1));
-	period = (float)this->get_parameter("period").get_value<int>()/1000; // s
+	period = (double)this->get_parameter("period").get_value<int>()/1000; // s
 	motors_controller_subscriber = this->create_subscription<minirys_interfaces::msg::MotorsControllerOutput>("motors_controller_data", 10, std::bind(&OdometryCalculatorNode::receiveCurrentSetSpeeds, this, std::placeholders::_1));
 	odometry_publisher = this->create_publisher<nav_msgs::msg::Odometry>("odometry_data", 10);
 	msg = nav_msgs::msg::Odometry();
@@ -57,12 +57,11 @@ OdometryCalculatorNode::~OdometryCalculatorNode() {
 
 void OdometryCalculatorNode::updatePosition() {
 	counter->count();
-	currentTime = this->get_clock()->now().nanoseconds();
+	currentTime = (double)this->get_clock()->now().nanoseconds()/1000000000;
 	distance_l = 0;
 	distance_r = 0;
 
-	phaseDuration = period - (double)(currentTime - lastMessageTime)/1000000000; //time from previous run to new message, if negative there was no new message since last run
-	std::cout << "\t" << period << "\t" << currentTime << "\t" << lastMessageTime << "\t" << (double)(currentTime - lastMessageTime)/1000000000 << "\t" << phaseDuration << std::endl;
+	phaseDuration = period - (currentTime - lastMessageTime); //time from previous run to new message, if negative there was no new message since last run
 	if (phaseDuration > 0) { //new message from controller was obtained, calculate position at that time
 		accelerationTime_l = 0;
 		accelerationTime_r = 0;
@@ -73,8 +72,8 @@ void OdometryCalculatorNode::updatePosition() {
 		}
 		if (previousSetSpeed_r != speed_r) { // acceleration right
 			accelerationTime_r = std::min(abs(previousSetSpeed_r - speed_r)/acceleration, phaseDuration);
-			distance_r += (speed_r*accelerationTime_r + (previousSetSpeed_r > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_RAD*wheelRadius_r;
-			speed_r += accelerationTime_r*acceleration*(previousSetSpeed_r > speed_l ? 1 : -1);
+			distance_r += (speed_r*accelerationTime_r + (previousSetSpeed_r > speed_r ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_RAD*wheelRadius_r;
+			speed_r += accelerationTime_r*acceleration*(previousSetSpeed_r > speed_r ? 1 : -1);
 		}
 		// driving straight forward
 		distance_l += speed_l*(phaseDuration - accelerationTime_l)*STEPS_TO_RAD*wheelRadius_l;
@@ -91,8 +90,8 @@ void OdometryCalculatorNode::updatePosition() {
 	}
 	if (setSpeed_r != speed_r) { // acceleration right
 		accelerationTime_r = std::min(abs(setSpeed_r - speed_r)/acceleration, phaseDuration);
-		distance_r += (speed_r*accelerationTime_r + (setSpeed_r > speed_l ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_RAD*wheelRadius_r;
-		speed_r += accelerationTime_r*acceleration*(setSpeed_r > speed_l ? 1 : -1);
+		distance_r += (speed_r*accelerationTime_r + (setSpeed_r > speed_r ? 1 : -1)*acceleration*pow(accelerationTime_r, 2)/2)*STEPS_TO_RAD*wheelRadius_r;
+		speed_r += accelerationTime_r*acceleration*(setSpeed_r > speed_r ? 1 : -1);
 	}
 	// driving straight forward
 	distance_l += speed_l*(phaseDuration - accelerationTime_l)*STEPS_TO_RAD*wheelRadius_l;
@@ -118,14 +117,13 @@ void OdometryCalculatorNode::updatePosition() {
 void OdometryCalculatorNode::receiveCurrentSetSpeeds(const minirys_interfaces::msg::MotorsControllerOutput::SharedPtr msg) {
 	previousSetSpeed_l = setSpeed_l;
 	previousSetSpeed_r = setSpeed_r;
-	lastMessageTime = (int64_t)msg->header.stamp.sec*1000000000 + msg->header.stamp.nanosec;
+	lastMessageTime = (double)msg->header.stamp.sec + (double)msg->header.stamp.nanosec/1000000000;
 	if (setSpeed_l != msg->left_wheel_speed){
 		setSpeed_l = msg->left_wheel_speed;
 	}
 	if (setSpeed_r != msg->right_wheel_speed){
 		setSpeed_r = msg->right_wheel_speed;
 	}
-	// RCLCPP_INFO(this->get_logger(), "%f\t%f", speed_l, speed_r);
 }
 
 void OdometryCalculatorNode::printLocation() {
@@ -137,7 +135,7 @@ void OdometryCalculatorNode::cropAngle() {
 	if (angle < -M_PI) angle += 2*M_PI;
 }
 
-void OdometryCalculatorNode::setPosition(float ix, float iy, float itheta) {
+void OdometryCalculatorNode::setPosition(double ix, double iy, double itheta) {
 	x = ix;
 	y = iy;
 	angle = itheta;
