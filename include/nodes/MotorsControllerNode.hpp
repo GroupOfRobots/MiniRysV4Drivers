@@ -19,7 +19,7 @@ class MotorsControllerNode : public rclcpp::Node{
 
 		bool printMotorStatus;
 		int statusCounter;
-		long motorStatus0, motorStatus1;
+		long motorStatusLeft, motorStatusRight;
 		float speedConfiguration[4];
 
 		rclcpp::TimerBase::SharedPtr control_motors_timer;

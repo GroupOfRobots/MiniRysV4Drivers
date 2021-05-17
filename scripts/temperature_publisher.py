@@ -16,7 +16,7 @@ class TmpPublisher(Node):
 		units = self.declare_parameter("units", 'C')
 		self.tmp_units = units.value
 
-		self.publisher_ = self.create_publisher(Temperature, 'tmp', 10)
+		self.publisher_ = self.create_publisher(Temperature, 'temperature', 10)
 		self.tmp = TMP102('C', 0x48, 1)
 		self.tmp.setUnits(self.tmp_units)
 

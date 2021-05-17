@@ -104,9 +104,40 @@ void MotorsControllerNode::controlMotors() {
 	leftSpeed = controller->getMotorSpeedLeft();
 	rightSpeed = controller->getMotorSpeedRight();
 
+	// build message
 	msg.header.stamp = this->get_clock()->now();
 	msg.left_wheel_speed = leftSpeed;
 	msg.right_wheel_speed = rightSpeed;
+	this->controller->getMotorsStatusRegisters(std::ref(motorStatusLeft), std::ref(motorStatusRight));
+	// left motor status
+	msg.status_left.stall_bridge_b = ~motorStatusLeft & 0x4000;
+	msg.status_left.stall_bridge_a = ~motorStatusLeft & 0x2000;
+	msg.status_left.overcurrent = ~motorStatusLeft & 0x1000;
+	msg.status_left.thermal_shutdown = ~motorStatusLeft & 0x0800;
+	msg.status_left.thermal_warning = ~motorStatusLeft & 0x0400;
+	msg.status_left.undervoltage = ~motorStatusLeft & 0x0200;
+	msg.status_left.motor_stopped = ~motorStatusLeft & 0x0060;
+	msg.status_left.motor_accelerating = (~motorStatusLeft & 0x0040) & (motorStatusLeft & 0x0020);
+	msg.status_left.motor_decelerating = (motorStatusLeft & 0x0040) & (~motorStatusLeft & 0x0020);
+	msg.status_left.motor_running = motorStatusLeft & 0x0060;
+	msg.status_left.motor_direction = motorStatusLeft & 0x0010;
+	msg.status_left.busy = ~motorStatusLeft & 0x0002;
+	msg.status_left.high_impedance = motorStatusLeft & 0x0001;
+	// right motor status
+	msg.status_right.stall_bridge_b = ~motorStatusLeft & 0x4000;
+	msg.status_right.stall_bridge_a = ~motorStatusLeft & 0x2000;
+	msg.status_right.overcurrent = ~motorStatusLeft & 0x1000;
+	msg.status_right.thermal_shutdown = ~motorStatusLeft & 0x0800;
+	msg.status_right.thermal_warning = ~motorStatusLeft & 0x0400;
+	msg.status_right.undervoltage = ~motorStatusLeft & 0x0200;
+	msg.status_right.motor_stopped = ~motorStatusLeft & 0x0060;
+	msg.status_right.motor_accelerating = (~motorStatusLeft & 0x0040) & (motorStatusLeft & 0x0020);
+	msg.status_right.motor_decelerating = (motorStatusLeft & 0x0040) & (~motorStatusLeft & 0x0020);
+	msg.status_right.motor_running = motorStatusLeft & 0x0060;
+	msg.status_right.motor_direction = motorStatusLeft & 0x0010;
+	msg.status_right.busy = ~motorStatusLeft & 0x0002;
+	msg.status_right.high_impedance = motorStatusLeft & 0x0001;
+	// send message
 	control_publisher->publish(msg);
 
 	if (printMotorStatus) printMotorsStatusFromRegisters();
@@ -118,27 +149,27 @@ void MotorsControllerNode::printMotorsSpeedConfiguration(){
 }
 
 void MotorsControllerNode::printMotorsStatusFromRegisters(){
-	this->controller->getMotorsStatusRegisters(std::ref(motorStatus0), std::ref(motorStatus1));
-	RCLCPP_INFO(this->get_logger(), "Status number\t%d\n\tMOTOR: 0 - 0x%x\n\tMOTOR: 1 - 0x%x\n", statusCounter, motorStatus0, motorStatus1);
-	if ((motorStatus0 & 0x7F80) != 0x7e00) {
+	this->controller->getMotorsStatusRegisters(std::ref(motorStatusLeft), std::ref(motorStatusRight));
+	RCLCPP_INFO(this->get_logger(), "Status number\t%d\n\tMOTOR: 0 - 0x%x\n\tMOTOR: 1 - 0x%x\n", statusCounter, motorStatusLeft, motorStatusRight);
+	if ((motorStatusLeft & 0x7F80) != 0x7e00) {
 		RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 0.");
-		if (~motorStatus0 & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
-		if (~motorStatus0 & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
-		if (~motorStatus0 & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
-		if (~motorStatus0 & 0x0800) RCLCPP_FATAL(this->get_logger(), "\tThermal shutdown detected.");
-		if (~motorStatus0 & 0x0400) RCLCPP_WARN(this->get_logger(), "\tThermal warning detected.");
-		if (~motorStatus0 & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
-		if (motorStatus0 & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
-		if (motorStatus0 & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
+		if (~motorStatusLeft & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
+		if (~motorStatusLeft & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
+		if (~motorStatusLeft & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
+		if (~motorStatusLeft & 0x0800) RCLCPP_FATAL(this->get_logger(), "\tThermal shutdown detected.");
+		if (~motorStatusLeft & 0x0400) RCLCPP_WARN(this->get_logger(), "\tThermal warning detected.");
+		if (~motorStatusLeft & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
+		if (motorStatusLeft & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
+		if (motorStatusLeft & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
 	}
-	if ((motorStatus1 & 0x7F80) != 0x7e00) RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 1.");
-		if (~motorStatus1 & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
-		if (~motorStatus1 & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
-		if (~motorStatus1 & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
-		if (~motorStatus1 & 0x0800) RCLCPP_FATAL(this->get_logger(), "\tThermal shutdown detected.");
-		if (~motorStatus1 & 0x0400) RCLCPP_WARN(this->get_logger(), "\tThermal warning detected.");
-		if (~motorStatus1 & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
-		if (motorStatus1 & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
-		if (motorStatus1 & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
+	if ((motorStatusRight & 0x7F80) != 0x7e00) RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 1.");
+		if (~motorStatusRight & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
+		if (~motorStatusRight & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
+		if (~motorStatusRight & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
+		if (~motorStatusRight & 0x0800) RCLCPP_FATAL(this->get_logger(), "\tThermal shutdown detected.");
+		if (~motorStatusRight & 0x0400) RCLCPP_WARN(this->get_logger(), "\tThermal warning detected.");
+		if (~motorStatusRight & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
+		if (motorStatusRight & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
+		if (motorStatusRight & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
 	statusCounter++;
 }

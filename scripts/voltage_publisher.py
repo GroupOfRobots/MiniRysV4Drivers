@@ -14,7 +14,7 @@ class VolPublisher(Node):
 		period = self.declare_parameter("period", 5)
 		self.timer_period = period.value
 
-		self.publisher_ = self.create_publisher(BatteryState, 'vol', 10)
+		self.publisher_ = self.create_publisher(BatteryState, 'voltage', 10)
 		self.vol = MCP3221(0x48, 0, 3.3, [10, 37])
 
 		self.timer = self.create_timer(self.timer_period, self.timer_callback)

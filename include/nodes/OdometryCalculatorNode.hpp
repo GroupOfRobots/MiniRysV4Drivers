@@ -2,6 +2,7 @@
 #include "../data_structures.h"
 #include "../FrequencyCounter/FrequencyCounter.hpp"
 #include "minirys_interfaces/msg/motors_controller_output.hpp"
+#include "minirys_interfaces/srv/set_odometry_position.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
 #define STEPS_TO_RAD 2*M_PI/200 // muliply by wheel radius to receive distance
@@ -24,11 +25,14 @@ class OdometryCalculatorNode : public rclcpp::Node{
 		rclcpp::TimerBase::SharedPtr odometry_calculation_timer;
 		rclcpp::Subscription<minirys_interfaces::msg::MotorsControllerOutput>::SharedPtr motors_controller_subscriber;
 		rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry_publisher;
+		rclcpp::Service<minirys_interfaces::srv::SetOdometryPosition>::SharedPtr set_position_service;
 		nav_msgs::msg::Odometry msg;
 
 		void receiveCurrentSetSpeeds(const minirys_interfaces::msg::MotorsControllerOutput::SharedPtr msg);
 		void updatePosition();
 		void printLocation();
 		void cropAngle();
+		void setOdometryPosition(const std::shared_ptr<minirys_interfaces::srv::SetOdometryPosition::Request> request,
+			std::shared_ptr<minirys_interfaces::srv::SetOdometryPosition::Response> response);
 		void setPosition(double, double, double);
 };

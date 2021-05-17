@@ -46,6 +46,7 @@ OdometryCalculatorNode::OdometryCalculatorNode(): Node("odometry_calculator") {
 	motors_controller_subscriber = this->create_subscription<minirys_interfaces::msg::MotorsControllerOutput>("motors_controller_data", 10, std::bind(&OdometryCalculatorNode::receiveCurrentSetSpeeds, this, std::placeholders::_1));
 	odometry_publisher = this->create_publisher<nav_msgs::msg::Odometry>("odometry_data", 10);
 	msg = nav_msgs::msg::Odometry();
+	set_position_service = this->create_service<minirys_interfaces::srv::SetOdometryPosition>("set_odometry_position", std::bind(&OdometryCalculatorNode::setOdometryPosition, this, std::placeholders::_1, std::placeholders::_2));
 	odometry_calculation_timer = this->create_wall_timer(
 	std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&OdometryCalculatorNode::updatePosition, this));
 	RCLCPP_INFO(this->get_logger(), "Odometry calculator initialized.");
@@ -133,6 +134,14 @@ void OdometryCalculatorNode::printLocation() {
 void OdometryCalculatorNode::cropAngle() {
 	if (angle > M_PI) angle -= 2*M_PI;
 	if (angle < -M_PI) angle += 2*M_PI;
+}
+
+void OdometryCalculatorNode::setOdometryPosition(const std::shared_ptr<minirys_interfaces::srv::SetOdometryPosition::Request> request,
+			std::shared_ptr<minirys_interfaces::srv::SetOdometryPosition::Response> response){
+	x = request.get()->pose.position.x;
+	y = request.get()->pose.position.y;
+	angle = atan2(2*(request.get()->pose.orientation.w*request.get()->pose.orientation.z+request.get()->pose.orientation.x*request.get()->pose.orientation.y),
+		1-2*(pow(request.get()->pose.orientation.y, 2)+pow(request.get()->pose.orientation.z, 2)));
 }
 
 void OdometryCalculatorNode::setPosition(double ix, double iy, double itheta) {
