@@ -1,3 +1,6 @@
+minirys_communication:
+  ros_parameters:
+    period: 1 #ms
 joycon_receiver:
   ros__parameters:
     forwardAxis: 1

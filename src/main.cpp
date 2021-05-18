@@ -7,6 +7,7 @@
 #include "nodes/JoyconReceiverNode.hpp"
 #include "nodes/MotorsControllerNode.hpp"
 #include "nodes/UMBmarkNode.hpp"
+#include "nodes/CommunicationNode.hpp"
 // #include "nodes/TOFReaderNode.hpp"
 // #include "nodes/TOFReaderSTMNode.hpp"
 
@@ -51,21 +52,23 @@ int main(int argc, char * argv[]) {
 	odometry_data odometry_data_structure;
 	// tof_data tof_data_structure;
 
-	auto JoyconReceiver = std::make_shared<JoyconReceiverNode>();
+	// auto JoyconReceiver = std::make_shared<JoyconReceiverNode>();
 	// auto ImuReader = std::make_shared<ImuReaderNode>();
 	// auto UMBmark = std::make_shared<UMBmarkNode>(std::ref(robot_control_data_structure), std::ref(odometry_data_structure));
-	auto MotorsController = std::make_shared<MotorsControllerNode>();
-	auto OdometryCalculator = std::make_shared<OdometryCalculatorNode>();
+	// auto MotorsController = std::make_shared<MotorsControllerNode>();
+	// auto OdometryCalculator = std::make_shared<OdometryCalculatorNode>();
 	// auto TOFReader = std::make_shared<TOFReaderNode>(std::ref(tof_data_structure));
 	// auto TOFReaderSTM = std::make_shared<TOFReaderSTMNode>(std::ref(tof_data_structure));
+	auto Communication = std::make_shared<CommunicationNode>();
 
-	executor.add_node(JoyconReceiver);
+	// executor.add_node(JoyconReceiver);
 	// executor.add_node(ImuReader);
 	// executor.add_node(UMBmark);
-	executor.add_node(MotorsController);
-	executor.add_node(OdometryCalculator);
+	// executor.add_node(MotorsController);
+	// executor.add_node(OdometryCalculator);
 	// executor.add_node(TOFReader);
 	// executor.add_node(TOFReaderSTM);
+	executor.add_node(Communication);
 
 	executor.spin();
 	rclcpp::shutdown();

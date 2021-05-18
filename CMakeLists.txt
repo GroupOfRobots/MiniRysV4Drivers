@@ -73,6 +73,7 @@ set(SOURCE_FILES
   src/nodes/TOFReaderSTMNode.cpp
   src/nodes/MotorsControllerNode.cpp
   src/nodes/UMBmarkNode.cpp
+  src/nodes/CommunicationNode.cpp
 )
 
 add_library(${PROJECT_NAME}_source ${SOURCE_FILES})
