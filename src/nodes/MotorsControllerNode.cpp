@@ -124,19 +124,19 @@ void MotorsControllerNode::controlMotors() {
 	msg.status_left.busy = ~motorStatusLeft & 0x0002;
 	msg.status_left.high_impedance = motorStatusLeft & 0x0001;
 	// right motor status
-	msg.status_right.stall_bridge_b = ~motorStatusLeft & 0x4000;
-	msg.status_right.stall_bridge_a = ~motorStatusLeft & 0x2000;
-	msg.status_right.overcurrent = ~motorStatusLeft & 0x1000;
-	msg.status_right.thermal_shutdown = ~motorStatusLeft & 0x0800;
-	msg.status_right.thermal_warning = ~motorStatusLeft & 0x0400;
-	msg.status_right.undervoltage = ~motorStatusLeft & 0x0200;
-	msg.status_right.motor_stopped = ~motorStatusLeft & 0x0060;
-	msg.status_right.motor_accelerating = (~motorStatusLeft & 0x0040) & (motorStatusLeft & 0x0020);
-	msg.status_right.motor_decelerating = (motorStatusLeft & 0x0040) & (~motorStatusLeft & 0x0020);
-	msg.status_right.motor_running = motorStatusLeft & 0x0060;
-	msg.status_right.motor_direction = motorStatusLeft & 0x0010;
-	msg.status_right.busy = ~motorStatusLeft & 0x0002;
-	msg.status_right.high_impedance = motorStatusLeft & 0x0001;
+	msg.status_right.stall_bridge_b = ~motorStatusRight & 0x4000;
+	msg.status_right.stall_bridge_a = ~motorStatusRight & 0x2000;
+	msg.status_right.overcurrent = ~motorStatusRight & 0x1000;
+	msg.status_right.thermal_shutdown = ~motorStatusRight & 0x0800;
+	msg.status_right.thermal_warning = ~motorStatusRight & 0x0400;
+	msg.status_right.undervoltage = ~motorStatusRight & 0x0200;
+	msg.status_right.motor_stopped = ~motorStatusRight & 0x0060;
+	msg.status_right.motor_accelerating = (~motorStatusRight & 0x0040) & (motorStatusRight & 0x0020);
+	msg.status_right.motor_decelerating = (motorStatusRight & 0x0040) & (~motorStatusRight & 0x0020);
+	msg.status_right.motor_running = motorStatusRight & 0x0060;
+	msg.status_right.motor_direction = motorStatusRight & 0x0010;
+	msg.status_right.busy = ~motorStatusRight & 0x0002;
+	msg.status_right.high_impedance = motorStatusRight & 0x0001;
 	// send message
 	control_publisher->publish(msg);
 
