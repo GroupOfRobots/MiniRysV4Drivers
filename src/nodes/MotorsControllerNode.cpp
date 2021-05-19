@@ -54,7 +54,6 @@ MotorsControllerNode::MotorsControllerNode(): Node("motors_regulator"){
 	rotationSpeed = 0;
 	enableBalancing = false;
 	previousEnableBalancing = false;
-	printMotorStatus = false;
 }
 
 MotorsControllerNode::~MotorsControllerNode(){
@@ -64,11 +63,9 @@ MotorsControllerNode::~MotorsControllerNode(){
 }
 
 void MotorsControllerNode::motorsControlCallback(const minirys_interfaces::msg::MotorsControl::SharedPtr msg) {
-	previousEnableBalancing = enableBalancing;
 	forwardSpeed = msg->forward_speed;
 	rotationSpeed = msg->rotation_speed;
 	enableBalancing = msg->enable_balancing;
-	printMotorStatus = msg->print_status;
 }
 
 void MotorsControllerNode::imuDataCallback(const minirys_interfaces::msg::ImuOutput::SharedPtr msg) {
@@ -146,7 +143,8 @@ void MotorsControllerNode::controlMotors() {
 	// send message
 	control_publisher->publish(msg);
 
-	if (printMotorStatus) printMotorsStatusFromRegisters();
+	// printMotorsStatusFromRegisters();
+	previousEnableBalancing = enableBalancing;
 }
 
 void MotorsControllerNode::printMotorsSpeedConfiguration(){

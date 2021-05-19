@@ -3,15 +3,21 @@
 CommunicationNode::CommunicationNode(): Node("minirys_communication"){
 	counter = new FrequencyCounter("communication");
 
+	minirys_data_publisher = this->create_publisher<minirys_interfaces::msg::MinirysOutput>("minirys_output", 10);
+	outputMessage = minirys_interfaces::msg::MinirysOutput();
+	motors_control_publisher = this->create_publisher<minirys_interfaces::msg::MotorsControl>("motors_control", 10);
+	motorsMessage = minirys_interfaces::msg::MotorsControl();
+
 	imu_data_subscriber = this->create_subscription<minirys_interfaces::msg::ImuOutput>("imu_data", 10, std::bind(&CommunicationNode::imuDataCallback, this, std::placeholders::_1));
 	temperature_subscriber = this->create_subscription<sensor_msgs::msg::Temperature>("temperature", 10, std::bind(&CommunicationNode::temperatureCallback, this, std::placeholders::_1));
 	battery_subscriber = this->create_subscription<sensor_msgs::msg::BatteryState>("voltage", 10, std::bind(&CommunicationNode::batteryCallback, this, std::placeholders::_1));
 	tof_data_subscriber = this->create_subscription<minirys_interfaces::msg::TofOutput>("tof_data", 10, std::bind(&CommunicationNode::tofDataCallback, this, std::placeholders::_1));
 	motors_controller_data_subscriber = this->create_subscription<minirys_interfaces::msg::MotorsControllerOutput>("motors_controller_data", 10, std::bind(&CommunicationNode::motorsControllerDataCallback, this, std::placeholders::_1));
 	odometry_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("odometry_data", 10, std::bind(&CommunicationNode::odometryDataCallback, this, std::placeholders::_1));
+	minirys_subscriber = this->create_subscription<minirys_interfaces::msg::MinirysInput>("minirys_input", 10, std::bind(&CommunicationNode::minirysCallback, this, std::placeholders::_1));
 
-	minirys_data_publisher = this->create_publisher<minirys_interfaces::msg::MinirysOutput>("minirys", 10);
-	outputMessage = minirys_interfaces::msg::MinirysOutput();
+	set_odometry_position_client = this->create_client<minirys_interfaces::srv::SetOdometryPosition>("set_odometry_position");
+	set_odometry_position_request = std::make_shared<minirys_interfaces::srv::SetOdometryPosition::Request>();
 
 	this->declare_parameter("period", rclcpp::ParameterValue(1));
 	communication_timer = this->create_wall_timer(
@@ -21,6 +27,19 @@ CommunicationNode::CommunicationNode(): Node("minirys_communication"){
 
 CommunicationNode::~CommunicationNode() {
 	delete counter;
+}
+
+void CommunicationNode::minirysCallback(const minirys_interfaces::msg::MinirysInput::SharedPtr msg) {
+	RCLCPP_INFO(this->get_logger(), "input");
+	motorsMessage.forward_speed = msg->forward_speed;
+	motorsMessage.rotation_speed = msg->rotation_speed;
+	motorsMessage.enable_balancing = msg->enable_balancing;
+	motors_control_publisher->publish(motorsMessage);
+	if (msg->set_new_odometry_position) {
+		set_odometry_position_request->pose = msg->new_odometry_position;
+		set_odometry_position_client->async_send_request(set_odometry_position_request);
+		// RCLCPP_INFO(this->get_logger(), "New odometry position set.");
+	}
 }
 
 void CommunicationNode::sendData() {

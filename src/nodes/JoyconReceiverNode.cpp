@@ -58,13 +58,13 @@ JoyconReceiverNode::JoyconReceiverNode(): Node("joycon_receiver") {
 	standUpButton = this->get_parameter("standUpButton").get_value<int>();
 	this->declare_parameter("layDownButton", rclcpp::ParameterValue(3));
 	layDownButton = this->get_parameter("layDownButton").get_value<int>();
-	this->declare_parameter("printStatusButton", rclcpp::ParameterValue(2));
-	printStatusButton = this->get_parameter("printStatusButton").get_value<int>();
-	this->declare_parameter("printLocationButton", rclcpp::ParameterValue(0));
-	printLocationButton = this->get_parameter("printLocationButton").get_value<int>();
+	// this->declare_parameter("printStatusButton", rclcpp::ParameterValue(2));
+	// printStatusButton = this->get_parameter("printStatusButton").get_value<int>();
+	// this->declare_parameter("printLocationButton", rclcpp::ParameterValue(0));
+	// printLocationButton = this->get_parameter("printLocationButton").get_value<int>();
 
-	joycon_control_publisher = this->create_publisher<minirys_interfaces::msg::MotorsControl>("motors_control", 10);
-	msg = minirys_interfaces::msg::MotorsControl();
+	joycon_control_publisher = this->create_publisher<minirys_interfaces::msg::MinirysInput>("minirys_input", 10);
+	msg = minirys_interfaces::msg::MinirysInput();
 
 	this->declare_parameter("period", rclcpp::ParameterValue(10));
 	get_joycon_state_timer = this->create_wall_timer(
@@ -113,7 +113,6 @@ void JoyconReceiverNode::get_joycon_state() {
 
 	if (button[standUpButton] == 1) msg.enable_balancing = true;
 	if (button[layDownButton] == 1) msg.enable_balancing = false;
-	msg.print_status = button[printStatusButton] == 1 ? true : false;
 
 	joycon_control_publisher->publish(msg);
 }
