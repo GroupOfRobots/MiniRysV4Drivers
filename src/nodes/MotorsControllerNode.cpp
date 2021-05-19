@@ -49,6 +49,12 @@ MotorsControllerNode::MotorsControllerNode(): Node("motors_regulator"){
 	statusCounter = 0;
 	printMotorsSpeedConfiguration();
 	printMotorsStatusFromRegisters();
+
+	forwardSpeed = 0;
+	rotationSpeed = 0;
+	enableBalancing = false;
+	previousEnableBalancing = false;
+	printMotorStatus = false;
 }
 
 MotorsControllerNode::~MotorsControllerNode(){

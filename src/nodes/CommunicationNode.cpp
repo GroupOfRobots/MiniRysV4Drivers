@@ -7,7 +7,7 @@ CommunicationNode::CommunicationNode(): Node("minirys_communication"){
 	temperature_subscriber = this->create_subscription<sensor_msgs::msg::Temperature>("temperature", 10, std::bind(&CommunicationNode::temperatureCallback, this, std::placeholders::_1));
 	battery_subscriber = this->create_subscription<sensor_msgs::msg::BatteryState>("voltage", 10, std::bind(&CommunicationNode::batteryCallback, this, std::placeholders::_1));
 	tof_data_subscriber = this->create_subscription<minirys_interfaces::msg::TofOutput>("tof_data", 10, std::bind(&CommunicationNode::tofDataCallback, this, std::placeholders::_1));
-	motors_controller_data_subscriber = this->create_subscription<minirys_interfaces::msg::MotorsControllerOutput>("tof_data", 10, std::bind(&CommunicationNode::motorsControllerDataCallback, this, std::placeholders::_1));
+	motors_controller_data_subscriber = this->create_subscription<minirys_interfaces::msg::MotorsControllerOutput>("motors_controller_data", 10, std::bind(&CommunicationNode::motorsControllerDataCallback, this, std::placeholders::_1));
 	odometry_data_subscriber = this->create_subscription<nav_msgs::msg::Odometry>("odometry_data", 10, std::bind(&CommunicationNode::odometryDataCallback, this, std::placeholders::_1));
 
 	minirys_data_publisher = this->create_publisher<minirys_interfaces::msg::MinirysOutput>("minirys", 10);
@@ -29,7 +29,7 @@ void CommunicationNode::sendData() {
 }
 
 void CommunicationNode::motorsControllerDataCallback(const minirys_interfaces::msg::MotorsControllerOutput::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "controller");
+	// RCLCPP_INFO(this->get_logger(), "controller");
 	outputMessage.motors.header = msg->header;
 	outputMessage.motors.left_wheel_speed = msg->left_wheel_speed;
 	outputMessage.motors.right_wheel_speed = msg->right_wheel_speed;
@@ -38,7 +38,7 @@ void CommunicationNode::motorsControllerDataCallback(const minirys_interfaces::m
 }
 
 void CommunicationNode::odometryDataCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "odometry");
+	// RCLCPP_INFO(this->get_logger(), "odometry");
 	outputMessage.odometry.header = msg->header;
 	outputMessage.odometry.child_frame_id = msg->child_frame_id;
 	outputMessage.odometry.pose = msg->pose;
@@ -46,7 +46,7 @@ void CommunicationNode::odometryDataCallback(const nav_msgs::msg::Odometry::Shar
 }
 
 void CommunicationNode::imuDataCallback(const minirys_interfaces::msg::ImuOutput::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "imu");
+	// RCLCPP_INFO(this->get_logger(), "imu");
 	outputMessage.imu.header = msg->header;
 	outputMessage.imu.raw_data = msg->raw_data;
 	outputMessage.imu.angle = msg->angle;
@@ -54,7 +54,7 @@ void CommunicationNode::imuDataCallback(const minirys_interfaces::msg::ImuOutput
 }
 
 void CommunicationNode::tofDataCallback(const minirys_interfaces::msg::TofOutput::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "tof");
+	// RCLCPP_INFO(this->get_logger(), "tof");
 	outputMessage.tof.header = msg->header;
 	for (int i = 0; i < 6; i++) {
 		outputMessage.tof.tof[i] = msg->tof[i];
@@ -62,14 +62,14 @@ void CommunicationNode::tofDataCallback(const minirys_interfaces::msg::TofOutput
 }
 
 void CommunicationNode::temperatureCallback(const sensor_msgs::msg::Temperature::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "temperature");
+	// RCLCPP_INFO(this->get_logger(), "temperature");
 	outputMessage.temperature.header = msg->header;
 	outputMessage.temperature.temperature = msg->temperature;
 	outputMessage.temperature.variance = msg->variance;
 }
 
 void CommunicationNode::batteryCallback(const sensor_msgs::msg::BatteryState::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "voltage");
+	// RCLCPP_INFO(this->get_logger(), "voltage");
 	outputMessage.battery.header = msg->header;
 	outputMessage.battery.voltage = msg->voltage;
 	outputMessage.battery.percentage = msg->percentage;
