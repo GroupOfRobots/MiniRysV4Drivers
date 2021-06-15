@@ -1,10 +1,15 @@
 #!/usr/bin/python3
 import math
+# import numpy
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
 
 L = 0.2
 b = 0.127
 
-file = open("UMBmark_output_post2")
+file = open("UMBmark_output_pre")
+# file = open("UMBmark_output_post")
+# file = open("UMBmark_output_post2")
 odometryData_x = []
 odometryData_y = []
 globalData_x = []
@@ -15,14 +20,18 @@ for line in file:
 	globalData_y.append(float(temp[1]))
 	odometryData_x.append(float(temp[3]))
 	odometryData_y.append(float(temp[4]))
+file.close()
 
-ex = [globalData_x[i] - odometryData_x[i] for i in range(10)]
-ey = [globalData_y[i] - odometryData_y[i] for i in range(10)]
+n = int(len(globalData_x))
+n2 = int(n/2)
 
-x_cg_CW = sum(ex[0:4])/5
-x_cg_CCW = sum(ex[5:9])/5
-y_cg_CW = sum(ey[0:4])/5
-y_cg_CCW = sum(ey[5:9])/5
+ex = [globalData_x[i] - odometryData_x[i] for i in range(n)]
+ey = [globalData_y[i] - odometryData_y[i] for i in range(n)]
+
+x_cg_CW = sum(ex[0:n2])/n2
+x_cg_CCW = sum(ex[n2:n])/n2
+y_cg_CW = sum(ey[0:n2])/n2
+y_cg_CCW = sum(ey[n2:n])/n2
 
 print("Average errors(x CW, x CCW, y CW, y CCW):\n" + "\n".join(str(i) for i in [x_cg_CW, x_cg_CCW, y_cg_CW, y_cg_CCW]))
 
@@ -46,56 +55,49 @@ print("Average:\nE_d:\t" + str((Ed_x+Ed_y)/2) + "\nE_b:\t" + str((Eb_x+Eb_y)/2))
 
 r_cg_CW = math.sqrt(x_cg_CW**2 + y_cg_CW**2)
 r_cg_CCW = math.sqrt(x_cg_CCW**2 + y_cg_CCW**2)
+print("Center of gravity:\n\tCW:\t" + str(r_cg_CW) + "\n\tCCW:\t" + str(r_cg_CCW))
 E = max([r_cg_CW, r_cg_CCW])
 print("Measure of odometric accuracy for systematic errors: " + str(E))
 
-# pre
-# Average errors(x CW, x CCW, y CW, y CCW):
-# -0.010718976
-# 0.0061535692
-# -0.015236762639999998
-# -0.00534327936
-# From x:
-# E_d:	1.013482616389831
-# E_b:	1.0036462823697798
-# From y:
-# E_d:	1.0164694719728073
-# E_b:	1.007935459587154
-# Average:
-# E_d:	1.0149760441813191
-# E_b:	1.0057908709784669
-# Measure of odometric accuracy for systematic errors: 0.01862942248799666
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111)
+# print data
+ax.plot([ex[0:5]], [ey[0:5]], 'c.', label = r'$(\epsilon_x, \epsilon_y)_{CW}$')
+ax.plot([x_cg_CW], [y_cg_CW], 'bo', label = r'$r_{c.g.,CW}$')
+ax.plot([ex[5:10]], [ey[5:10]], 'm.', label = r'$(\epsilon_x, \epsilon_y)_{CCW}$')
+ax.plot([x_cg_CCW], [y_cg_CCW], 'ro', label = r'$r_{c.g.,CCW}$')
 
-# post
-# Average errors(x CW, x CCW, y CW, y CCW):
-# -0.0017289499999999995
-# 0.007386696
-# -0.0011294320000000003
-# -0.005320512
-# From x:
-# E_d:	1.0072617761779428
-# E_b:	0.9955178885576719
-# From y:
-# E_d:	1.0051327681184452
-# E_b:	0.9966759307932112
-# Average:
-# E_d:	1.006197272148194
-# E_b:	0.9960969096754415
-# Measure of odometric accuracy for systematic errors: 0.009103357937517343
+# maksymalna odległość od osi
+m = 1.2*max([abs(x) for x in ex+ey])
+# szerokość osi
+aw = m/400
+# szerokość głowy strzałki
+hw = m/40
+# odległość napisu od osi
+td = m/40
 
-# post 2
-# Average errors(x CW, x CCW, y CW, y CCW):
-# 0.00294127
-# -0.0008492360000000001
-# -0.0015880240000000008
-# 0.0026605060000000004
-# From x:
-# E_d:	0.9969958080500564
-# E_b:	0.9983379791508867
-# From y:
-# E_d:	0.9991490796630533
-# E_b:	1.003392341827922
-# Average:
-# E_d:	0.9980724438565549
-# E_b:	1.0008651604894043
-# Measure of odometric accuracy for systematic errors: 0.00334258723707789
+# osie x i y
+ax.arrow(-m, 0, 2*m, 0, length_includes_head = True, width = aw, head_width = hw, head_length = hw, color='k')
+ax.arrow(0, -m, 0, 2*m, length_includes_head = True, width = aw, head_width = hw, head_length = hw, color='k')
+
+# CW
+# ax.arrow(x_cg_CW, y_cg_CW, 0, -y_cg_CW, length_includes_head = True, width = aw, head_width = hw, head_length = hw, color='b', label = 'x c.g.,CW')
+# plt.text(x_cg_CW+td, y_cg_CW/2, 'x')
+# ax.arrow(x_cg_CW, y_cg_CW, -x_cg_CW, 0, length_includes_head = True, width = aw, head_width = hw, head_length = hw, color='b', label = 'y c.g.,CW')
+# plt.text(x_cg_CW/2, y_cg_CW+td, 'y')
+ax.arrow(x_cg_CW, y_cg_CW, -x_cg_CW, -y_cg_CW, length_includes_head = True, width = aw, head_width = 2*hw, head_length = hw, color='b')
+# plt.text(x_cg_CW/2+numpy.sign([x_cg_CW])[0]*td, y_cg_CW/2-numpy.sign([y_cg_CW])[0]*td, 'r CW')
+
+# CCS
+# ax.arrow(x_cg_CCW, y_cg_CCW, 0, -y_cg_CCW, length_includes_head = True, width = aw, head_width = hw, head_length = hw, color='r', label = 'x c.g.,CCW')
+# plt.text(x_cg_CCW+td, y_cg_CCW/2, 'x')
+# ax.arrow(x_cg_CCW, y_cg_CCW, -x_cg_CCW, 0, length_includes_head = True, width = aw, head_width = hw, head_length = hw, color='r', label = 'y c.g.,CCW')
+# plt.text(x_cg_CCW/2, y_cg_CCW+td, 'y')
+ax.arrow(x_cg_CCW, y_cg_CCW, -x_cg_CCW, -y_cg_CCW, length_includes_head = True, width = aw, head_width = 2*hw, head_length = hw, color='r')
+# plt.text(x_cg_CCW/2+numpy.sign([x_cg_CCW])[0]*td, y_cg_CCW/2-numpy.sign([y_cg_CCW])[0]*td, 'r CCW')
+
+plt.axis([-m, m, -m, m])
+plt.xlabel('$\epsilon_x[m]$')
+plt.ylabel('$\epsilon_y[m]$')
+ax.legend()
+plt.show()

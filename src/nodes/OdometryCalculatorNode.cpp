@@ -143,9 +143,3 @@ void OdometryCalculatorNode::setOdometryPosition(const std::shared_ptr<minirys_i
 	angle = atan2(2*(request.get()->pose.orientation.w*request.get()->pose.orientation.z+request.get()->pose.orientation.x*request.get()->pose.orientation.y),
 		1-2*(pow(request.get()->pose.orientation.y, 2)+pow(request.get()->pose.orientation.z, 2)));
 }
-
-void OdometryCalculatorNode::setPosition(double ix, double iy, double itheta) {
-	x = ix;
-	y = iy;
-	angle = itheta;
-}

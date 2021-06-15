@@ -71,6 +71,10 @@ void ImuReaderNode::read_imu_data() {
 	gyroX = (SensorOne->readFloatGyroX() - gyroOffsetX)*M_PI/180;
 	gyroY = (SensorOne->readFloatGyroY() - gyroOffsetY)*M_PI/180;
 	gyroZ = (SensorOne->readFloatGyroZ() - gyroOffsetZ)*M_PI/180;
+	
+	previousAngles[2] = previousAngles[1];
+	previousAngles[1] = previousAngles[0];
+	previousAngles[0] = calculatedAngle;
 	calculatedAngle = atan2(accelerationX, sqrt(accelerationY*accelerationY + accelerationZ*accelerationZ)) - angleCorrection;
 
 	filter();
@@ -92,7 +96,4 @@ void ImuReaderNode::filter() {
 	previousFilteredAngle = filteredAngle;
 	filteredAngle = (filteredAngle + gyroY*this->get_parameter("period").get_value<int>()/1000)*(1-this->get_parameter("filterFactor").get_value<float>())+this->get_parameter("filterFactor").get_value<float>()*(calculatedAngle+previousAngles[0]+previousAngles[1]+previousAngles[2])/4;
 	filteredGyro = (filteredAngle - previousFilteredAngle)*1000/this->get_parameter("period").get_value<int>();
-	previousAngles[2] = previousAngles[1];
-	previousAngles[1] = previousAngles[0];
-	previousAngles[0] = calculatedAngle;
 }

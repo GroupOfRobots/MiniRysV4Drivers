@@ -17,9 +17,8 @@ class MotorsControllerNode : public rclcpp::Node{
 		bool enableBalancing, previousEnableBalancing, ignoreAcceleration;
 		FrequencyCounter *counter;
 
-		bool printMotorStatus;
 		int statusCounter;
-		long motorStatusLeft, motorStatusRight;
+		motor_status motorStatusLeft, motorStatusRight;
 		float speedConfiguration[4];
 
 		rclcpp::TimerBase::SharedPtr control_motors_timer;
@@ -30,7 +29,6 @@ class MotorsControllerNode : public rclcpp::Node{
 
 		void controlMotors();
 		void printMotorsSpeedConfiguration();
-		void printMotorsStatusFromRegisters();
 		void motorsControlCallback(const minirys_interfaces::msg::MotorsControl::SharedPtr msg);
 		void imuDataCallback(const minirys_interfaces::msg::ImuOutput::SharedPtr msg);
 

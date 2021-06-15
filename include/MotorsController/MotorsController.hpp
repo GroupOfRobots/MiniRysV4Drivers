@@ -15,6 +15,13 @@
 
 void clipValue(float & value, float max);
 
+struct motor_status {
+	bool status[13];
+	motor_status(){
+		for (int i; i < 13; i++) status[i] = false;
+	};
+};
+
 class MotorsController {
 	private:
 		Motors *board;
@@ -78,6 +85,8 @@ class MotorsController {
 		float getMotorSpeedRight() const;
 
 		void getMotorsStatusRegisters(long &motor0, long &motor1);
+		motor_status getMotorStatusLeft();
+		motor_status getMotorStatusRight();
 		void getMotorsSpeedConfiguration(float &max, float &min, float &acc, float &dec);
 };
 

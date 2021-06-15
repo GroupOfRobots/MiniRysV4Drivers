@@ -1,8 +1,7 @@
 #include "nodes/TOFReaderNode.hpp"
 
-TOFReaderNode::TOFReaderNode(tof_data& structure): Node("tof_reader"){
-
-	dataStructure = &structure;
+TOFReaderNode::TOFReaderNode(): Node("tof_reader"){
+	counter = new  FrequencyCounter("tof");
 
 	bcm2835_gpio_fsel(GPIO_TOF_1, BCM2835_GPIO_FSEL_OUTP);
 	// bcm2835_gpio_fsel(GPIO_TOF_2, BCM2835_GPIO_FSEL_OUTP);
@@ -75,6 +74,9 @@ TOFReaderNode::TOFReaderNode(tof_data& structure): Node("tof_reader"){
 	// tofSensors[8]->setAddress(0x38);
 	// RCLCPP_INFO(this->get_logger(), "TOF sensor nine started at: 0x38");
 
+	tof_data_publisher = this->create_publisher<minirys_interfaces::msg::TofOutput>("tof_data", 10);
+	msg = minirys_interfaces::msg::TofOutput();
+
 	this->declare_parameter("period", rclcpp::ParameterValue(100));
 	for(int i = 0; i < NUM_OF_TOF; i++){
 		tofSensors[i]->startContinuous(this->get_parameter("period").get_value<int>());
@@ -88,13 +90,14 @@ TOFReaderNode::~TOFReaderNode() {
 		tofSensors[i]->disable();
 		delete tofSensors[i];
 	}
+	delete counter;
 }
 
 void TOFReaderNode::read_tof_data() {
-	counter.count();
-	dataStructure->tof_data_access.lock();
+	counter->count();
+	msg.header.stamp = this->get_clock()->now();
 	for(int i = 0; i < NUM_OF_TOF; i++){
-		dataStructure->measurement[i] = tofSensors[i]->readData(1);
+		msg.sensor[i].range = float(tofSensors[i]->readData(1))/1000;
 	}
-	dataStructure->tof_data_access.unlock();
+	tof_data_publisher->publish(msg);
 }

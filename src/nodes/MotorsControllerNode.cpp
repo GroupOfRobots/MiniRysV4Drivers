@@ -1,6 +1,6 @@
 #include "nodes/MotorsControllerNode.hpp"
 
-MotorsControllerNode::MotorsControllerNode(): Node("motors_regulator"){
+MotorsControllerNode::MotorsControllerNode(): Node("motors_controller"){
 	counter = new FrequencyCounter("motors");
 	controller = new MotorsController();
 	controller->enableMotors();
@@ -48,7 +48,6 @@ MotorsControllerNode::MotorsControllerNode(): Node("motors_regulator"){
 
 	statusCounter = 0;
 	printMotorsSpeedConfiguration();
-	printMotorsStatusFromRegisters();
 
 	forwardSpeed = 0;
 	rotationSpeed = 0;
@@ -78,7 +77,6 @@ void MotorsControllerNode::controlMotors() {
 
 	leftSpeed = 0;
 	rightSpeed = 0;
-	ignoreAcceleration = false;
 	controller->setPIDSpeedRegulatorEnabled(this->get_parameter("enableSpeedPID").get_value<bool>());
     controller->setPIDParameters(
 	    this->get_parameter("pidSpeedKp").get_value<float>(),
@@ -103,7 +101,7 @@ void MotorsControllerNode::controlMotors() {
 	} else controller->calculateSpeeds(tilt, gyro, forwardSpeed, rotationSpeed, std::ref(leftSpeed), std::ref(rightSpeed), (float)(this->get_parameter("period").get_value<int>())/1000);
 	// RCLCPP_INFO(this->get_logger(), "%3.4f\t%3.4f\t%3.4f\t%3.4f", forwardSpeed, rotationSpeed, leftSpeed, rightSpeed);
 
-	controller->setMotorSpeeds(leftSpeed, rightSpeed, ignoreAcceleration);
+	controller->setMotorSpeeds(leftSpeed, rightSpeed, false);
 	leftSpeed = controller->getMotorSpeedLeft();
 	rightSpeed = controller->getMotorSpeedRight();
 
@@ -111,35 +109,37 @@ void MotorsControllerNode::controlMotors() {
 	msg.header.stamp = this->get_clock()->now();
 	msg.left_wheel_speed = leftSpeed;
 	msg.right_wheel_speed = rightSpeed;
-	this->controller->getMotorsStatusRegisters(std::ref(motorStatusLeft), std::ref(motorStatusRight));
+	// this->controller->getMotorsStatusRegisters(std::ref(motorStatusLeft), std::ref(motorStatusRight));
+	motorStatusLeft = controller->getMotorStatusLeft();
+	motorStatusRight = controller->getMotorStatusRight();
 	// left motor status
-	msg.status_left.stall_bridge_b = ~motorStatusLeft & 0x4000;
-	msg.status_left.stall_bridge_a = ~motorStatusLeft & 0x2000;
-	msg.status_left.overcurrent = ~motorStatusLeft & 0x1000;
-	msg.status_left.thermal_shutdown = ~motorStatusLeft & 0x0800;
-	msg.status_left.thermal_warning = ~motorStatusLeft & 0x0400;
-	msg.status_left.undervoltage = ~motorStatusLeft & 0x0200;
-	msg.status_left.motor_stopped = ~motorStatusLeft & 0x0060;
-	msg.status_left.motor_accelerating = (~motorStatusLeft & 0x0040) & (motorStatusLeft & 0x0020);
-	msg.status_left.motor_decelerating = (motorStatusLeft & 0x0040) & (~motorStatusLeft & 0x0020);
-	msg.status_left.motor_running = motorStatusLeft & 0x0060;
-	msg.status_left.motor_direction = motorStatusLeft & 0x0010;
-	msg.status_left.busy = ~motorStatusLeft & 0x0002;
-	msg.status_left.high_impedance = motorStatusLeft & 0x0001;
+	msg.status_left.stall_bridge_b = motorStatusLeft.status[0];
+	msg.status_left.stall_bridge_a = motorStatusLeft.status[1];
+	msg.status_left.overcurrent = motorStatusLeft.status[2];
+	msg.status_left.thermal_shutdown = motorStatusLeft.status[3];
+	msg.status_left.thermal_warning = motorStatusLeft.status[4];
+	msg.status_left.undervoltage = motorStatusLeft.status[5];
+	msg.status_left.motor_stopped = motorStatusLeft.status[6];
+	msg.status_left.motor_accelerating = motorStatusLeft.status[7];
+	msg.status_left.motor_decelerating = motorStatusLeft.status[8];
+	msg.status_left.motor_running = motorStatusLeft.status[9];
+	msg.status_left.motor_direction = motorStatusLeft.status[10];
+	msg.status_left.busy = motorStatusLeft.status[11];
+	msg.status_left.high_impedance = motorStatusLeft.status[12];
 	// right motor status
-	msg.status_right.stall_bridge_b = ~motorStatusRight & 0x4000;
-	msg.status_right.stall_bridge_a = ~motorStatusRight & 0x2000;
-	msg.status_right.overcurrent = ~motorStatusRight & 0x1000;
-	msg.status_right.thermal_shutdown = ~motorStatusRight & 0x0800;
-	msg.status_right.thermal_warning = ~motorStatusRight & 0x0400;
-	msg.status_right.undervoltage = ~motorStatusRight & 0x0200;
-	msg.status_right.motor_stopped = ~motorStatusRight & 0x0060;
-	msg.status_right.motor_accelerating = (~motorStatusRight & 0x0040) & (motorStatusRight & 0x0020);
-	msg.status_right.motor_decelerating = (motorStatusRight & 0x0040) & (~motorStatusRight & 0x0020);
-	msg.status_right.motor_running = motorStatusRight & 0x0060;
-	msg.status_right.motor_direction = motorStatusRight & 0x0010;
-	msg.status_right.busy = ~motorStatusRight & 0x0002;
-	msg.status_right.high_impedance = motorStatusRight & 0x0001;
+	msg.status_right.stall_bridge_b = motorStatusRight.status[0];
+	msg.status_right.stall_bridge_a = motorStatusRight.status[1];
+	msg.status_right.overcurrent = motorStatusRight.status[2];
+	msg.status_right.thermal_shutdown = motorStatusRight.status[3];
+	msg.status_right.thermal_warning = motorStatusRight.status[4];
+	msg.status_right.undervoltage = motorStatusRight.status[5];
+	msg.status_right.motor_stopped = motorStatusRight.status[6];
+	msg.status_right.motor_accelerating = motorStatusRight.status[7];
+	msg.status_right.motor_decelerating = motorStatusRight.status[8];
+	msg.status_right.motor_running = motorStatusRight.status[9];
+	msg.status_right.motor_direction = motorStatusRight.status[10];
+	msg.status_right.busy = motorStatusRight.status[11];
+	msg.status_right.high_impedance = motorStatusRight.status[12];
 	// send message
 	control_publisher->publish(msg);
 
@@ -150,30 +150,4 @@ void MotorsControllerNode::controlMotors() {
 void MotorsControllerNode::printMotorsSpeedConfiguration(){
 	this->controller->getMotorsSpeedConfiguration(std::ref(speedConfiguration[0]), std::ref(speedConfiguration[1]), std::ref(speedConfiguration[2]), std::ref(speedConfiguration[3]));
 	RCLCPP_INFO(this->get_logger(), "Motors configuration:\nMax speed:\t%f\nMin speed:\t%f\nAcceleration:\t%f\nDeceleration:\t%f\n", speedConfiguration[0], speedConfiguration[1], speedConfiguration[2], speedConfiguration[3]);
-}
-
-void MotorsControllerNode::printMotorsStatusFromRegisters(){
-	this->controller->getMotorsStatusRegisters(std::ref(motorStatusLeft), std::ref(motorStatusRight));
-	RCLCPP_INFO(this->get_logger(), "Status number\t%d\n\tMOTOR: 0 - 0x%x\n\tMOTOR: 1 - 0x%x\n", statusCounter, motorStatusLeft, motorStatusRight);
-	if ((motorStatusLeft & 0x7F80) != 0x7e00) {
-		RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 0.");
-		if (~motorStatusLeft & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
-		if (~motorStatusLeft & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
-		if (~motorStatusLeft & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
-		if (~motorStatusLeft & 0x0800) RCLCPP_FATAL(this->get_logger(), "\tThermal shutdown detected.");
-		if (~motorStatusLeft & 0x0400) RCLCPP_WARN(this->get_logger(), "\tThermal warning detected.");
-		if (~motorStatusLeft & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
-		if (motorStatusLeft & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
-		if (motorStatusLeft & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
-	}
-	if ((motorStatusRight & 0x7F80) != 0x7e00) RCLCPP_INFO(this->get_logger(), "Something may be not right with motor 1.");
-		if (~motorStatusRight & 0x4000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge B.");
-		if (~motorStatusRight & 0x2000) RCLCPP_INFO(this->get_logger(), "\tStall on bridge A.");
-		if (~motorStatusRight & 0x1000) RCLCPP_INFO(this->get_logger(), "\tOvercurrent detected.");
-		if (~motorStatusRight & 0x0800) RCLCPP_FATAL(this->get_logger(), "\tThermal shutdown detected.");
-		if (~motorStatusRight & 0x0400) RCLCPP_WARN(this->get_logger(), "\tThermal warning detected.");
-		if (~motorStatusRight & 0x0200) RCLCPP_INFO(this->get_logger(), "\tUndervoltage lockout or reset detected.\n\tIgnore above message if it is first status read after motor's power-up.");
-		if (motorStatusRight & 0x0100) RCLCPP_INFO(this->get_logger(), "\tNon-existent command detected.");
-		if (motorStatusRight & 0x0080) RCLCPP_INFO(this->get_logger(), "\tNon-performable command detected.");
-	statusCounter++;
 }

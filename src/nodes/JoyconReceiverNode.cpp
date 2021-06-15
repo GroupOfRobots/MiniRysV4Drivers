@@ -58,6 +58,8 @@ JoyconReceiverNode::JoyconReceiverNode(): Node("joycon_receiver") {
 	standUpButton = this->get_parameter("standUpButton").get_value<int>();
 	this->declare_parameter("layDownButton", rclcpp::ParameterValue(3));
 	layDownButton = this->get_parameter("layDownButton").get_value<int>();
+	this->declare_parameter("shutdownButton", rclcpp::ParameterValue(99));
+	shutdownButton = this->get_parameter("shutdownButton").get_value<int>();
 	// this->declare_parameter("printStatusButton", rclcpp::ParameterValue(2));
 	// printStatusButton = this->get_parameter("printStatusButton").get_value<int>();
 	// this->declare_parameter("printLocationButton", rclcpp::ParameterValue(0));
@@ -100,19 +102,21 @@ void JoyconReceiverNode::get_joycon_state() {
 	msg.header.stamp = this->get_clock()->now();
 
 	if(!forwardAxisInverted){
-		msg.forward_speed = axis[forwardAxis]/forwardSpeedFactor;
+		msg.motor_control.forward_speed = axis[forwardAxis]/forwardSpeedFactor;
 	} else {
-		msg.forward_speed = -axis[forwardAxis]/forwardSpeedFactor;
+		msg.motor_control.forward_speed = -axis[forwardAxis]/forwardSpeedFactor;
 	}
 
 	if(!rotationAxisInverted){
-		msg.rotation_speed = axis[rotationAxis]/rotationSpeedFactor;
+		msg.motor_control.rotation_speed = axis[rotationAxis]/rotationSpeedFactor;
 	} else {
-		msg.rotation_speed = -axis[rotationAxis]/rotationSpeedFactor;
+		msg.motor_control.rotation_speed = -axis[rotationAxis]/rotationSpeedFactor;
 	}
 
-	if (button[standUpButton] == 1) msg.enable_balancing = true;
-	if (button[layDownButton] == 1) msg.enable_balancing = false;
+	if (button[standUpButton] == 1) msg.motor_control.enable_balancing = true;
+	if (button[layDownButton] == 1) msg.motor_control.enable_balancing = false;
+
+	if (button[shutdownButton] == 1) msg.emergency_shutdown = true;
 
 	joycon_control_publisher->publish(msg);
 }

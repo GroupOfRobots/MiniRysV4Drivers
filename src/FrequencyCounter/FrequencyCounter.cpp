@@ -33,7 +33,7 @@ FrequencyCounter::~FrequencyCounter() {
 
 void FrequencyCounter::count() {
 	this->numOfRuns++;
-	if (this->numOfRuns > 9999) {
+	if (this->numOfRuns > 999) {
 		this->previous = this->timeNow;
 		this->timeNow = std::chrono::steady_clock::now();
 		auto loopTimeSpan = std::chrono::duration_cast<std::chrono::duration<float>>(this->timeNow - this->previous);
@@ -47,7 +47,7 @@ void FrequencyCounter::count() {
 
 void FrequencyCounter::count2() {
 	this->numOfRuns++;
-	if (this->numOfRuns > 9999) {
+	if (this->numOfRuns > 999) {
 		this->previous2.tv_sec = this->timeNow2.tv_sec;
 		this->previous2.tv_nsec = this->timeNow2.tv_nsec;
 		clock_gettime(CLOCK_REALTIME, &this->timeNow2);

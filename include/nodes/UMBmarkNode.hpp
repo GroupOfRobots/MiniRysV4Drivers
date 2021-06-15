@@ -2,22 +2,22 @@
 #include "../data_structures.h"
 #include "../FrequencyCounter/FrequencyCounter.hpp"
 #include "minirys_interfaces/srv/get_minirys_global_localization.hpp"
+#include "minirys_interfaces/msg/minirys_output.hpp"
+#include "minirys_interfaces/msg/minirys_input.hpp"
 #include <iostream>
 #include <fstream>
 
 class UMBmarkNode : public rclcpp::Node{
 
 	public:
-		UMBmarkNode(robot_control_data&, odometry_data&);
+		UMBmarkNode();
 		~UMBmarkNode();
 
 	private:
-		robot_control_data *robotControlDataStructure;
-		odometry_data *odometryDataStructure;
 
 		float period, odometryPosition[3];
 		FrequencyCounter counter;
-		unsigned int cw_runs_completed, ccw_runs_completed, periods, phase_of_movement;
+		unsigned int cw_runs_completed, ccw_runs_completed, periods_completed, phase_of_movement;
 		float forward_speed, rotation_speed;
 
 		const unsigned int forward_periods = 1447;
@@ -35,8 +35,12 @@ class UMBmarkNode : public rclcpp::Node{
 		rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedPtr client;
 		rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedRequest request;
 		rclcpp::Client<minirys_interfaces::srv::GetMinirysGlobalLocalization>::SharedResponse result;
+		rclcpp::Subscription<minirys_interfaces::msg::MinirysOutput>::SharedPtr minirys_subscriber;
+		rclcpp::Publisher<minirys_interfaces::msg::MinirysInput>::SharedPtr minirys_publisher;
+		minirys_interfaces::msg::MinirysInput minirys_message;
 
 		std::ofstream outputFile;
 
 		void run();
+		void minirysCallback(const minirys_interfaces::msg::MinirysOutput::SharedPtr msg);
 };

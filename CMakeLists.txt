@@ -92,39 +92,89 @@ install(TARGETS
 	INCLUDES DESTINATION include
 )
 
+################################################################################ MAIN
+
 # building and installing executables
 add_executable(main src/main.cpp)
 target_link_libraries(main ${PROJECT_NAME}_source)
 ament_target_dependencies(main ${AMENT_DEPENDENCIES})
-
 target_include_directories(main
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
+################################################################################ SINGLE NODES
+
+add_executable(motors_controller_node src/motors_controller_node.cpp)
+target_link_libraries(motors_controller_node ${PROJECT_NAME}_source)
+ament_target_dependencies(motors_controller_node ${AMENT_DEPENDENCIES})
+target_include_directories(motors_controller_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(imu_sensor_node src/imu_sensor_node.cpp)
+target_link_libraries(imu_sensor_node ${PROJECT_NAME}_source)
+ament_target_dependencies(imu_sensor_node ${AMENT_DEPENDENCIES})
+target_include_directories(imu_sensor_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(tof_sensors_node src/tof_sensors_node.cpp)
+target_link_libraries(tof_sensors_node ${PROJECT_NAME}_source)
+ament_target_dependencies(tof_sensors_node ${AMENT_DEPENDENCIES})
+target_include_directories(tof_sensors_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(tof_sensors_stm_node src/tof_sensors_stm_node.cpp)
+target_link_libraries(tof_sensors_stm_node ${PROJECT_NAME}_source)
+ament_target_dependencies(tof_sensors_stm_node ${AMENT_DEPENDENCIES})
+target_include_directories(tof_sensors_stm_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(odometry_calculator_node src/odometry_calculator_node.cpp)
+target_link_libraries(odometry_calculator_node ${PROJECT_NAME}_source)
+ament_target_dependencies(odometry_calculator_node ${AMENT_DEPENDENCIES})
+target_include_directories(odometry_calculator_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(communication_node src/communication_node.cpp)
+target_link_libraries(communication_node ${PROJECT_NAME}_source)
+ament_target_dependencies(communication_node ${AMENT_DEPENDENCIES})
+target_include_directories(communication_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(joycon_receiver_node src/joycon_receiver_node.cpp)
+target_link_libraries(joycon_receiver_node ${PROJECT_NAME}_source)
+ament_target_dependencies(joycon_receiver_node ${AMENT_DEPENDENCIES})
+target_include_directories(joycon_receiver_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_executable(umbmark_node src/umbmark_node.cpp)
+target_link_libraries(umbmark_node ${PROJECT_NAME}_source)
+ament_target_dependencies(umbmark_node ${AMENT_DEPENDENCIES})
+target_include_directories(umbmark_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+################################################################################ TESTS
+
 add_executable(frequency_test src/freqmain.cpp)
 target_link_libraries(frequency_test ${PROJECT_NAME}_source)
 ament_target_dependencies(frequency_test ${AMENT_DEPENDENCIES})
-
 target_include_directories(frequency_test
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-add_executable(imu_sensor_test src/imu_sensor_test.cpp)
-target_link_libraries(imu_sensor_test ${PROJECT_NAME}_source)
-ament_target_dependencies(imu_sensor_test ${AMENT_DEPENDENCIES})
-
-target_include_directories(imu_sensor_test
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-add_executable(tof_sensor_test src/tof_sensor_test.cpp)
-target_link_libraries(tof_sensor_test ${PROJECT_NAME}_source)
-ament_target_dependencies(tof_sensor_test ${AMENT_DEPENDENCIES})
-
-target_include_directories(tof_sensor_test
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
@@ -132,7 +182,6 @@ target_include_directories(tof_sensor_test
 add_executable(motors_test src/motors_test.cpp)
 target_link_libraries(motors_test ${PROJECT_NAME}_source)
 ament_target_dependencies(motors_test ${AMENT_DEPENDENCIES})
-
 target_include_directories(motors_test
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -141,17 +190,7 @@ target_include_directories(motors_test
 add_executable(joycon_response_test src/joycon_response_test.cpp)
 target_link_libraries(joycon_response_test ${PROJECT_NAME}_source)
 ament_target_dependencies(joycon_response_test ${AMENT_DEPENDENCIES})
-
 target_include_directories(joycon_response_test
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-add_executable(joycon_control_only src/joycon_control_only.cpp)
-target_link_libraries(joycon_control_only ${PROJECT_NAME}_source)
-ament_target_dependencies(joycon_control_only ${AMENT_DEPENDENCIES})
-
-target_include_directories(joycon_control_only
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
@@ -159,22 +198,28 @@ target_include_directories(joycon_control_only
 add_executable(get_imu_calibration_values src/get_imu_calibration_values.cpp)
 target_link_libraries(get_imu_calibration_values ${PROJECT_NAME}_source)
 ament_target_dependencies(get_imu_calibration_values ${AMENT_DEPENDENCIES})
-
 target_include_directories(get_imu_calibration_values
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-
 install(TARGETS
   main
+
+  motors_controller_node
+  imu_sensor_node
+  tof_sensors_node
+  tof_sensors_stm_node
+  odometry_calculator_node
+  communication_node
+  joycon_receiver_node
+  umbmark_node
+
 	frequency_test
-  imu_sensor_test
-  tof_sensor_test
   motors_test
   joycon_response_test
-  joycon_control_only
   get_imu_calibration_values
+
 	DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -188,8 +233,8 @@ install(FILES
 install(PROGRAMS
   scripts/temperature_sensor_test.py
   scripts/voltage_sensor_test.py
-  scripts/temperature_publisher.py
-  scripts/voltage_publisher.py
+  scripts/temperature_sensor_node.py
+  scripts/voltage_sensor_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

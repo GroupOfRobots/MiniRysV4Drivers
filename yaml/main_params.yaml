@@ -1,6 +1,6 @@
 minirys_communication:
   ros__parameters:
-    period: 1 #ms
+    period: 10 #ms
 joycon_receiver:
   ros__parameters:
     forwardAxis: 1
@@ -24,7 +24,12 @@ imu_reader:
     period: 10 #in milliseconds
 tof_reader:
   ros__parameters:
-      period: 100 #in milliseconds
+    period: 100 #in milliseconds
+tof_reader_stm:
+  ros__parameters:
+    period: 100 #in milliseconds
+    imp: 25 # in ms
+    mtb: 20000 # in us
 motors_regulator:
   ros__parameters:
     microstep: 64
@@ -48,7 +53,7 @@ odometry_calculator:
     wheel_radius: 0.055 # m
     e_d: 1.0 # wheel diameter ration
     # e_d: 1.0149760441813191 # wheel diameter ration
-    period: 1 # in milliseconds
+    period: 10 # in milliseconds
     initial_x: 0.0
     initial_y: 0.0
     initial_theta: 0.0

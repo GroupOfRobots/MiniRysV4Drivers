@@ -1,7 +1,7 @@
 #include "nodes/TOFReaderSTMNode.hpp"
 
-TOFReaderSTMNode::TOFReaderSTMNode(tof_data &structure): Node("tof_reader_stm"){
-	dataStructure = &structure;
+TOFReaderSTMNode::TOFReaderSTMNode(): Node("tof_reader_stm"){
+	counter = new FrequencyCounter("STMtof");
 
 	// setting GPIO direction
 	for (int i = 0; i < NUM_OF_TOF; i++) bcm2835_gpio_fsel(sensorsPins[i], BCM2835_GPIO_FSEL_OUTP);
@@ -9,7 +9,7 @@ TOFReaderSTMNode::TOFReaderSTMNode(tof_data &structure): Node("tof_reader_stm"){
 	//disable all sensors first
 	for (int i = 0; i < NUM_OF_TOF; i++) bcm2835_gpio_clr(sensorsPins[i]);	
 
-	this->declare_parameter("sensorsUsed", rclcpp::ParameterValue(6));
+	this->declare_parameter("sensorsUsed", rclcpp::ParameterValue(8));
 	sensorsUsed = this->get_parameter("sensorsUsed").get_value<int>();
 
 	//sensors' and sata structures
@@ -52,7 +52,7 @@ TOFReaderSTMNode::TOFReaderSTMNode(tof_data &structure): Node("tof_reader_stm"){
 	bcm2835_delay(100);
 
 	// measurement timing budget initialization
-	this->declare_parameter("mtb", rclcpp::ParameterValue(20000));
+	this->declare_parameter("mtb", rclcpp::ParameterValue(40000));
 	mtb = this->get_parameter("mtb").get_value<int>();
 	RCLCPP_INFO(this->get_logger(), "Setting measurement timing budget.");
 	for (int s = 0; s < sensorsUsed; ++s)
@@ -62,7 +62,7 @@ TOFReaderSTMNode::TOFReaderSTMNode(tof_data &structure): Node("tof_reader_stm"){
 	bcm2835_delay(100);
 
 	// inter measurement period initialization
-	this->declare_parameter("imp", rclcpp::ParameterValue(24));
+	this->declare_parameter("imp", rclcpp::ParameterValue(100));
 	imp = this->get_parameter("imp").get_value<int>();
 	RCLCPP_INFO(this->get_logger(), "Setting inter measurement period.");
 	for (int s = 0; s < sensorsUsed; ++s)
@@ -79,6 +79,9 @@ TOFReaderSTMNode::TOFReaderSTMNode(tof_data &structure): Node("tof_reader_stm"){
 	}
 	bcm2835_delay(100);
 
+	tof_data_publisher = this->create_publisher<minirys_interfaces::msg::TofOutput>("tof_data", 10);
+	msg = minirys_interfaces::msg::TofOutput();
+
 	this->declare_parameter("period", rclcpp::ParameterValue(100));
 	read_tof_data_timer = this->create_wall_timer(
 	std::chrono::milliseconds(this->get_parameter("period").get_value<int>()), std::bind(&TOFReaderSTMNode::read_tof_data, this));
@@ -92,10 +95,11 @@ TOFReaderSTMNode::~TOFReaderSTMNode(){
 		delete sensor[s];
 		delete data[s];
 	}
+	delete counter;
 }
 
 void TOFReaderSTMNode::read_tof_data(){
-	counter.count();
+	counter->count();
 
 	do {
 		ready = 0;
@@ -105,7 +109,7 @@ void TOFReaderSTMNode::read_tof_data(){
 	// 		printf("%d ", dataReady[s]);
 		}
 	// 	printf("\n");
-	} while(ready != 6);
+	} while(ready != sensorsUsed);
 
 	for (int s = 0; s < sensorsUsed; ++s)
 	{
@@ -114,10 +118,11 @@ void TOFReaderSTMNode::read_tof_data(){
 		VL53L1_ClearInterruptAndStartMeasurement(sensor[s]);
 	}
 	// RCLCPP_INFO(this->get_logger(), "%d, %d, %d, %d, %d, %d", data[0]->RangeMilliMeter, data[1]->RangeMilliMeter, data[2]->RangeMilliMeter, data[3]->RangeMilliMeter, data[4]->RangeMilliMeter, data[5]->RangeMilliMeter);
-	dataStructure->tof_data_access.lock();
+
+	msg.header.stamp = this->get_clock()->now();
 	for (int s = 0; s < sensorsUsed; ++s)
 	{
-		dataStructure->measurement[s] = (float)data[s]->RangeMilliMeter;
+		msg.sensor[s].range = (float)data[s]->RangeMilliMeter/1000;
 	}
-	dataStructure->tof_data_access.unlock();
+	tof_data_publisher->publish(msg);
 }

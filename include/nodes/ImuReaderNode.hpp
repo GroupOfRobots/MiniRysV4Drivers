@@ -21,7 +21,6 @@ class ImuReaderNode : public rclcpp::Node{
 		float filteredAngle, previousFilteredAngle;
 		float filteredGyro;
 
-		imu_data *dataStructure = NULL; 
 		FrequencyCounter *counter;
 
 		rclcpp::TimerBase::SharedPtr read_imu_data_timer;

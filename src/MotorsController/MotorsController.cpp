@@ -303,6 +303,48 @@ void MotorsController::getMotorsStatusRegisters(long &motor0, long &motor1) {
 	motor1 = board->getStatusRight();
 }
 
+motor_status MotorsController::getMotorStatusLeft(){
+	long motorStatusLeft = board->getStatusLeft();
+	motor_status status;
+
+	status.status[0] = ~motorStatusLeft & 0x4000;
+	status.status[1] = ~motorStatusLeft & 0x2000;
+	status.status[2] = ~motorStatusLeft & 0x1000;
+	status.status[3] = ~motorStatusLeft & 0x0800;
+	status.status[4] = ~motorStatusLeft & 0x0400;
+	status.status[5] = ~motorStatusLeft & 0x0200;
+	status.status[6] = ~motorStatusLeft & 0x0060;
+	status.status[7] = (~motorStatusLeft & 0x0040) & (motorStatusLeft & 0x0020);
+	status.status[8] = (motorStatusLeft & 0x0040) & (~motorStatusLeft & 0x0020);
+	status.status[9] = motorStatusLeft & 0x0060;
+	status.status[10] = motorStatusLeft & 0x0010;
+	status.status[11] = ~motorStatusLeft & 0x0002;
+	status.status[12] = motorStatusLeft & 0x0001;
+
+	return status;
+}
+
+motor_status MotorsController::getMotorStatusRight(){
+	long motorStatusRight = board->getStatusRight();
+	motor_status status;
+
+	status.status[0] = ~motorStatusRight & 0x4000;
+	status.status[1] = ~motorStatusRight & 0x2000;
+	status.status[2] = ~motorStatusRight & 0x1000;
+	status.status[3] = ~motorStatusRight & 0x0800;
+	status.status[4] = ~motorStatusRight & 0x0400;
+	status.status[5] = ~motorStatusRight & 0x0200;
+	status.status[6] = ~motorStatusRight & 0x0060;
+	status.status[7] = (~motorStatusRight & 0x0040) & (motorStatusRight & 0x0020);
+	status.status[8] = (motorStatusRight & 0x0040) & (~motorStatusRight & 0x0020);
+	status.status[9] = motorStatusRight & 0x0060;
+	status.status[10] = motorStatusRight & 0x0010;
+	status.status[11] = ~motorStatusRight & 0x0002;
+	status.status[12] = motorStatusRight & 0x0001;
+
+	return status;
+}
+
 void MotorsController::getMotorsSpeedConfiguration(float &max, float &min, float &acc, float &dec){
 	max = this->board->getMaxSpeed();
 	min = this->board->getMinSpeed();

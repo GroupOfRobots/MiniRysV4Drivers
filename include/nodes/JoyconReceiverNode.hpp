@@ -22,7 +22,7 @@ class JoyconReceiverNode : public rclcpp::Node{
 		int forwardAxis, rotationAxis, forwardSpeedFactor, rotationSpeedFactor;
 		bool forwardAxisInverted, rotationAxisInverted;
 
-		int standUpButton, layDownButton, printStatusButton, printLocationButton;
+		int standUpButton, layDownButton, shutdownButton;//, printStatusButton, printLocationButton;
 
 		FrequencyCounter *counter;
 

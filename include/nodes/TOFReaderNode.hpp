@@ -1,8 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
-#include "../data_structures.h"
 #include "../FrequencyCounter/FrequencyCounter.hpp"
 #include "../vl53l1x/VL53L1X.h"
 #include "../bcm/bcm2835.h"
+#include "minirys_interfaces/msg/tof_output.hpp"
 
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_12
 // #define GPIO_TOF_2 	RPI_V2_GPIO_P1_16
@@ -18,14 +18,15 @@
 
 class TOFReaderNode : public rclcpp::Node{
 	public:
-		TOFReaderNode(tof_data &structure);
+		TOFReaderNode();
 		~TOFReaderNode();
 
 	private:
 		VL53L1X *tofSensors[NUM_OF_TOF];
-		tof_data *dataStructure = NULL;
-		FrequencyCounter counter;
+		FrequencyCounter *counter;
 
 		rclcpp::TimerBase::SharedPtr read_tof_data_timer;
+		rclcpp::Publisher<minirys_interfaces::msg::TofOutput>::SharedPtr tof_data_publisher;
+		minirys_interfaces::msg::TofOutput msg;
 		void read_tof_data();
 };

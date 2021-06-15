@@ -1,9 +1,10 @@
 #include "rclcpp/rclcpp.hpp"
-#include "../data_structures.h"
 #include "../FrequencyCounter/FrequencyCounter.hpp"
 #include "../vl53l1x_stm/vl53l1_api.h"
 #include "../vl53l1x_stm/vl53l1_platform.h"
 #include "../bcm/bcm2835.h"
+#include "minirys_interfaces/msg/tof_output.hpp"
+
 
 #define GPIO_TOF_1 	RPI_V2_GPIO_P1_12
 // #define GPIO_TOF_2 	RPI_V2_GPIO_P1_16
@@ -20,7 +21,7 @@
 class TOFReaderSTMNode : public rclcpp::Node{
 
 	public:
-		TOFReaderSTMNode(tof_data &structure);
+		TOFReaderSTMNode();
 		~TOFReaderSTMNode();
 
 	private:
@@ -28,12 +29,13 @@ class TOFReaderSTMNode : public rclcpp::Node{
 		VL53L1_RangingMeasurementData_t *data[NUM_OF_TOF];
 		uint8_t dataReady[NUM_OF_TOF];
 		uint8_t ready;
-		tof_data *dataStructure = NULL;
-		FrequencyCounter counter;
+		FrequencyCounter *counter;
 		int sensorsUsed, mtb, imp;
 		const uint8_t sensorsPins[NUM_OF_TOF] = {GPIO_TOF_1, GPIO_TOF_3, GPIO_TOF_4, GPIO_TOF_5, GPIO_TOF_6, GPIO_TOF_7, GPIO_TOF_8, GPIO_TOF_9};
 		const uint8_t sensorsAddress[NUM_OF_TOF] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37};
 		rclcpp::TimerBase::SharedPtr read_tof_data_timer;
+		rclcpp::Publisher<minirys_interfaces::msg::TofOutput>::SharedPtr tof_data_publisher;
+		minirys_interfaces::msg::TofOutput msg;
 
 		void read_tof_data();
 	

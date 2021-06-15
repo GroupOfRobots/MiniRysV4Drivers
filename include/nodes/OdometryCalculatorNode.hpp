@@ -34,5 +34,4 @@ class OdometryCalculatorNode : public rclcpp::Node{
 		void cropAngle();
 		void setOdometryPosition(const std::shared_ptr<minirys_interfaces::srv::SetOdometryPosition::Request> request,
 			std::shared_ptr<minirys_interfaces::srv::SetOdometryPosition::Response> response);
-		void setPosition(double, double, double);
 };

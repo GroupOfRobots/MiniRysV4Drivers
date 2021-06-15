@@ -30,12 +30,21 @@ CommunicationNode::~CommunicationNode() {
 }
 
 void CommunicationNode::minirysCallback(const minirys_interfaces::msg::MinirysInput::SharedPtr msg) {
-	RCLCPP_INFO(this->get_logger(), "input");
-	motorsMessage.forward_speed = msg->forward_speed;
-	motorsMessage.rotation_speed = msg->rotation_speed;
-	motorsMessage.enable_balancing = msg->enable_balancing;
+	// RCLCPP_INFO(this->get_logger(), "input");
+	outputMessage.emergency_stop = outputMessage.emergency_stop || msg->emergency_shutdown;
+
+	if (outputMessage.emergency_stop) {
+		motorsMessage.forward_speed = 0;
+		motorsMessage.rotation_speed = 0;
+		motorsMessage.enable_balancing = false;
+	} else {
+		motorsMessage.forward_speed = msg->motor_control.forward_speed;
+		motorsMessage.rotation_speed = msg->motor_control.rotation_speed;
+		motorsMessage.enable_balancing = msg->motor_control.enable_balancing;
+	}
 	motors_control_publisher->publish(motorsMessage);
-	if (msg->set_new_odometry_position) {
+
+	if (msg->set_new_odometry_position && !outputMessage.emergency_stop) {
 		set_odometry_position_request->pose = msg->new_odometry_position;
 		set_odometry_position_client->async_send_request(set_odometry_position_request);
 		// RCLCPP_INFO(this->get_logger(), "New odometry position set.");
@@ -43,6 +52,8 @@ void CommunicationNode::minirysCallback(const minirys_interfaces::msg::MinirysIn
 }
 
 void CommunicationNode::sendData() {
+	counter->count();
+	// RCLCPP_INFO(this->get_logger(), "Data sent.");
 	outputMessage.header.stamp = this->get_clock()->now();
 	minirys_data_publisher->publish(outputMessage);
 }
@@ -75,8 +86,8 @@ void CommunicationNode::imuDataCallback(const minirys_interfaces::msg::ImuOutput
 void CommunicationNode::tofDataCallback(const minirys_interfaces::msg::TofOutput::SharedPtr msg) {
 	// RCLCPP_INFO(this->get_logger(), "tof");
 	outputMessage.tof.header = msg->header;
-	for (int i = 0; i < 6; i++) {
-		outputMessage.tof.tof[i] = msg->tof[i];
+	for (int i = 0; i < 8; i++) {
+		outputMessage.tof.sensor[i] = msg->sensor[i];
 	}
 }
 
@@ -96,4 +107,6 @@ void CommunicationNode::batteryCallback(const sensor_msgs::msg::BatteryState::Sh
 	outputMessage.battery.power_supply_health = msg->power_supply_health;
 	outputMessage.battery.power_supply_technology = msg->power_supply_technology;
 	outputMessage.battery.present = msg->present;
+
+	if (outputMessage.battery.power_supply_health == sensor_msgs::msg::BatteryState::POWER_SUPPLY_HEALTH_DEAD) outputMessage.emergency_stop = true;
 }
