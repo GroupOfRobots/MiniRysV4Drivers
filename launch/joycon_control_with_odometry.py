@@ -16,31 +16,45 @@ def generate_launch_description():
 			# the name of the executable is set in CMakeLists.txt, towards the end of
 			# the file, in add_executable(...) and the directives following it
 			package= package,
-			node_executable='temperature_publisher.py',
+			executable='imu_sensor_node',
 			output='screen',
-			parameters=[full_path + "/yaml/temperature_publisher_params.yaml"]
+			parameters=[full_path + "/yaml/main_params.yaml"],
+			on_exit=Shutdown(),
 		),
-
 		launch_ros.actions.Node(
 			# the name of the executable is set in CMakeLists.txt, towards the end of
 			# the file, in add_executable(...) and the directives following it
 			package= package,
-			node_executable='voltage_publisher.py',
+			executable='odometry_calculator_node',
 			output='screen',
-			parameters=[full_path + "/yaml/voltage_publisher_params.yaml"]
+			parameters=[full_path + "/yaml/main_params.yaml"],
+			on_exit=Shutdown(),
 		),
-
 		launch_ros.actions.Node(
 			# the name of the executable is set in CMakeLists.txt, towards the end of
 			# the file, in add_executable(...) and the directives following it
 			package= package,
-			node_executable='joycon_control_only',
+			executable='communication_node',
 			output='screen',
-			# env={RCUTILS_CONSOLE_LINE_BUFFERED: "1"},
-			# env={PYTHONUNBUFFERED : "1"},
-			# emulate_tty=True,
-			# arguments=[('__log_level:=info')],
-			parameters=[full_path + "/yaml/joycon_control_only_params.yaml"],
+			parameters=[full_path + "/yaml/main_params.yaml"],
+			on_exit=Shutdown(),
+		),
+		launch_ros.actions.Node(
+			# the name of the executable is set in CMakeLists.txt, towards the end of
+			# the file, in add_executable(...) and the directives following it
+			package= package,
+			executable='motors_controller_node',
+			output='screen',
+			parameters=[full_path + "/yaml/main_params.yaml"],
+			on_exit=Shutdown(),
+		),
+		launch_ros.actions.Node(
+			# the name of the executable is set in CMakeLists.txt, towards the end of
+			# the file, in add_executable(...) and the directives following it
+			package= package,
+			executable='joycon_receiver_node',
+			output='screen',
+			parameters=[full_path + "/yaml/main_params.yaml"],
 			on_exit=Shutdown(),
 		),
 	])

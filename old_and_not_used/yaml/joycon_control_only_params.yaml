@@ -1,9 +1,0 @@
-joycon_control_only:
-    ros__parameters:
-        period: 10 #in milliseconds
-        forwardAxis: 1
-        rotationAxis: 2
-        forwardSpeedFactor: 80
-        rotationSpeedFactor: 200
-        forwardAxisInverted: false
-        rotationAxisInverted: true

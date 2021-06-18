@@ -5,7 +5,7 @@
 int main(int argc, char const *argv[])
 {
 	// set real time priority for thread
-	setRTPriority("Odometry");
+	setRTPriority("Joycon");
 
 	// initiate ROS2
 	rclcpp::init(argc, argv);

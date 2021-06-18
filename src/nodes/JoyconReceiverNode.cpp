@@ -58,7 +58,7 @@ JoyconReceiverNode::JoyconReceiverNode(): Node("joycon_receiver") {
 	standUpButton = this->get_parameter("standUpButton").get_value<int>();
 	this->declare_parameter("layDownButton", rclcpp::ParameterValue(3));
 	layDownButton = this->get_parameter("layDownButton").get_value<int>();
-	this->declare_parameter("shutdownButton", rclcpp::ParameterValue(99));
+	this->declare_parameter("shutdownButton", rclcpp::ParameterValue(9));
 	shutdownButton = this->get_parameter("shutdownButton").get_value<int>();
 	// this->declare_parameter("printStatusButton", rclcpp::ParameterValue(2));
 	// printStatusButton = this->get_parameter("printStatusButton").get_value<int>();
